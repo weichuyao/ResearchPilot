@@ -1,7 +1,8 @@
 [CmdletBinding()]
 param(
     [switch]$RebuildFrontend,
-    [switch]$NoBrowser
+    [switch]$NoBrowser,
+    [string]$Browser = 'edge'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -91,6 +92,58 @@ if (-not (Test-Path $backendPython)) {
     throw "Backend environment is missing: $backendPython"
 }
 
+# ---------------------------------------------------------------------------
+# Open the frontend in an explicitly chosen browser.
+#
+# Start-Process on a URL goes through ShellExecute, which resolves the Windows
+# default handler for the http/https scheme. Third-party clients register
+# themselves as browser clients and take that association over -- Quark
+# (quark.exe --brand-clouddrive), Doubao, Lenovo SLBrowser and friends all do
+# it -- so a plain Start-Process 'http://...' ends up in whichever of them last
+# won the association.
+#
+# Launching a concrete browser executable makes this script independent of the
+# machine's default-browser setting, so a hijack cannot change where the
+# frontend opens. Choose with -Browser edge|chrome|quark, or pass a full path
+# to any .exe. -NoBrowser (or -Browser none) skips opening a window entirely.
+# ---------------------------------------------------------------------------
+function Get-BrowserCandidates {
+    param([string]$Name)
+
+    $programFiles = $env:ProgramFiles
+    $programFilesX86 = ${env:ProgramFiles(x86)}
+    $localAppData = $env:LOCALAPPDATA
+
+    $candidates = @()
+    switch ($Name.ToLowerInvariant()) {
+        'edge' {
+            if ($programFilesX86) { $candidates += Join-Path $programFilesX86 'Microsoft\Edge\Application\msedge.exe' }
+            if ($programFiles) { $candidates += Join-Path $programFiles 'Microsoft\Edge\Application\msedge.exe' }
+        }
+        'chrome' {
+            if ($localAppData) { $candidates += Join-Path $localAppData 'Google\Chrome\Application\chrome.exe' }
+            if ($programFiles) { $candidates += Join-Path $programFiles 'Google\Chrome\Application\chrome.exe' }
+            if ($programFilesX86) { $candidates += Join-Path $programFilesX86 'Google\Chrome\Application\chrome.exe' }
+        }
+        'quark' {
+            $candidates += 'D:\App\Quark\quark.exe'
+        }
+        default {
+            $candidates += $Name
+        }
+    }
+    return $candidates
+}
+
+function Resolve-BrowserExecutable {
+    param([string]$Name)
+
+    foreach ($candidate in Get-BrowserCandidates -Name $Name) {
+        if (Test-Path -LiteralPath $candidate -PathType Leaf) { return $candidate }
+    }
+    return $null
+}
+
 $ollama = (Get-Command ollama -ErrorAction Stop).Source
 if (-not (Test-LocalPort 11434)) {
     Write-Host 'Starting Ollama...'
@@ -155,6 +208,20 @@ Write-Host 'AI ChatKit is ready.' -ForegroundColor Green
 Write-Host 'Frontend: http://localhost:3000'
 Write-Host 'Backend:  http://localhost:8001/docs'
 
-if (-not $NoBrowser) {
-    Start-Process 'http://localhost:3000'
+if (-not $NoBrowser -and $Browser -ne 'none') {
+    $browserExecutable = Resolve-BrowserExecutable -Name $Browser
+    if ($browserExecutable) {
+        Write-Host "Opening http://localhost:3000 in $browserExecutable"
+        Start-Process -FilePath $browserExecutable -ArgumentList 'http://localhost:3000'
+    }
+    else {
+        # Deliberately NOT falling back to Start-Process <url>: that is the
+        # system default handler, which is how a hijacked association (Quark
+        # and similar) gets to answer this request in the first place.
+        Write-Warning "Browser '$Browser' was not found. Tried:"
+        foreach ($candidate in Get-BrowserCandidates -Name $Browser) {
+            Write-Warning "  $candidate"
+        }
+        Write-Warning 'Open http://localhost:3000 manually, or pass a full .exe path with -Browser.'
+    }
 }

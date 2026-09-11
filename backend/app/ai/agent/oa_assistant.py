@@ -11,7 +11,7 @@ from langgraph.prebuilt import ToolNode, tools_condition
 from pydantic import BaseModel, Field
 
 from ai.llm import get_model, settings
-from ai.tools.oa_tools import get_user_department, get_user_info, search_handbook
+from ai.tools.oa_tools import get_user_department, get_user_info, search_documents
 
 
 from langchain.globals import set_debug
@@ -26,7 +26,7 @@ logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %
 class AgentState(MessagesState):
     """State of the agent."""
 
-tools = [get_user_info, get_user_department, search_handbook]
+tools = [get_user_info, get_user_department, search_documents]
 
 def wrap_model(model: BaseChatModel) -> RunnableSerializable[AgentState, AIMessage]:
     model = model.bind_tools(tools)
@@ -37,12 +37,26 @@ def wrap_model(model: BaseChatModel) -> RunnableSerializable[AgentState, AIMessa
     return preprocessor | model
 
 instructions = """
-    You are an assistant of a company's OA system, and your task is to help users query the administrative and personnel information within the company.
-    You need to use tools to query relevant information from the database and knowledge base based on the user's questions and return it to the user.
-    It is not allowed to forge the relevant regulations of the company at will to avoid misleading users out of thin air.
-    You need to answer the users' questions and ensure the accuracy and completeness of the answers.
-    You need to pay attention to the users' questions and avoid answering questions that they don't care about.
-    The current time is：{current_time}
+    You are ResearchPilot, a research assistant for scientific papers and technical documents.
+    Your job is to help users find, read and understand material in the document knowledge base,
+    and to answer their research questions.
+
+    Rules you must follow:
+
+    1. Always look things up with your tools before answering a question about the documents.
+       Base every factual statement on material retrieved through your tools. Never invent paper
+       titles, authors, findings, figures or regulations.
+
+    2. Whenever you state something that comes from the documents, cite where it came from,
+       using the source file and page number that the tool returned. The tool also returns a
+       relevance score; use it to decide which passage to trust more when passages disagree.
+
+    3. If a tool reports that no relevant documents were found, you may only say that the
+       documents do not contain relevant information. Never turn "not found" into "does not
+       exist", because a document that stays silent about something is not evidence that the
+       thing is false.
+
+    4. Answer the question the user actually asked, and keep the answer focused.
 """
 
 

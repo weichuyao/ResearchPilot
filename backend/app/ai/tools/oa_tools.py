@@ -1,4 +1,5 @@
 from langchain_core.tools import BaseTool, tool
+import os
 
 from db.models.employee import Employee
 from db.repository.employee_repo import EmployeeRepository
@@ -38,12 +39,41 @@ async def get_user_department(user_name: str) -> dict:
         
         return asdict(department)
 
+# 检索相关性阈值。
+# 实测分布：应当返回的最低分 0.566，不应当返回的最高分 0.366。
+# 0.5 落在两者之间，四个实测 case（vacation benefits / annual leave policy /
+# 宠物保险 / 无关乱码）全部判断正确。校准方法见 reference/transformation-03-research-workflow-design.md。
+RELEVANCE_THRESHOLD = 0.5
+
+# 先粗召回多少条，再用阈值筛。召回放宽、筛选收紧，避免阈值把真答案一刀切掉。
+RETRIEVE_K = 10
+
+
 @tool
-async def search_handbook(query: str) -> str:
-    """ Check the employee handbook and the internal rules and regulations of the company """
-    result = hand_book_vector_store.similarity_search(query, k=10)
-    
-    if result.__len__ == 0:
-        return "no result found"
-    
-    return "\n\n".join(doc.page_content for doc in result)    
+async def search_documents(query: str) -> str:
+    """Search the research document knowledge base and return the most relevant passages.
+
+    Each passage is prefixed with its source file, page number and relevance score,
+    so you can tell the user where the information came from.
+    """
+    results = hand_book_vector_store.similarity_search_with_relevance_scores(query, k=RETRIEVE_K)
+
+    hits = [(doc, score) for doc, score in results if score >= RELEVANCE_THRESHOLD]
+
+    if not hits:
+        return (
+            "No relevant documents found: no passage in the knowledge base is sufficiently "
+            "related to this query. When you answer, you may only state that the documents do "
+            "not contain relevant information. You must not conclude that the fact does not "
+            "exist, and you must not add anything that is not in the documents."
+        )
+
+    blocks = []
+    for index, (doc, score) in enumerate(hits, start=1):
+        source = os.path.basename(str(doc.metadata.get("source", "unknown")))
+        page = doc.metadata.get("page_label") or doc.metadata.get("page", "?")
+        blocks.append(
+            "[source %d | %s | page %s | relevance %.2f]\n%s"
+            % (index, source, page, score, doc.page_content)
+        )
+    return "\n\n".join(blocks)
