@@ -38,22 +38,30 @@ from langchain_core.messages import HumanMessage, SystemMessage
 # ---------------------------------------------------------------------------
 # 检索结果的解析
 # ---------------------------------------------------------------------------
-# search_documents 返回的每段开头长这样：
+# search_documents 返回的每段开头长这样（末段是「怎么匹配上的」，格式会演进）：
 #   [source 1 | Unsupervised Maritime Vessel ... | p.15 | relevance 0.83]
+#   [source 2 | Dynamic Patch-aware ... | p.4 | relevance 0.56 + exact terms]
+#   [source 3 | ViV-ReID: ... | p.9 | matched on exact terms]
+#
+# 这里刻意把末段整体吞下来再单独解析分数，而不是写死 "relevance X.XX]" ——
+# 之前就是因为写死了，工具返回格式一变，retrieval_recall 直接静默掉到 0.25。
 _SOURCE_RE = re.compile(
-    r"\[source\s+\d+\s*\|\s*(?P<title>.+?)\s*\|\s*p\.(?P<page>[^\s|]+)\s*\|\s*relevance\s+(?P<score>[\d.]+)\]"
+    r"\[source\s+\d+\s*\|\s*(?P<title>.+?)\s*\|\s*p\.(?P<page>[^\s|]+)\s*\|\s*(?P<how>[^\]]+)\]"
 )
+_SCORE_RE = re.compile(r"relevance\s+(?P<score>[\d.]+)")
 
 
 def parse_sources(tool_output: str) -> list[dict]:
     """从工具返回的文本里把「论文 / 页码 / 分数」抽出来。"""
     out = []
     for match in _SOURCE_RE.finditer(tool_output or ""):
+        how = match.group("how")
+        score = _SCORE_RE.search(how)
         out.append(
             {
                 "title": match.group("title").strip(),
                 "page": match.group("page").strip(),
-                "score": float(match.group("score")),
+                "score": float(score.group("score")) if score else None,
             }
         )
     return out
@@ -133,7 +141,12 @@ def build_judge_prompt(item: dict, answer: str, sources: list[dict]) -> str:
         lines.append("")
         lines.append("SOURCES THE SYSTEM ACTUALLY RETRIEVED (paper | page | score):")
         for source in sources[:12]:
-            lines.append("  - %s | p.%s | %.2f" % (source["title"][:60], source["page"], source["score"]))
+            # score 可能是 None —— 关键词命中没有向量分数。
+            # 早先这里写死 %.2f，score 为 None 时直接抛 TypeError，
+            # 而且因为它在 try 之外，整题记录都被丢掉了。
+            score = source.get("score")
+            score_text = ("%.2f" % score) if isinstance(score, (int, float)) else "keyword-only"
+            lines.append("  - %s | p.%s | %s" % (str(source.get("title"))[:60], source.get("page"), score_text))
     lines += ["", "ANSWER:", answer or "(empty)", ""]
     return "\n".join(lines)
 
@@ -189,12 +202,19 @@ async def run_item(item: dict, model, agent, model_name: str) -> dict:
             tool_outputs.append(message.content if isinstance(message.content, str) else str(message.content))
 
     sources = []
+    parse_warnings = 0
     for output in tool_outputs:
-        sources.extend(parse_sources(output))
+        parsed = parse_sources(output)
+        sources.extend(parsed)
+        # 告警：工具确实返回了检索结果，但一条都没解析出来 —— 说明返回格式变了，
+        # 解析器要跟着改。静默返回 0 的指标比没有指标更危险。
+        if not parsed and "[source " in (output or "") and "No relevant documents" not in output:
+            parse_warnings += 1
 
     record["tool_calls"] = len(tool_queries)
     record["queries"] = tool_queries
     record["retrieved"] = sources
+    record["parse_warnings"] = parse_warnings
     record["context_chars"] = sum(len(o) for o in tool_outputs)
     record["answer"] = answer
 
@@ -220,15 +240,18 @@ async def run_item(item: dict, model, agent, model_name: str) -> dict:
         record["retrieval_rank"] = None
 
     # ---- 判定层：LLM 评委 ----
-    judge_prompt = build_judge_prompt(item, answer, sources)
+    # 注意：build_judge_prompt 也放在 try 里面。之前它在 try 之外，
+    # 一旦提示词构造出错，异常会冒泡到调用方，整题记录（工具调用、检索结果、
+    # 答案）全被丢弃换成空壳，事后完全没法诊断。
     try:
+        judge_prompt = build_judge_prompt(item, answer, sources)
         # oa_assistant 模块在导入时打开了全局 set_debug(True)，会让 LangChain
         # 把每次模型调用的完整 debug 结构打到 stdout。评委会被淹掉，所以这里也包一层。
         with contextlib.redirect_stdout(io.StringIO()):
             judged = await model.ainvoke([SystemMessage(content=JUDGE_SYSTEM), HumanMessage(content=judge_prompt)])
         judged_text = judged.content if isinstance(judged.content, str) else str(judged.content)
     except Exception as exc:
-        record["judge_error"] = "%s: %s" % (type(exc).__name__, str(exc)[:150])
+        record["judge_error"] = "%s: %s" % (type(exc).__name__, str(exc)[:200])
         record["judge"] = None
         return record
 
@@ -258,6 +281,13 @@ def summarize(records: list[dict]) -> dict:
         return [r for r in records if r["type"] == kind and r.get("judge")]
 
     summary = {"total": len(records), "judged": len([r for r in records if r.get("judge")])}
+
+    # 自检：这两项不为零时，下面的检索/判定指标是在有偏子集上算出来的，不可信。
+    # 今天已经踩过两次：① 工具返回格式变了、解析正则没跟着改 -> recall 静默掉到 0.25
+    # ② 评委提示词构造抛异常 -> 7 题记录被丢弃，汇总只在 13 题上计算
+    summary["not_judged"] = summary["total"] - summary["judged"]
+    summary["parse_warnings"] = sum(r.get("parse_warnings") or 0 for r in records)
+    summary["metric_reliable"] = (summary["not_judged"] == 0 and summary["parse_warnings"] == 0)
 
     a_items = group("A")
     if a_items:
@@ -419,6 +449,16 @@ async def _main() -> None:
     print("=" * 70)
     print(json.dumps(summary, ensure_ascii=False, indent=2))
     print("")
+    if not summary.get("metric_reliable", True):
+        print("!" * 70)
+        print("!! 指标不可信：有 %d 题没被判分，%d 处检索结果解析失败。"
+              % (summary["not_judged"], summary["parse_warnings"]))
+        print("!! 下面的百分比是在有偏子集上算出来的，不要拿去做对比结论。")
+        for record in records:
+            if not record.get("judge"):
+                print("!!   %s: %s" % (record["id"], record.get("judge_error") or "未知"))
+        print("!" * 70)
+        print("")
     print("详细结果 : %s" % os.path.relpath(json_path, backend_root))
     print("可读报告 : %s" % os.path.relpath(md_path, backend_root))
 
