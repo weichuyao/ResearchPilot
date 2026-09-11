@@ -35,8 +35,53 @@
 POST   /documents            上传一个 PDF → 202 + 文档记录（含 id 与 status）
 GET    /documents            列出知识库里的文档
 GET    /documents/{id}       查单个文档的状态（前端轮询这个）
+DELETE /documents/{id}       删除文档（向量块 + 上传的文件 + 记录）
 GET    /health               服务健康：代码版本、已加载的模型、索引统计
 ```
+
+### 1.0 删除接口的三条约束
+
+**① 删的顺序不能反：先删向量块，再删 paper 行。**
+反过来的话，万一删向量失败，`source_file` 这个唯一能把两边对起来的键就没了 ——
+那些向量块变成永远找不到、也永远清不掉的孤儿。先删向量则失败时记录还在，可以重试。
+（删向量失败返回 **503** 而不是 500：它是下游依赖不可用，语义上属于「稍后重试」。）
+
+**② 只删「自己管的」文件。**
+`resource/papers/` 里那 4 篇是操作者放进去的种子语料，由 `ingest.py` 管理；
+`resource/uploads/` 才是本接口的产物。所以磁盘删除**只允许发生在上传目录之内**，
+判断用 `os.path.commonpath` 而不是字符串 `startswith` ——
+`startswith("/a/uploads")` 会被 `/a/uploads-evil/x.pdf` 骗过去。
+删库接口顺手把语料删了是不可逆的事故。
+
+**③ 默认拒绝删除「处理中」的文档（409），另留 `?force=true` 出口。**
+后台索引任务手里攥着 `paper_id`，跑完会去写状态。此时删记录：
+状态更新会落空（`update_progress` 找不到行，静默返回 None），
+但**向量块已经写进去了** —— 又一批孤儿。
+
+那卡住的文档怎么办？`force=true` 就是给它们留的：进程重启会让后台任务消失，
+记录永远停在「处理中」（`/health` 的 `index.by_status.indexing` 报的就是这个）。
+**那种情况下没有任何任务会再写，强制删才安全** —— 换言之 force 只在
+「你确认进程重启过」时才用。
+
+> 返回 **204** 而不是 200 + body：项目里 `DELETE /employee/delete/{id}` 已经是 204。
+> 「删掉了几个向量块」这类细节进日志，聚合效果看 `/health`。
+
+### 1.0.1 一个 FastAPI 的坑：204 路由不能写返回注解
+
+```python
+async def delete_document(...) -> None:      # ← 会让 FastAPI 直接断言失败
+```
+
+因为 FastAPI 会从返回注解推断 `response_model`，而 **`NoneType` 这个类对象是 truthy 的**，
+于是它认为"有响应体"：
+
+```
+AssertionError: Status code 204 must not have a response body
+```
+
+正确写法是**不写返回注解**（项目里 `delete_employee` 就是这么写的）。
+这个坑值得记一下：错误信息指向的是「状态码不能有响应体」，看起来像是状态码写错了，
+实际上问题在返回注解上。
 
 ### 1.1 为什么是 202 而不是 200
 

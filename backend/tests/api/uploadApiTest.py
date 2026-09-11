@@ -120,6 +120,26 @@ def cleanup(paper_id: int | None, source_file: str | None) -> None:
         print("   清理：删掉 paper 行 id=%s" % paper_id)
 
 
+def set_status(paper_id: int, status: int) -> None:
+    """直接改库里的状态，用来确定性地构造「处理中」这种中间态。
+
+    靠真实上传去抢那个时间窗是不稳定的（索引可能几十毫秒就跑完了），
+    测试会随机地通过或失败 —— 那比没有测试更糟。
+    """
+    import asyncio
+
+    from db.database import async_session_maker
+    from db.repository.paper_repo import PaperRepository
+
+    async def run() -> None:
+        async with async_session_maker() as session:
+            await PaperRepository.update_progress(
+                session=session, paper_id=paper_id, status=status
+            )
+
+    asyncio.run(run())
+
+
 def report(failures: list[str]) -> int:
     print()
     if failures:
@@ -138,16 +158,20 @@ def main() -> int:
 
     import main
     from core.config import settings as cfg
+    from db.models.paper import STATUS_INDEXED, STATUS_INDEXING
 
     failures: list[str] = []
     paper_id = None
     source_file = None
+    baseline_chunks = 0
 
     with TestClient(main.app) as client:
         r = client.get("/health")
         print("[health] HTTP %s  %s" % (r.status_code, r.json()))
         if r.status_code != 200:
             failures.append("health 不是 200")
+        # 上传前记下基线，删除之后要比对它 —— 这才是"删干净了"的判据
+        baseline_chunks = r.json()["index"]["chunks"]
 
         r = client.post("/documents", files={"file": ("notes.txt", b"hello", "text/plain")})
         ok = r.status_code == 415
@@ -224,6 +248,48 @@ def main() -> int:
         r = client.get("/documents")
         ids = [item["id"] for item in r.json()["items"]]
         print("[列表] total=%s，含测试文档: %s" % (r.json()["total"], paper_id in ids))
+
+        # ---- 10) 409：处理中的文档不允许删 ----
+        # 直接改库把状态改成「处理中」，模拟"后台任务还在跑"。这样测是确定性的，
+        # 靠真实上传去抢那个时间窗是不稳定的。
+        set_status(paper_id, STATUS_INDEXING)
+        r = client.delete("/documents/%s" % paper_id)
+        print("[409 处理中] HTTP %s  %s" % (r.status_code, r.json().get("detail", "")[:70]))
+        if r.status_code != 409:
+            failures.append("处理中的文档应拒绝删除（409），实际 %s" % r.status_code)
+        set_status(paper_id, STATUS_INDEXED)
+
+        # ---- 11) 正常删除 → 204 ----
+        r = client.delete("/documents/%s" % paper_id)
+        print("[204 删除] HTTP %s  响应体长度 %d" % (r.status_code, len(r.content)))
+        if r.status_code != 204:
+            failures.append("删除应为 204，实际 %s" % r.status_code)
+        if r.content:
+            failures.append("204 不该有响应体")
+
+        # ---- 12) 删完再查 → 404 ----
+        r = client.get("/documents/%s" % paper_id)
+        print("[404 已删] HTTP %s" % r.status_code)
+        if r.status_code != 404:
+            failures.append("已删除的文档应返回 404，实际 %s" % r.status_code)
+
+        # ---- 13) 向量块真的没了（这条才是删除的实质）----
+        # 记录没了不代表向量没了；如果只删了行，向量会变成永远清不掉的孤儿，
+        # 而且它还会被检索到 —— 那是最糟的一种"删除成功"。
+        health = client.get("/health").json()["index"]
+        print("[删除后] papers=%s chunks=%s" % (health["papers"], health["chunks"]))
+        if health["chunks"] != baseline_chunks:
+            failures.append(
+                "删除后向量块数没回到基线：%s != %s" % (health["chunks"], baseline_chunks)
+            )
+
+        # ---- 14) 再删一次 → 404 ----
+        r = client.delete("/documents/%s" % paper_id)
+        print("[404 重复删] HTTP %s" % r.status_code)
+        if r.status_code != 404:
+            failures.append("重复删除应为 404，实际 %s" % r.status_code)
+
+        paper_id = None          # 已删干净，不需要 cleanup 再处理
 
     cleanup(paper_id, source_file)
     return report(failures)

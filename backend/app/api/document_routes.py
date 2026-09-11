@@ -294,3 +294,124 @@ async def get_document(paper_id: int) -> DocumentOut:
             status_code=http.HTTP_404_NOT_FOUND, detail="没有 id=%s 的文档" % paper_id
         )
     return _to_out(paper)
+
+
+# ⚠️ 这个函数**故意不写返回注解**。
+#
+# 写成 `async def delete_document(...) -> None:` 会让 FastAPI 从注解推断出
+# `response_model=NoneType`，而 `NoneType` 这个类对象是 truthy 的 ——
+# 于是它认为"有响应体"，直接断言失败：
+#
+#     AssertionError: Status code 204 must not have a response body
+#
+# 项目里 `DELETE /employee/delete/{employee_id}` 也是这么写的（不写注解），保持一致。
+@document_router.delete("/{paper_id}", status_code=http.HTTP_204_NO_CONTENT)
+async def delete_document(paper_id: int, force: bool = False):
+    """删除一个文档：向量块、上传的文件、paper 记录，三样都要删。
+
+    ## 为什么删的顺序不能反
+
+    **先删向量块，再删 paper 行。** 反过来的话，万一删向量失败，
+    `source_file` 这个唯一能把两边对起来的键就没了 —— 那些向量块变成
+    永远找不到、也永远清不掉的孤儿。先删向量则失败时记录还在，可以重试。
+
+    ## 为什么只删「自己管的」文件
+
+    `resource/papers/` 里那 4 篇是操作者放进来的种子语料，由 `ingest.py` 管理；
+    `resource/uploads/` 才是本接口的产物。所以磁盘删除**只允许发生在上传目录之内**，
+    并且要先把路径规范化再判断（防 `..` 之类）。删库接口顺手把语料删了是不可逆的事故。
+
+    ## 为什么默认拒绝删除「处理中」的文档
+
+    后台索引任务手里攥着 `paper_id`，跑完会去写状态。此时把记录删掉：
+      · 状态更新会落空（`update_progress` 找不到行，静默返回 None）
+      · 但**向量块已经写进去了** —— 又一批孤儿
+    所以状态是「待处理 / 处理中」时返回 **409**，这正是状态码速查里
+    「当前状态不允许这个操作」那一类。
+
+    `force=true` 是给**卡住的**文档留的出口：进程重启会让后台任务消失，
+    记录永远停在「处理中」（`/health` 的 `index.by_status.indexing` 就是在报这个）。
+    那种情况下没有任务会再写，强制删是安全的 —— 但也**只在那时**才安全。
+
+    ## 为什么返回 204 而不是 200 + body
+
+    项目里 `DELETE /employee/delete/{id}` 已经是 204，保持一致。
+    「删掉了几个向量块」这类细节进日志；要看聚合效果有 `/health` 的 `index`。
+    """
+    async with async_session_maker() as session:
+        paper = await PaperRepository.get_by_id(session=session, paper_id=paper_id)
+        if paper is None:
+            raise HTTPException(
+                status_code=http.HTTP_404_NOT_FOUND, detail="没有 id=%s 的文档" % paper_id
+            )
+
+        if paper.status in (STATUS_PENDING, STATUS_INDEXING) and not force:
+            raise HTTPException(
+                status_code=http.HTTP_409_CONFLICT,
+                detail=(
+                    "文档正在处理中（%s），此时删除会留下无法清理的向量块。"
+                    "等它结束，或者如果确认是进程重启后卡住的，用 ?force=true。"
+                    % status_text(paper.status)
+                ),
+            )
+
+        source_file = paper.source_file
+        pdf_path = paper.pdf_path
+        title = paper.title
+
+        # 1) 先删向量块（顺序理由见 docstring）
+        from ai.rag.chromaClient import document_vector_store
+        from ai.rag.hybrid import invalidate_index
+
+        deleted_chunks = 0
+        try:
+            got = document_vector_store.get(where={"source": source_file})
+            ids = got.get("ids") or []
+            if ids:
+                document_vector_store.delete(ids=ids)
+                deleted_chunks = len(ids)
+        except Exception as exc:
+            logger.exception("delete: 删除向量块失败 id=%s", paper_id)
+            raise HTTPException(
+                status_code=http.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="向量库删除失败，文档记录已保留，可以重试：%s" % str(exc)[:120],
+            )
+
+        # 2) 让 BM25 索引重建 —— 否则被删掉的文档还能被关键词搜出来
+        invalidate_index()
+
+        # 3) 删磁盘文件。**只删上传目录里的**，种子语料不碰。
+        removed_file = _remove_uploaded_file(pdf_path)
+
+        # 4) 最后删记录
+        await session.delete(paper)
+        await session.commit()
+
+    logger.info("delete: 删除 id=%s《%s》—— 向量块 %d 个，磁盘文件 %s",
+                paper_id, title, deleted_chunks, "已删" if removed_file else "未动")
+
+
+def _remove_uploaded_file(pdf_path: str) -> bool:
+    """删掉上传目录里的 PDF。返回是否真的删了。
+
+    两重保险：
+      · `commonpath` 而不是字符串 startswith —— `startswith("/a/uploads")`
+        会被 `/a/uploads-evil/x.pdf` 骗过去
+      · 种子语料（resource/papers/）因此天然落在允许范围之外
+    """
+    if not pdf_path:
+        return False
+    try:
+        upload_root = os.path.abspath(settings.UPLOAD_DIR)
+        target = os.path.abspath(pdf_path)
+        if os.path.commonpath([upload_root, target]) != upload_root:
+            logger.info("delete: %s 不在上传目录内，不动磁盘文件", target)
+            return False
+        if os.path.isfile(target):
+            os.remove(target)
+            return True
+    except Exception as exc:
+        # 文件删不掉不该让整个删除失败：记录和向量才是"能不能检索到"的决定因素，
+        # 残留一个文件只是占点磁盘。所以这里记警告，不抛。
+        logger.warning("delete: 删除文件失败 %s：%s", pdf_path, exc)
+    return False
