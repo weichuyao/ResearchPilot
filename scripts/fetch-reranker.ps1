@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     下载交叉编码器重排模型（bge-reranker-base 的 int8 ONNX 版本）。
 
@@ -52,9 +52,14 @@ Write-Host "下载 bge-reranker-base (int8) 到 $ModelDir"
 Write-Host "镜像: $env:HF_ENDPOINT"
 Write-Host ""
 
+# ⚠️ 这里不能用 Join-String —— 那是 **PowerShell 7** 才有的命令，
+# 而本机的运行环境是 Windows PowerShell 5.1（$PSVersionTable 实测 5.1.26100）。
+# 用 -join 运算符，5.1 和 7 都支持。
+$fileList = ($files | ForEach-Object { "'$_'" }) -join ', '
+
 $script = @"
 from huggingface_hub import hf_hub_download
-for f in $($files | ForEach-Object { "'$_'" } | Join-String -Separator ', '):
+for f in [$fileList]:
     path = hf_hub_download('Xenova/bge-reranker-base', f, local_dir=r'$ModelDir')
     print('  ok', f)
 "@
