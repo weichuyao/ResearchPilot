@@ -69,7 +69,22 @@
   <strong>所以顺序是：先补 .gitignore → 再 git init → 再第一个 commit。</strong></div>
 
   <h2>第 1 步：手动启动后端（为了能看见日志）</h2>
-  <div class="step"><div class="num">1</div><div>如果后端正在跑，先停掉它。然后用<strong>这条命令手动启动</strong>——关键是<strong>日志会打在你眼前</strong>：</div></div>
+  <div class="warnbox"><strong>你大概率会先撞上这个错误（我自己也撞了）：</strong>
+  <pre>ERROR: [Errno 10048] error while attempting to bind on address
+       ('127.0.0.1', 8001): 通常每个套接字地址(协议/网络地址/端口)
+       只允许使用一次。</pre>
+  <strong>翻译成人话：8001 上已经有一个后端在跑了，你不能起第二个。</strong><br><br>
+  为什么会这样？因为<strong>一键脚本是用隐藏窗口启动后端的</strong>——它一直在跑，但你看不见它。于是你以为"后端没启动"，再启动一次就撞上了。<br><br>
+  <strong>端口是独占资源：一个端口只能有一个监听者。</strong> 所以"重启后端"永远是严格两步：<strong>先停，再起</strong>。跳过"停"就会看到 10048。<br><br>
+  <strong>怎么查是谁占着：</strong>
+  <pre>netstat -ano | findstr :8001
+   ↑ 最后一列就是 PID</pre>
+  <strong>怎么停掉它：</strong>
+  <pre>Stop-Process -Id &lt;PID&gt; -Confirm:$false</pre>
+  或者用我们加固过的停止脚本（它会<strong>复查</strong>端口是否真的释放了，失败会明确报错）：
+  <pre>powershell -ExecutionPolicy Bypass -File "D:\Code\agent\ai-chatkit-master\scripts\stop-ai-chatkit.ps1"</pre>
+  <strong>记住这条经验：看到 10048 = 端口被占用 = 你上次启动的实例还活着。</strong> 这是开发中最高频的错误之一，错误信息本身很难懂，但原因永远就这么简单。</div>
+  <div class="step"><div class="num">1</div><div>停掉已有的后端，然后用<strong>这条命令手动启动</strong>——关键是<strong>日志会打在你眼前</strong>：</div></div>
   <pre>cd D:\Code\agent\ai-chatkit-master\backend
 $env:NO_PROXY = '127.0.0.1,localhost,::1'
 .\.venv-py311\Scripts\python.exe -m uvicorn main:app --app-dir app --host 127.0.0.1 --port 8001</pre>
