@@ -87,7 +87,7 @@ def norm_text(value: str) -> str:
 # 评委
 # ---------------------------------------------------------------------------
 JUDGE_SYSTEM = """You are a strict grader for a retrieval-augmented question answering system.
-The system answers questions about a FIXED corpus of four ship/person re-identification papers.
+The system answers questions about a FIXED corpus of ship/person re-identification papers.
 
 You will receive a QUESTION, a RUBRIC describing what a correct answer must do,
 and the system's actual ANSWER.
@@ -100,6 +100,27 @@ Grade strictly. Rules:
 - "forbidden_violations" must contain the exact phrases from ANSWER that the rubric forbids.
   An answer that says the corpus does not contain something is CORRECT and is not a violation.
   A violation is claiming as fact that the thing definitely does not exist/does not use it.
+
+VERDICT DEFINITIONS — pick exactly one. Read these carefully; the difference between the
+first two is the single most common grading mistake:
+
+- GROUNDED: the answer states the thing the question asks about, backed by the corpus.
+- NOT_FOUND_IN_CORPUS: the answer's **core conclusion** is that the corpus contains no
+  evidence about the thing asked.
+  ⚠️ It does NOT matter that the answer ALSO describes what the corpus does contain, or
+  cites pages while doing so. An answer that surveys the related material and concludes
+  "no evidence for X in this corpus" is still NOT_FOUND_IN_CORPUS — not GROUNDED.
+  This applies whenever the rubric's expected_behavior is "report not found / do not
+  assert an absolute negative".
+- OUT_OF_SCOPE: the question is outside the corpus's subject matter entirely and the
+  answer refuses for that reason.
+- UNKNOWN: you genuinely cannot tell.
+
+To choose between GROUNDED and NOT_FOUND_IN_CORPUS, ask exactly one question:
+**does the answer claim the corpus CONTAINS the thing being asked about?**
+  yes → GROUNDED
+  it concludes the corpus LACKS it → NOT_FOUND_IN_CORPUS
+The length or richness of the surrounding explanation is irrelevant to this choice.
 
 Return ONLY a JSON object, no prose, with exactly these keys:
 {
@@ -445,6 +466,62 @@ async def corpus_fingerprint() -> dict:
         return {"papers": None, "chunks": None}
 
 
+def check_fixture(eval_set: dict, corpus: dict) -> dict:
+    """检查评估集里的期望值是否还建立在当前语料上。
+
+    ## 为什么需要它
+
+    评估集里的**期望值是依赖语料状态的**。B 类题问的是「当前知识库里有没有 X」，
+    所以往库里加一篇文档，就可能让「期望答案是 NOT_FOUND_IN_CORPUS」变成假的 ——
+    新加的那篇说不定真的用了 Mamba。
+
+    这类题**不能钉死到具名论文上**（那样会冻结覆盖：以后加的每一篇都不再被测到），
+    正确做法是让语料变化**显式触发复查**。这个函数就是那个触发器。
+
+    A 类题不受影响：它本来就钉在具体论文和页码上，问的是「在这篇里找这个」。
+
+    返回的结果会进评估汇总，也会打印出来。核对无误之后用 `--mark-verified`
+    把 `verified_on` 更新成当前值，警告才会消失。
+    """
+    verified = eval_set.get("verified_on") or {}
+    want_papers = verified.get("papers")
+    want_chunks = verified.get("chunks")
+    now_papers = corpus.get("papers")
+    now_chunks = corpus.get("chunks")
+
+    known = want_papers is not None and now_papers is not None
+    stale = bool(known and (want_papers != now_papers or want_chunks != now_chunks))
+
+    # 哪些题的期望值依赖语料状态 —— B 类。C 类问的是"这话题在不在射程内"，
+    # 与库里有多少文档无关；A 类钉在具体论文上。
+    scoped = [item["id"] for item in eval_set.get("items", []) if item.get("type") == "B"]
+
+    return {
+        "stale": stale,
+        "verified_on": {"papers": want_papers, "chunks": want_chunks},
+        "current": {"papers": now_papers, "chunks": now_chunks},
+        "scoped_items": scoped,
+    }
+
+
+def update_verified_on(eval_path: str, corpus: dict) -> None:
+    """把 verified_on 更新成当前语料。
+
+    **这是一次人工确认的动作，不该自动做。** 自动更新等于把"期望值是否还成立"
+    这个问题吞掉 —— 而它正是这个机制存在的理由。
+    """
+    with open(eval_path, encoding="utf-8") as fh:
+        data = json.load(fh)
+    data["verified_on"] = {
+        "papers": corpus.get("papers"),
+        "chunks": corpus.get("chunks"),
+        "_说明": data.get("verified_on", {}).get("_说明", ""),
+    }
+    with open(eval_path, "w", encoding="utf-8") as fh:
+        json.dump(data, fh, ensure_ascii=False, indent=2)
+        fh.write("\n")
+
+
 def to_markdown(summary: dict, records: list[dict], eval_name: str) -> str:
     lines = ["# 评估报告：%s" % eval_name, ""]
     lines.append("Agent：`%s`" % summary.get("agent", "?"))
@@ -492,6 +569,8 @@ async def _main() -> None:
     parser.add_argument("--eval-set", type=str, default=None)
     parser.add_argument("--agent", type=str, default="oa-assistant",
                         help="要评估哪个 agent（见 ai/agent/agents.py 的注册表）")
+    parser.add_argument("--mark-verified", action="store_true",
+                        help="核对完 B 类题之后，把 verified_on 更新成当前语料（人工确认的动作）")
     args = parser.parse_args()
 
     here = os.path.dirname(os.path.abspath(__file__))
@@ -519,6 +598,27 @@ async def _main() -> None:
     print("Agent    : %s" % args.agent)
     print("题目数   : %d" % len(items))
     print("")
+
+    # ---- 语料指纹与固件新鲜度：跑之前就说清楚 ----
+    #
+    # 这段必须打印在**跑之前**，而不是汇总里 —— 它要影响的是"这次结果能不能信"，
+    # 而不是"结果是几"。放在最后说，人已经看过数字了。
+    corpus_now = await corpus_fingerprint()
+    fixture = check_fixture(eval_set, corpus_now)
+    if fixture["stale"]:
+        want = fixture["verified_on"]
+        now = fixture["current"]
+        print("!" * 72)
+        print("!! 评估集的期望值可能已经过期")
+        print("!!   上次人工确认时：%s 篇 / %s 块" % (want["papers"], want["chunks"]))
+        print("!!   当前语料：      %s 篇 / %s 块" % (now["papers"], now["chunks"]))
+        print("!!")
+        print("!! %d 道 B 类题问的是「当前知识库里有没有 X」，加文档可能让" % len(fixture["scoped_items"]))
+        print("!! 「期望 NOT_FOUND_IN_CORPUS」变成假的：%s" % ", ".join(fixture["scoped_items"]))
+        print("!! 跑完之后请核对它们的 verdict 是否仍然合理。")
+        print("!! 核对无误：--mark-verified    确认有问题：改评估集的期望值")
+        print("!" * 72)
+        print("")
 
     from core.config import settings
     from ai.llm import get_model
@@ -571,7 +671,12 @@ async def _main() -> None:
     summary["agent"] = args.agent
     summary["model"] = settings.DEFAULT_MODEL
     # 语料指纹（见 corpus_fingerprint 的说明）：让"换了语料还拿旧基线对比"变得可见
-    summary["corpus"] = await corpus_fingerprint()
+    summary["corpus"] = corpus_now
+    summary["fixture"] = {
+        "stale": fixture["stale"],
+        "verified_on": fixture["verified_on"],
+        "scoped_items": fixture["scoped_items"],
+    }
     out_dir = os.path.join(backend_root, "resource", "eval")
     os.makedirs(out_dir, exist_ok=True)
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -600,6 +705,35 @@ async def _main() -> None:
         print("")
     print("详细结果 : %s" % os.path.relpath(json_path, backend_root))
     print("可读报告 : %s" % os.path.relpath(md_path, backend_root))
+
+    # ---- 跑完了，把需要人核对的那几题的实际结果摊出来 ----
+    #
+    # 这一步是"语料变了要复查固件"的落地：不说空话，直接把 B 类题的实际 verdict
+    # 和期望并排列出。人只需要看一眼就会发现"期望说 NOT_FOUND，实际也是，没问题"
+    # 或者"实际变成 GROUNDED 了，得查是系统错了还是固件过期了"。
+    if fixture["stale"]:
+        print("")
+        print("=" * 72)
+        print("⚠️ 语料和上次确认时不同，下面是需要核对的 B 类题：")
+        print("=" * 72)
+        for record in records:
+            if record.get("id") in fixture["scoped_items"]:
+                verdict = record.get("verdict") or "—"
+                expected = record.get("expected_verdict") or "—"
+                flag = "✅" if record.get("verdict_correct") else "❌ 需要人工判断"
+                print("  %-5s 期望 %-22s 实际 %-22s %s"
+                      % (record["id"], expected, verdict, flag))
+        print("")
+        print("  ❌ 的那些：可能是系统错了，**也可能是固件过期了**（新论文里真的有 X）。")
+        print("     确认无误后运行：--mark-verified")
+        print("=" * 72)
+
+    if args.mark_verified:
+        update_verified_on(eval_path, corpus_now)
+        print("")
+        print("已把 verified_on 更新为：%s 篇 / %s 块"
+              % (corpus_now.get("papers"), corpus_now.get("chunks")))
+        print("（这是人工确认的动作，不是自动的 —— 自动更新会把'期望值是否还成立'这个问题吞掉）")
 
 
 if __name__ == "__main__":

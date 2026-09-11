@@ -1,12 +1,19 @@
 {
   "name": "reid_paper_eval_set_v1",
   "language": "zh-CN",
-  "source_scope": "仅限 backend/resource/papers 中的四篇 PDF",
+  "source_scope": "当前知识库中的全部文档（backend/resource/papers 的种子语料 + 通过 POST /documents 上传的文档）",
   "page_convention": "pdf_physical_page_1_indexed",
+  "verified_on": {
+    "papers": 7,
+    "chunks": 636,
+    "_说明": "这份期望值最后一次被人工确认时，知识库里有几篇、多少块。run_eval 会把它和当前语料指纹对比，不一致就报警并列出需要重新确认的题。确认之后把这里改成当前值（或用 --mark-verified）。",
+    "_7篇确认记录": "用户新增 3 篇（行人 ReID transformer / 船舶检测视觉语言 / 车辆 ReID 姿态引导）之后重跑，B01~B06 的实际 verdict 全部是 NOT_FOUND_IN_CORPUS，与期望一致。逐字看过 B03 的答案：它明确说「没有证据表明」，并主动澄清 A²RNet 提到的是 SAR 影像而不是 AIS —— 行为正确，期望值仍然成立。"
+  },
   "answer_contract": {
     "fields": ["verdict", "answer", "citations"],
     "verdicts": ["GROUNDED", "NOT_FOUND_IN_CORPUS", "OUT_OF_SCOPE"]
   },
+  "corpus_coupling_note": "B 类题的期望值**依赖语料状态**：它问的是「当前知识库里有没有 X」，所以往库里加文档可能让「期望答案是 NOT_FOUND_IN_CORPUS」变成假的 —— 新加的第 8 篇说不定真的用了 Mamba。这类题不能钉死到具名论文上（那样会冻结覆盖：以后加的每一篇都不再被测到），正确做法是让语料变化显式触发复查，靠 verified_on 的对比来做。A 类题不受影响，它本来就钉在具体论文和页码上。",
   "required_evidence_note": "A 类题特有的字段。列出答案必需的字面串（不区分大小写、已按 norm_text 归一化连字/破折号/数字分隔符），要求全部出现在**检索到的文本**里，才算 evidence_hit。为什么需要它：retrieval_recall 只看「期望论文+页码有没有被碰到」，A08 的答案块排在候选第 18 位、根本没被召回，同一页另一块含 'ship type' 却让 retrieval_recall = 1.0 —— 页级指标会骗人。这些锚点都对着语料逐条验证过存在。",
   "items": [
     {"id":"A01","question":"hard positive problem（HPP）在无监督船舶 ReID 中指什么？","type":"A","required_evidence":["hard positive problem","instance-level"],"expected_behavior":"解释不准确伪标签使同一真实船舶难作正样本，且常规实例级对比把同伪标签样本视作不同类别。","expected_source":{"paper":"Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning","pdf_page":2},"judge":{"verdict":"GROUNDED","required_concepts":["inaccurate pseudo-label","same vessel/true positive","instance contrast separate classes"],"required_citation":{"paper_short":"MCL","pdf_page":2}}},
@@ -21,12 +28,12 @@
     {"id":"A10","question":"ViV-ReID 数据集的规模是多少？","type":"A","required_evidence":["480","7165","1145469"],"expected_behavior":"480 个身份、20 个区域、7,165 tracklets、1,145,469 帧。","expected_source":{"paper":"ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset","pdf_page":2},"judge":{"verdict":"GROUNDED","required_concepts":["480","20","7165","1145469"],"required_citation":{"paper_short":"ViV-ReID","pdf_page":2}}},
     {"id":"A11","question":"ViV-ReID 数据集标注管线如何同时利用自动化和人工核验？","type":"A","required_evidence":["Grounding DINO","Deep SORT"],"expected_behavior":"Grounding DINO 检测框、Deep SORT 划分轨迹，人工筛轨迹并逐帧去除错误帧。","expected_source":{"paper":"ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset","pdf_page":5},"judge":{"verdict":"GROUNDED","required_concepts":["Grounding DINO","Deep SORT","manual verification","frame-by-frame"],"required_citation":{"paper_short":"ViV-ReID","pdf_page":5}}},
     {"id":"A12","question":"ViV-ReID 的 query set 是怎样从 gallery set 形成的，包含多少条 tracklet？","type":"A","required_evidence":["one-fifth","364"],"expected_behavior":"从 gallery 的五分之一抽取，形成 364 条 tracklet。","expected_source":{"paper":"ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset","pdf_page":6},"judge":{"verdict":"GROUNDED","required_concepts":["one-fifth","364"],"required_citation":{"paper_short":"ViV-ReID","pdf_page":6}}},
-    {"id":"B01","question":"这四篇论文的提出方法是否采用 Mamba 或 state-space model 架构？","type":"B","expected_behavior":"限于当前四篇论文，报告未找到证据，不作绝对否定。","expected_source":null,"judge":{"verdict":"NOT_FOUND_IN_CORPUS","required_scope":"provided four papers/current corpus","forbidden_claims":["没有使用 Mamba","不存在 Mamba"]}},
-    {"id":"B02","question":"这些方法是否用大语言模型（LLM）或文本 prompt 来生成 ReID 的语义特征？","type":"B","expected_behavior":"限于当前四篇论文，报告未找到证据，不作绝对否定。","expected_source":null,"judge":{"verdict":"NOT_FOUND_IN_CORPUS","required_scope":"provided four papers/current corpus","forbidden_claims":["没有使用 LLM","不存在 LLM"]}},
-    {"id":"B03","question":"这些船舶 ReID 方法是否融合 AIS（船舶自动识别系统）信号作为输入特征？","type":"B","expected_behavior":"限于当前四篇论文，报告未找到 AIS 输入或融合的证据，不作绝对否定。","expected_source":null,"judge":{"verdict":"NOT_FOUND_IN_CORPUS","required_scope":"provided four papers/current corpus","forbidden_claims":["没有使用 AIS","不存在 AIS"]}},
-    {"id":"B04","question":"这些论文是否使用声呐、LiDAR 或其他三维点云来完成 ReID？","type":"B","expected_behavior":"限于当前四篇论文，报告未找到相关证据，不作绝对否定。","expected_source":null,"judge":{"verdict":"NOT_FOUND_IN_CORPUS","required_scope":"provided four papers/current corpus","forbidden_claims":["完全没有使用","不存在声呐"]}},
-    {"id":"B05","question":"DPEFormer 是否用 GAN（生成对抗网络）生成遮挡训练图像？","type":"B","expected_behavior":"限于当前论文库，报告未找到 GAN 生成遮挡的证据，不从 ROA 反推绝对否定。","expected_source":null,"judge":{"verdict":"NOT_FOUND_IN_CORPUS","required_scope":"provided four papers/current corpus","forbidden_claims":["DPEFormer 没有使用 GAN","肯定未使用 GAN"]}},
-    {"id":"B06","question":"这些论文是否通过强化学习来决定船舶/人体 patch 的选择策略？","type":"B","expected_behavior":"限于当前论文库，报告未找到强化学习用于 patch 选择的证据，不将 DPSM/TAR 误称为强化学习。","expected_source":null,"judge":{"verdict":"NOT_FOUND_IN_CORPUS","required_scope":"provided four papers/current corpus","forbidden_claims":["没有使用强化学习","DPSM 是强化学习"]}},
+    {"id":"B01","question":"当前知识库中的论文，其提出方法是否采用 Mamba 或 state-space model 架构？","type":"B","expected_behavior":"限于当前知识库，报告未找到证据，不作绝对否定。","expected_source":null,"judge":{"verdict":"NOT_FOUND_IN_CORPUS","required_scope":"current corpus","forbidden_claims":["没有使用 Mamba","不存在 Mamba"]}},
+    {"id":"B02","question":"当前知识库中的方法是否用大语言模型（LLM）或文本 prompt 来生成 ReID 的语义特征？","type":"B","expected_behavior":"限于当前知识库，报告未找到证据，不作绝对否定。","expected_source":null,"judge":{"verdict":"NOT_FOUND_IN_CORPUS","required_scope":"current corpus","forbidden_claims":["没有使用 LLM","不存在 LLM"]}},
+    {"id":"B03","question":"当前知识库中的船舶 ReID 方法是否融合 AIS（船舶自动识别系统）信号作为输入特征？","type":"B","expected_behavior":"限于当前知识库，报告未找到 AIS 输入或融合的证据，不作绝对否定。","expected_source":null,"judge":{"verdict":"NOT_FOUND_IN_CORPUS","required_scope":"current corpus","forbidden_claims":["没有使用 AIS","不存在 AIS"]}},
+    {"id":"B04","question":"当前知识库中的论文是否使用声呐、LiDAR 或其他三维点云来完成 ReID？","type":"B","expected_behavior":"限于当前知识库，报告未找到相关证据，不作绝对否定。","expected_source":null,"judge":{"verdict":"NOT_FOUND_IN_CORPUS","required_scope":"current corpus","forbidden_claims":["完全没有使用","不存在声呐"]}},
+    {"id":"B05","question":"当前知识库中的 DPEFormer 是否用 GAN（生成对抗网络）生成遮挡训练图像？","type":"B","expected_behavior":"限于当前知识库，报告未找到 GAN 生成遮挡的证据，不从 ROA 反推绝对否定。","expected_source":null,"judge":{"verdict":"NOT_FOUND_IN_CORPUS","required_scope":"current corpus","forbidden_claims":["DPEFormer 没有使用 GAN","肯定未使用 GAN"]}},
+    {"id":"B06","question":"当前知识库中的论文是否通过强化学习来决定船舶/人体 patch 的选择策略？","type":"B","expected_behavior":"限于当前知识库，报告未找到强化学习用于 patch 选择的证据，不将 DPSM/TAR 误称为强化学习。","expected_source":null,"judge":{"verdict":"NOT_FOUND_IN_CORPUS","required_scope":"current corpus","forbidden_claims":["没有使用强化学习","DPSM 是强化学习"]}},
     {"id":"C01","question":"如何做红烧肉？","type":"C","expected_behavior":"简短拒绝，说明超出当前 ReID 论文库范围。","expected_source":null,"judge":{"verdict":"OUT_OF_SCOPE","forbidden_behaviors":["recipe","paper citation"]}},
     {"id":"C02","question":"现在应该买哪只股票，才能在下个月获得最高收益？","type":"C","expected_behavior":"简短拒绝，说明超出当前 ReID 论文库范围。","expected_source":null,"judge":{"verdict":"OUT_OF_SCOPE","forbidden_behaviors":["specific investment advice","paper citation"]}}
   ]
