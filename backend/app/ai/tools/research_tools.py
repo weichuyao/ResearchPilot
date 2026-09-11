@@ -3,7 +3,8 @@
 只放模型可以申请调用的能力。这里有两类工具，分工是刻意的：
 
   · list_papers        —— 结构化查询：精确、可枚举、能过滤（作者/年份）
-  · search_documents   —— 语义检索：模糊、按意思找、能跨措辞
+  · search_documents   —— 混合检索：向量（按意思找）+ BM25（按精确术语找），
+                          用 RRF 融合。实现与取舍见 ai/rag/hybrid.py
 
 语义检索答不了「库里有哪几篇」「2023 年之后的」「作者是谁」这类问题，
 那些需要结构化查询；反过来结构化查询也找不到「和这个问题意思相近的段落」。
@@ -21,7 +22,7 @@ from typing import Optional
 
 from langchain_core.tools import tool
 
-from ai.rag.chromaClient import document_vector_store
+from ai.rag.hybrid import hybrid_search
 from db.database import async_session_maker
 from db.models.paper import Paper
 from db.repository.paper_repo import PaperRepository
@@ -114,7 +115,11 @@ async def list_papers(
 async def search_documents(query: str, paper: Optional[str] = None) -> str:
     """Search the research paper knowledge base and return the most relevant passages.
 
-    Each passage is prefixed with the paper title, page number and relevance score,
+    The search is hybrid: it combines semantic similarity with BM25 keyword matching,
+    so it finds passages both by meaning and by exact terms (model names, dataset names,
+    abbreviations).
+
+    Each passage is prefixed with the paper title, page number, and how it was matched,
     so you can tell the user where the information came from.
 
     Args:
@@ -123,7 +128,7 @@ async def search_documents(query: str, paper: Optional[str] = None) -> str:
             that single paper, so passages from the other papers cannot be returned.
             Use it whenever the user names a specific paper.
     """
-    where = None
+    allowed_sources = None
     if paper:
         async with async_session_maker() as session:
             matches = await PaperRepository.find_by_title(session=session, keyword=paper, limit=5)
@@ -133,27 +138,30 @@ async def search_documents(query: str, paper: Optional[str] = None) -> str:
                 "not restricted. Known titles:\n%s"
                 % (paper, await _all_titles())
             )
-        files = [m.source_file for m in matches]
-        where = {"source": files[0]} if len(files) == 1 else {"source": {"$in": files}}
+        allowed_sources = [m.source_file for m in matches]
 
-    results = document_vector_store.similarity_search_with_relevance_scores(
-        query, k=RETRIEVE_K, filter=where
-    )
+    hits, vector_top1 = hybrid_search(query, allowed_sources=allowed_sources)
 
-    hits = [(doc, score) for doc, score in results if score >= RELEVANCE_THRESHOLD]
-
-    if not hits:
+    # 阀门：向量那一路的最高分不过阈值 -> 判定这个话题不在知识库里。
+    # 注意 RRF 的分数是排名算出来的，不能拿来当相关性判据，所以「该不该回答」
+    # 仍然由向量的绝对分数决定，「哪几段最相关」才交给 RRF。
+    if vector_top1 < RELEVANCE_THRESHOLD or not hits:
         return _NO_HITS_MESSAGE
 
     blocks = []
-    for index, (doc, score) in enumerate(hits, start=1):
+    for index, (doc, origin, score) in enumerate(hits, start=1):
         title = doc.metadata.get("paper_title") or os.path.basename(
             str(doc.metadata.get("source", "unknown"))
         )
         page = doc.metadata.get("page_label") or doc.metadata.get("page", "?")
+        if score is None:
+            how = "matched on exact terms"
+        elif origin == "hybrid":
+            how = "relevance %.2f + exact terms" % score
+        else:
+            how = "relevance %.2f" % score
         blocks.append(
-            "[source %d | %s | p.%s | relevance %.2f]\n%s"
-            % (index, title, page, score, doc.page_content)
+            "[source %d | %s | p.%s | %s]\n%s" % (index, title, page, how, doc.page_content)
         )
     return "\n\n".join(blocks)
 
