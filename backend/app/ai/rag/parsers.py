@@ -370,7 +370,11 @@ def parse_document(path: str) -> tuple[list[Section], ParserInfo]:
     """解析一个文件，返回 (清洗过的片段, 解析器信息)。"""
     parser = parser_for(path)
     if parser is None:
+        # 只报扩展名，不报整个路径 —— 路径太长时会被日志截断，
+        # 反而看不出到底缺的是什么（实测踩过：一个 133 字符的没有扩展名的路径，
+        # 报错信息里只看到一串论文标题，看不到"没有扩展名"这个事实）
+        ext = os.path.splitext(path)[1].lower()
         raise ValueError("不支持的格式：%s（支持 %s）"
-                         % (os.path.splitext(path)[1] or path, describe_formats()))
+                         % (ext or "文件没有扩展名", describe_formats()))
     sections = parser.clean(parser.parse(path))
     return sections, parser.info

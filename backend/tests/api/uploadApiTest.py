@@ -138,6 +138,35 @@ def make_docx() -> bytes:
     return buf.getvalue()
 
 
+def make_empty_pdf() -> bytes:
+    """一个合法但**没有文本层**的 PDF —— 用来构造"索引失败"的文档。
+
+    有文本层的话它会正常索引，测不出失败路径。空页面 → 解析出 0 个片段 →
+    index_pdf 抛「没有解析出任何内容」→ 记录变成 failed。
+    """
+    from pypdf import PdfReader, PdfWriter
+
+    stream = b""
+    objects = [
+        b"<< /Type /Catalog /Pages 2 0 R >>",
+        b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+        b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R >>",
+        b"<< /Length 0 >>\nstream\n\nendstream",
+    ]
+    out = bytearray(b"%PDF-1.4\n")
+    for index, payload in enumerate(objects, start=1):
+        out += b"%d 0 obj\n" % index + payload + b"\nendobj\n"
+    out += b"xref\n0 5\ntrailer << /Size 5 /Root 1 0 R >>\nstartxref\n0\n%%EOF\n"
+
+    reader = PdfReader(io.BytesIO(bytes(out)))
+    writer = PdfWriter()
+    for page in reader.pages:
+        writer.add_page(page)
+    buf = io.BytesIO()
+    writer.write(buf)
+    return buf.getvalue()
+
+
 CASES = [
     ("pdf", "upload-test.pdf", make_pdf, "p", "application/pdf"),
     ("markdown", "upload-test.md", make_markdown, "sec", "text/markdown"),
@@ -329,6 +358,62 @@ def main() -> int:
             bm, _vt = hybrid_search(MARKER, allowed_sources=[state["source_file"]], top_n=5)
             if not any(MARKER in d.page_content for d, _o, _s in bm):
                 failures.append("%s 的 BM25 索引没看到新文档" % label)
+
+        # ---------- 长文件名（回归：截断不能把扩展名切掉）----------
+        #
+        # 实测踩过：_safe_name 第一版写的是 base[:120]，把**整个文件名**截断，
+        # 于是长文件名的 .pdf 被切掉，下游认不出格式，1.4 MB 的论文直接上传失败。
+        # 上面那些用例的文件名都很短，所以没覆盖到 —— 这条就是补这个洞。
+        long_name = ("MVReID-Former_Multi-View_Vision_Transformer_for_Cross-Camera_"
+                     "Person_and_Vehicle_Re-Identification_in_Surveillance_Networks_"
+                     "Journal_Version_Final_Accepted_Manuscript_2024.pdf")
+        print("[长文件名] %d 字符" % len(long_name))
+        r = client.post("/documents",
+                        files={"file": (long_name, make_pdf(), "application/pdf")},
+                        data={"title": "长文件名回归测试"})
+        if r.status_code != 202:
+            failures.append("长文件名上传应为 202，实际 %s：%s" % (r.status_code, r.text[:160]))
+        else:
+            long_id = r.json()["id"]
+            state = wait_for(client, long_id)
+            if not state or state["status_text"] != "indexed":
+                failures.append("长文件名文档索引失败：%s" % state)
+            else:
+                sf = state["source_file"]
+                print("[长文件名] source_file 长度 %d，结尾 %r" % (len(sf), sf[-8:]))
+                if not sf.endswith(".pdf"):
+                    failures.append("长文件名的扩展名被截掉了：%r" % sf)
+                TRACKED.append((long_id, sf))
+
+        # ---------- 失败的文档可以重新上传（重试语义，不该被 409 挡住）----------
+        #
+        # 一个索引失败的文档并没有真的进知识库（chunk_count=0、检索不到）。
+        # 把它当"已存在"会让用户陷入死循环：想重试却被 409 挡住，只能先删再传。
+        empty = make_empty_pdf()
+        r = client.post("/documents",
+                        files={"file": ("no-text-layer.pdf", empty, "application/pdf")},
+                        data={"title": "无文本层测试"})
+        if r.status_code != 202:
+            failures.append("无文本层 PDF 上传应为 202，实际 %s" % r.status_code)
+        else:
+            failed_id = r.json()["id"]
+            state = wait_for(client, failed_id)
+            print("[失败路径] 状态=%s error=%s"
+                  % (state and state["status_text"], (state or {}).get("error", "")[:60]))
+            if not state or state["status_text"] != "failed":
+                failures.append("无文本层的 PDF 应该索引失败，实际 %s" % state)
+            else:
+                if not state.get("error"):
+                    failures.append("失败记录里没有 error —— 失败必须是看得见的")
+                TRACKED.append((failed_id, state["source_file"]))
+
+                r = client.post("/documents",
+                                files={"file": ("no-text-layer.pdf", empty, "application/pdf")})
+                print("[失败后重传] HTTP %s %s"
+                      % (r.status_code, r.json().get("detail", "（受理了）")[:50]))
+                if r.status_code != 202:
+                    failures.append("上传一个索引失败过的文档应该被受理（重试），实际 %s：%s"
+                                    % (r.status_code, r.text[:160]))
 
         # ---------- 409 重复上传 ----------
         if pdf_bytes:

@@ -75,15 +75,30 @@ document_router = APIRouter(prefix="/documents", tags=["documents"])
 READ_CHUNK = 1024 * 1024
 
 
-def _safe_name(name: str) -> str:
+def _safe_name(name: str, max_length: int = 120) -> str:
     """把用户给的文件名清洗成安全的磁盘名。
 
     用户提供的文件名不可信 —— 可能带路径分隔符（`../../etc/passwd`）、
     控制字符、超长串。文件名只用来给人看，**永远不直接参与路径拼接**。
+
+    ## ⚠️ 截断必须保留扩展名
+
+    第一版写的是 `base[:120]`，把**整个文件名**截断 —— 于是长文件名的扩展名被切掉：
+
+        MVReID-Former_..._Surveillance_Networ     ← 没有 .pdf
+
+    下游 `parser_for()` 靠扩展名选解析器，认不出来就报「不支持的格式」，
+    用户看到的是一句莫名其妙的错误。实测踩过：一个 133 字符的 source_file
+    结尾没有 .pdf，1.4 MB 的论文直接上传失败。
+
+    正确做法是**截词干、留扩展名**：`stem[:120-len(ext)] + ext`。
     """
     base = os.path.basename(name or "").strip() or "upload.pdf"
     base = re.sub(r"[^A-Za-z0-9._-]+", "_", base)
-    return base[:120] or "upload.pdf"
+    stem, ext = os.path.splitext(base)
+    if not stem:
+        return "upload.pdf"
+    return stem[: max(1, max_length - len(ext))] + ext
 
 
 def _derive_title(filename: str, provided: str) -> str:
@@ -190,21 +205,26 @@ async def upload_document(
     async with async_session_maker() as session:
         # ---- 5) 去重（409）----
         existing = await PaperRepository.get_by_source_file(session=session, source_file=source_file)
-        if existing is not None:
-            # 两种情况分开报：正在处理 vs 已经处理完。
-            # 都用 409，但消息要能让人知道下一步该干什么。
-            if existing.status in (STATUS_PENDING, STATUS_INDEXING):
-                raise HTTPException(
-                    status_code=http.HTTP_409_CONFLICT,
-                    detail="这篇论文正在处理中（id=%s）。请查 GET /documents/%s 看进度。"
-                           % (existing.id, existing.id),
-                )
+        if existing is not None and existing.status in (STATUS_PENDING, STATUS_INDEXING):
+            raise HTTPException(
+                status_code=http.HTTP_409_CONFLICT,
+                detail="这篇论文正在处理中（id=%s）。请查 GET /documents/%s 看进度。"
+                       % (existing.id, existing.id),
+            )
+        if existing is not None and existing.status != STATUS_FAILED:
             raise HTTPException(
                 status_code=http.HTTP_409_CONFLICT,
                 detail="这篇论文已经在知识库里了（id=%s, 状态 %s）。"
                        "需要重新索引请先删除该文档。"
                        % (existing.id, status_text(existing.status)),
             )
+        # 走到这里有两种情况：全新文件，或者**上次索引失败**。
+        #
+        # 失败的那条为什么放行：它并没有真的进知识库（chunk_count=0、检索不到），
+        # 把它当成「已存在」会让用户陷入死循环 —— 想重试却被 409 挡住，
+        # 只能先删除再传。**重新上传一个失败的文件，用户的意图就是重试。**
+        # 下面 upsert 会按 source_file 命中同一行，把状态和 error 一起重置掉，
+        # 所以不会产生第二条记录。
 
         with open(pdf_path, "wb") as fh:
             fh.write(payload)
