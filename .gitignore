@@ -30,6 +30,10 @@ __pycache__/
 /frontend/out/
 /.pnpm-store/
 
+# TypeScript 的增量编译缓存。tcs --noEmit 也会生成它，
+# 内容是本机的文件时间戳和哈希，换台机器就没意义了。
+/frontend/tsconfig.tsbuildinfo
+
 # --- 运行时生成的数据 ---
 # Chroma 向量库可由 backend/tests/rag/importRag.py 从 EmployeeHandbook.pdf 重新生成
 **/chroma_db/
