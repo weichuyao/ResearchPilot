@@ -96,12 +96,15 @@
 - 归属：改造 #5（API 与业务逻辑）、改造 #6（数据层，`updated_at` 应该由数据库或 ORM 自动维护）。
 - 同类风险：`Employee` 的更新路径（`employee_repo.update_employee`）有同样的问题。
 
-### A3 · `GET /employee/get_by_name/{name}` 必 500 [实测]
+### A3 · `GET /employee/get_by_name/{name}` 必 500 [实测] — ✅ 已修复
 
 - 位置：`backend/app/api/employee_routers.py:56`
 - 现象：`await get_user_info(name)` 把 `@tool` 生成的 `StructuredTool` 当普通函数调用。
 - 实测：抛 `NotImplementedError: StructuredTool does not support sync invocation.`
-- 正确写法：`await get_user_info.ainvoke({"user_name": name})`
+- **修复方式**：切换到科研文献助手时，工具层不再提供员工查询，这个接口改为直接调用
+  `EmployeeRepository.get_employee_by_name(session, name=name)`。
+- 验修：`GET /employee/get_by_name/jack` → **200** 并返回完整员工记录；
+  `GET /employee/get_by_name/nobody` → **404**。修复日期 2026-09-11。
 - 归属：改造 #5。
 
 ### A4 · `GET /department/get_by_name/{department_name}` 无视路径里的名字 [实测]
