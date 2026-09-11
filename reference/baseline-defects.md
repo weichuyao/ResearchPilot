@@ -16,7 +16,7 @@
 - 后果：查不到内容时返回 `"\n\n".join([])` = **空字符串**，而不是 `"no result found"`。模型收到一条空的 ToolMessage。
 - 归属：改造 #2（重写 RAG）顺手修掉。
 
-### A2 · 部门写接口三个全坏 [实测：路由与函数签名已核对，异常类型由源码推导]
+### A2 · 部门写接口三个全坏 [实测]
 
 | 位置 | 代码 | 后果 |
 |---|---|---|
@@ -26,6 +26,58 @@
 
 - 对照组：`employee_repo.py` 的同类方法**都正确传了 `session`**。所以这不是设计缺陷，是复制粘贴漏改。
 - 归属：改造 #5（完善 FastAPI）的入门练习题——边界清晰、可立刻验证、不需理解全系统。
+
+> **重要补充（动手时才发现）**：A2 这三个 500 里，`POST /department/add` 修好拼写后**会立刻暴露出 A5**。
+> 因为 `NameError` 发生在第 11 行，第 12 行的 `commit()`（INSERT 真正发生的地方）永远执行不到。
+> **修好一个 bug 会暴露被它掩盖的下一个 bug** —— 这是真实的调试常态。
+
+### A5 · `DBBaseModel` 的时间默认值写成了「函数本身」，导致所有创建接口都插不进去 [实测]
+
+- 位置：`backend/app/db/models/base.py:12-13`
+  ```python
+  create_time: datetime | None = Field(default=datetime.now, ...)     # ← 少了 ()
+  edit_time:   datetime | None = Field(default=datetime.now, ...)     # ← 少了 ()
+  ```
+- **现象**：`datetime.now` 是一个**函数对象**，不是调用结果。Pydantic v2 不会替你调用它，所以字段的默认值**就是这个函数本身**。
+- 实测：
+  ```
+  Employee.create_time 的默认值 = <built-in method now of type object at ...>
+  类型 = builtin_function_or_method
+  ```
+- 后果：SQLAlchemy 要求 `DateTime` 列必须是 `datetime` 对象，收到函数对象 → 抛
+  `sqlalchemy.exc.StatementError: (builtins.TypeError) SQLite DateTime type only accepts Python datetime and date objects as input.`
+- **注意不能简单加括号**：`default=datetime.now()` 会在**模块导入时**算一次，之后所有记录共用同一个时间戳。正确写法是：
+  ```python
+  Field(default_factory=datetime.now)
+  ```
+  `default_factory` 的含义是「**需要的时候再调用它**」。
+- 实测修法有效：改 `default_factory` 后，FastAPI 校验出的 `create_time` 是真正的 `datetime`，INSERT 成功。
+- **影响面（比看起来大）**：`Employee` 和 `Department` 都继承 `DBBaseModel`，所以下面这些接口全都有同一个问题：
+  - `POST /department/add`（被 A2 的 NameError 掩盖着，修完 A2 才暴露）
+  - **`POST /employee/add`**（实测等价操作失败，同一个异常）← 原清单漏掉了这一条
+- 归属：改造 #5；也是改造 #6（数据层）要一起处理的模型设计问题。
+
+### A6 · 用数据库模型直接当请求体模型（反模式）[实测]
+
+- 位置：`backend/app/api/department_routers.py:19-23`、`employee_routers.py:12`
+  ```python
+  async def create_department(department: Department, session: SessionDep):
+  ```
+  请求体类型直接用了 `table=True` 的数据库模型。
+- 后果一：客户端被要求提供 `id`、`create_time`、`edit_time` —— **服务端生成的字段变成了客户端的义务**。
+- 后果二：**客户端传来的时间字符串不会被转换成 `datetime`**。实测（修好 A5 之后）：
+  | 请求体 | 结果 |
+  |---|---|
+  | `{"id":100,"name":"x"}` | `create_time` = `datetime` ✅ |
+  | `{"name":"x"}` | `id` = `None`（SQLite 会自增），`create_time` = `datetime` ✅ |
+  | `{"id":101,"name":"x","create_time":"2026-…Z",…}` | `create_time` = **`str`** ❌ 仍然失败 |
+- 实测三条 FastAPI 校验路径的差异（这是根因所在）：
+  ```
+  Department.model_validate(payload)        -> create_time 类型 = datetime
+  TypeAdapter(Department).validate_python() -> create_time 类型 = str     ← FastAPI 用的是这条
+  ```
+- 正确做法：单独定义**创建请求模型**，只含客户端该填的字段（如 `DepartmentCreate: name / parent_id / manager_id`），`id` 与时间戳由服务端负责。
+- 归属：**改造 #5** 的核心内容之一。不在第一次动手的范围内。
 
 ### A3 · `GET /employee/get_by_name/{name}` 必 500 [实测]
 
