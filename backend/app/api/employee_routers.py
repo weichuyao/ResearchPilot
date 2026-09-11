@@ -3,7 +3,7 @@ from db.models.employee import Employee
 from db.repository.employee_repo import EmployeeRepository
 from db.database import SessionDep
 from typing import List
-from ai.tools.oa_tools import get_user_info, get_user_department
+from dataclasses import asdict
 
 employee_router = APIRouter(prefix="/employee", tags=["employee"])
 
@@ -51,10 +51,11 @@ async def delete_employee(employee_id: int, session: SessionDep):
     
 # 获取员工信息通过姓名
 @employee_router.get("/get_by_name/{name}", response_model=dict)
-async def get_employee_by_name(name: str):
-    # employee = await EmployeeRepository.get_employee_by_name(session, name)
-    employee = await get_user_info(name)
-    if employee:
-        return employee
-    else:
+async def get_employee_by_name(name: str, session: SessionDep):
+    # 原先这里调用的是 @tool 包装过的 get_user_info（一个 StructuredTool），
+    # 直接当普通函数 await 会抛 NotImplementedError: StructuredTool does not
+    # support sync invocation。既然工具层已经不再提供员工查询，这里直接走 repository。
+    employee = await EmployeeRepository.get_employee_by_name(session, name=name)
+    if not employee:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Employee not found")
+    return asdict(employee)

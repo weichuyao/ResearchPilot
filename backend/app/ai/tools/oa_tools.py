@@ -1,49 +1,32 @@
-from langchain_core.tools import BaseTool, tool
+"""ResearchPilot 的工具集。
+
+这里只放模型可以申请调用的能力。原先的 get_user_info / get_user_department
+（查 SQLite 里的员工和部门）属于 OA 企业助手的遗留，已经在切换到科研文献助手时移除。
+对应的 HTTP 接口仍然保留在 api/employee_routers.py，但它们直接走 repository，
+不再通过工具层绕一圈。
+"""
+
 import os
 
-from db.models.employee import Employee
-from db.repository.employee_repo import EmployeeRepository
-from db.models.department import Department
-from db.repository.department_repo import DepartmentRepository
-from db.database import async_session_maker
-from dataclasses import dataclass, asdict
-from fastapi import Depends
-from ai.rag.chromaClient import hand_book_vector_store
+from langchain_core.tools import tool
 
+from ai.rag.chromaClient import document_vector_store
 
-@tool
-async def get_user_info(user_name: str) -> dict:
-    """Obtain user information"""
-    async with async_session_maker() as session:
-        employee =  await EmployeeRepository.get_employee_by_name(session, name=user_name)
-        
-        if not employee:
-            return {"error": "user not found"}
-
-        return asdict(employee)
-
-@tool
-async def get_user_department(user_name: str) -> dict:
-    """Obtain the information of the user department"""
-   
-    async with async_session_maker() as session: 
-        employee = await EmployeeRepository.get_employee_by_name(session, name=user_name)
-        
-        if not employee:
-            return {"error": "user not found"}
-
-        department = await DepartmentRepository.get_department(session, department_id=employee.department_id)
-        
-        if not department:
-            return {"error": "department not found"}
-        
-        return asdict(department)
 
 # 检索相关性阈值。
-# 实测分布：应当返回的最低分 0.566，不应当返回的最高分 0.366。
-# 0.5 落在两者之间，四个实测 case（vacation benefits / annual leave policy /
-# 宠物保险 / 无关乱码）全部判断正确。校准方法见 reference/transformation-03-research-workflow-design.md。
-RELEVANCE_THRESHOLD = 0.5
+#
+# 校准过程（两轮，第二轮推翻了第一轮）：
+#   第一轮：用 4 个手挑的查询（措辞贴近论文原文），得到 0.366 / 0.566 的空隙，
+#           据此取了 0.5。结果是错的 —— 那批查询有个共同偏差：都塞进了论文自己的
+#           词汇，分数被抬高，不能代表真实提问。
+#   第二轮：用 15 个真实问法的查询实测，得到真正的空隙：
+#           不该返回的最高 0.2685（"今天的天气怎么样"）
+#           应返回的最低   0.3752（"什么是 hard positive problem"）
+#           取 0.35 落在空隙中，15 个查询全部判断正确（10 通过 / 5 拦截）。
+#
+# ⚠️ 仍然是 15 个查询的小样本。正式做法是用评估集校准（改造 #8），
+#    并且每次换 embedding 模型或换语料都要重新测。
+RELEVANCE_THRESHOLD = 0.35
 
 # 先粗召回多少条，再用阈值筛。召回放宽、筛选收紧，避免阈值把真答案一刀切掉。
 RETRIEVE_K = 10
@@ -51,12 +34,12 @@ RETRIEVE_K = 10
 
 @tool
 async def search_documents(query: str) -> str:
-    """Search the research document knowledge base and return the most relevant passages.
+    """Search the research paper knowledge base and return the most relevant passages.
 
-    Each passage is prefixed with its source file, page number and relevance score,
+    Each passage is prefixed with the paper title, page number and relevance score,
     so you can tell the user where the information came from.
     """
-    results = hand_book_vector_store.similarity_search_with_relevance_scores(query, k=RETRIEVE_K)
+    results = document_vector_store.similarity_search_with_relevance_scores(query, k=RETRIEVE_K)
 
     hits = [(doc, score) for doc, score in results if score >= RELEVANCE_THRESHOLD]
 
@@ -70,10 +53,12 @@ async def search_documents(query: str) -> str:
 
     blocks = []
     for index, (doc, score) in enumerate(hits, start=1):
-        source = os.path.basename(str(doc.metadata.get("source", "unknown")))
+        title = doc.metadata.get("paper_title") or os.path.basename(
+            str(doc.metadata.get("source", "unknown"))
+        )
         page = doc.metadata.get("page_label") or doc.metadata.get("page", "?")
         blocks.append(
-            "[source %d | %s | page %s | relevance %.2f]\n%s"
-            % (index, source, page, score, doc.page_content)
+            "[source %d | %s | p.%s | relevance %.2f]\n%s"
+            % (index, title, page, score, doc.page_content)
         )
     return "\n\n".join(blocks)

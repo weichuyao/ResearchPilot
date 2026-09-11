@@ -11,22 +11,37 @@ from langgraph.prebuilt import ToolNode, tools_condition
 from pydantic import BaseModel, Field
 
 from ai.llm import get_model, settings
-from ai.tools.oa_tools import get_user_department, get_user_info, search_documents
+from ai.tools.oa_tools import search_documents
 
+
+import logging
 
 from langchain.globals import set_debug
 from langchain.globals import set_verbose
-set_debug(True)
+
+from core.config import settings
+
+# LangChain 的结构化调试输出（每次模型调用的完整 prompt / tool schema）。
+# 开关交给 .env 的 DEBUG，别写死。
+set_debug(settings.DEBUG)
 set_verbose(False)
 
-import logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(filename)s[line:%(lineno)d] - %(funcName)s() - %(message)s')
+# 这里曾经是 logging.basicConfig(level=logging.DEBUG)，等于把「根日志记录器」设成
+# DEBUG —— 于是 httpx / httpcore / openai 的每一次 HTTP 调用都会把完整请求体
+# （含用户提问和系统提示词）打到 stderr。噪音大到把正常输出淹掉，而且请求内容
+# 会进日志。根记录器只到 INFO，需要细节的库单独调。
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(filename)s[line:%(lineno)d] - %(funcName)s() - %(message)s',
+)
+for noisy in ("httpx", "httpcore", "openai", "urllib3", "chromadb"):
+    logging.getLogger(noisy).setLevel(logging.WARNING)
 
 
 class AgentState(MessagesState):
     """State of the agent."""
 
-tools = [get_user_info, get_user_department, search_documents]
+tools = [search_documents]
 
 def wrap_model(model: BaseChatModel) -> RunnableSerializable[AgentState, AIMessage]:
     model = model.bind_tools(tools)
