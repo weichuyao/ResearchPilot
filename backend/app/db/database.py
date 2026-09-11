@@ -34,6 +34,10 @@ async_session_maker = async_sessionmaker(
 #         yield session
 
 async def create_db_and_tables():
+    # 显式导入模型包：SQLModel.metadata.create_all 只会为「已经被 import 过」的模型建表。
+    # 漏导入一个模块，那张表就会静默地不存在，然后在第一次查询时才炸。
+    import db.models  # noqa: F401
+
     async with async_engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
 
