@@ -37,6 +37,13 @@ __pycache__/
 # 早期因工作目录不对而产生的残留产物
 /backend/app/resource/
 
+# --- 模型权重 ---
+# 交叉编码器重排模型（int8 ONNX，266 MB + 16 MB 分词器）。
+# 二进制权重不进版本库，用 scripts/fetch-reranker.ps1 下载。
+# 代价是全新 clone 出来的仓库没有这个模型 —— 所以 ai/rag/rerank.py 必须能
+# 在模型缺失时静默降级回纯混合检索，而不是报错。
+/backend/resource/models/
+
 # --- 编辑器 / 操作系统 ---
 /.vscode/
 /.idea/

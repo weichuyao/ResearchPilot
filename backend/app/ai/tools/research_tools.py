@@ -3,8 +3,10 @@
 只放模型可以申请调用的能力。这里有两类工具，分工是刻意的：
 
   · list_papers        —— 结构化查询：精确、可枚举、能过滤（作者/年份）
-  · search_documents   —— 混合检索：向量（按意思找）+ BM25（按精确术语找），
-                          用 RRF 融合。实现与取舍见 ai/rag/hybrid.py
+  · search_documents   —— 二段式检索：
+                           召回  向量（按意思找）+ BM25（按精确术语找），RRF 融合
+                           重排  交叉编码器精排，再截断
+                         实现与取舍见 ai/rag/hybrid.py 和 ai/rag/rerank.py
 
 语义检索答不了「库里有哪几篇」「2023 年之后的」「作者是谁」这类问题，
 那些需要结构化查询；反过来结构化查询也找不到「和这个问题意思相近的段落」。
@@ -23,6 +25,7 @@ from typing import Optional
 from langchain_core.tools import tool
 
 from ai.rag.hybrid import hybrid_search
+from ai.rag.rerank import rerank_hits
 from db.database import async_session_maker
 from db.models.paper import Paper
 from db.repository.paper_repo import PaperRepository
@@ -43,8 +46,35 @@ from db.repository.paper_repo import PaperRepository
 #    并且每次换 embedding 模型或换语料都要重新测。
 RELEVANCE_THRESHOLD = 0.35
 
-# 先粗召回多少条，再用阈值筛。召回放宽、筛选收紧，避免阈值把真答案一刀切掉。
-RETRIEVE_K = 10
+# 二段式检索的两个数字。
+#
+# 第一段：混合召回、过阀门之后，留多少条进重排。候选池越大重排越慢 ——
+# 交叉编码器每个 (查询, 段落) 对都是一次完整前向，实测 10 条约 0.5s。
+RERANK_CANDIDATES = 10
+
+# 第二段：重排之后真正交给模型的条数。
+#
+# 这里曾经设成 5，用评估集测出来是**不可行**的，记录如下：
+#
+#   hybrid@10      上下文 20972 字符  A 类 verdict 1.0    概念覆盖 1.0    延迟 4.1s
+#   hybrid+rerank@5 上下文 12857 字符  A 类 verdict 0.917  概念覆盖 0.944  延迟 5.5s
+#
+# 省了 39% 上下文，但掉了 1 题。查了那题的原始回答，原因不是重排排错，是**截断**：
+#
+#   A08 问「SAP 模块推断的三类语义属性」。模型拿到的段落结尾是
+#   "...inferred from the global feature vector: (i) ship type, (ii) imaging
+#   perspective, and (iii)..." —— 列举被**分块边界切断**了，而带第三项的下一块
+#   被 top_n=5 裁掉。模型的回答因此只能给出前两项，判成 NOT_FOUND。
+#   A06 同理：补足「推理阶段不用掩码」的那一段被裁掉。
+#
+# 所以结论是：**重排的分数没有校准到能当裁剪依据**，而这份语料里一个答案经常
+# 横跨相邻两块。用 12 道 A 类题去换 39% 的上下文，一题 = 8.3%，对科研问答来说
+# 答错比多花 token 贵得多。
+#
+# 于是收回到 10：重排只负责排序，不负责裁剪。
+# 真正对症的修法是「块结尾被切断时补上邻块」，以及重新设计分块大小/重叠
+# （见 reference/design-decisions.md 的待办）。在那之前不裁剪。
+FINAL_TOP_N = 10
 
 _NO_HITS_MESSAGE = (
     "No relevant documents found: no passage in the knowledge base is sufficiently "
@@ -115,9 +145,11 @@ async def list_papers(
 async def search_documents(query: str, paper: Optional[str] = None) -> str:
     """Search the research paper knowledge base and return the most relevant passages.
 
-    The search is hybrid: it combines semantic similarity with BM25 keyword matching,
-    so it finds passages both by meaning and by exact terms (model names, dataset names,
-    abbreviations).
+    The search is two-stage. It first recalls candidates in two ways at once —
+    semantic similarity and BM25 keyword matching — and merges them, so it finds
+    passages both by meaning and by exact terms (model names, dataset names,
+    abbreviations). It then re-scores those candidates with a cross-encoder that
+    reads the query and the passage together, and returns only the best few.
 
     Each passage is prefixed with the paper title, page number, and how it was matched,
     so you can tell the user where the information came from.
@@ -140,13 +172,18 @@ async def search_documents(query: str, paper: Optional[str] = None) -> str:
             )
         allowed_sources = [m.source_file for m in matches]
 
-    hits, vector_top1 = hybrid_search(query, allowed_sources=allowed_sources)
+    hits, vector_top1 = hybrid_search(query, allowed_sources=allowed_sources,
+                                      top_n=RERANK_CANDIDATES)
 
     # 阀门：向量那一路的最高分不过阈值 -> 判定这个话题不在知识库里。
     # 注意 RRF 的分数是排名算出来的，不能拿来当相关性判据，所以「该不该回答」
     # 仍然由向量的绝对分数决定，「哪几段最相关」才交给 RRF。
+    #
+    # 阀门刻意放在重排**之前**：既然都要拒答了，就没必要再花 0.5s 跑一次重排。
     if vector_top1 < RELEVANCE_THRESHOLD or not hits:
         return _NO_HITS_MESSAGE
+
+    hits = rerank_hits(query, hits, top_n=FINAL_TOP_N)
 
     blocks = []
     for index, (doc, origin, score) in enumerate(hits, start=1):
