@@ -68,15 +68,15 @@ def parse_sources(tool_output: str) -> list[dict]:
 
 
 def norm_text(value: str) -> str:
-    """归一化，用于字符串比对。
+    """归一化，用于字符串比对。实现与完整理由见 ai/rag/textnorm.py。
 
-    真实语料里的数字常常带逗号和空格（例如 PDF 两端对齐造成的 `30, 587`），
-    所以比对前必须把数字里的分隔符去掉，否则会产生大量假失败。
+    这里只做转发：归一化必须在导入端、评估端、名次基准端**完全一致**，
+    所以只留一份实现。run_eval 是等 _main() 才把 app/ 加进 sys.path 的，
+    因此这里只能延迟导入（和本文件其余 ai.* 导入的做法一致）。
     """
-    text = str(value or "").lower()
-    text = re.sub(r"(?<=\d)[,\s]+(?=\d)", "", text)   # 30, 587 -> 30587
-    text = re.sub(r"[\s\u00a0]+", " ", text)
-    return text.strip()
+    from ai.rag.textnorm import norm_for_match
+
+    return norm_for_match(value)
 
 
 # ---------------------------------------------------------------------------
@@ -239,6 +239,30 @@ async def run_item(item: dict, model, agent, model_name: str) -> dict:
         record["retrieval_hit"] = None
         record["retrieval_rank"] = None
 
+    # ---- 检索层之二：答案必需的证据句，到底有没有被检索到 ----
+    #
+    # 「期望论文 + 页码」是个**页级**代理指标，它会骗人。A08 要的答案是
+    # "(iii) loading and equipment configuration"，实测它排在候选第 18 位、
+    # 根本没进检索结果；但同一页的另一块含 "ship type"，于是 retrieval_hit = True、
+    # retrieval_recall = 1.0 —— 指标全绿，检索其实是坏的。
+    #
+    # 所以再加一层**内容锚点**比对：每道 A 类题列出答案必需的字面串，
+    # 要求**全部**出现在检索到的文本里。锚点是字面串，可以对着语料逐条验证，
+    # 不像 verdict 那样依赖评委的主观判断。
+    required = [str(x) for x in (item.get("required_evidence") or [])]
+    if required:
+        retrieved_text = norm_text("\n".join(tool_outputs))
+        found = [anchor for anchor in required if norm_text(anchor) in retrieved_text]
+        record["evidence_required"] = required
+        record["evidence_found"] = found
+        record["evidence_missing"] = [a for a in required if a not in found]
+        record["evidence_hit"] = len(found) == len(required)
+    else:
+        record["evidence_required"] = []
+        record["evidence_found"] = []
+        record["evidence_missing"] = []
+        record["evidence_hit"] = None
+
     # ---- 判定层：LLM 评委 ----
     # 注意：build_judge_prompt 也放在 try 里面。之前它在 try 之外，
     # 一旦提示词构造出错，异常会冒泡到调用方，整题记录（工具调用、检索结果、
@@ -295,6 +319,9 @@ def summarize(records: list[dict]) -> dict:
         summary["A"] = {
             "count": len(a_items),
             "retrieval_recall": round(len(hits) / len(a_items), 3),
+            "evidence_recall": round(
+                sum(1 for r in a_items if r.get("evidence_hit")) / len(a_items), 3
+            ),
             "verdict_accuracy": round(sum(1 for r in a_items if r.get("verdict_correct")) / len(a_items), 3),
             "avg_concept_coverage": round(
                 sum((r.get("concepts_covered") or 0) / (r.get("concepts_total") or 1) for r in a_items) / len(a_items), 3
@@ -343,12 +370,14 @@ def to_markdown(summary: dict, records: list[dict], eval_name: str) -> str:
             lines.append("| %s.%s | %s |" % (kind, key, value))
     for key, value in (summary.get("process") or {}).items():
         lines.append("| process.%s | %s |" % (key, value))
-    lines += ["", "## 逐题", "", "| 题号 | 类型 | 检索命中 | 排名 | verdict | 期望 | 概念覆盖 | 越界 | 引用 | 工具轮数 |", "|---|---|---|---|---|---|---|---|---|---|"]
+    lines += ["", "## 逐题", "", "| 题号 | 类型 | 页级命中 | 排名 | 证据命中 | 缺失的锚点 | verdict | 期望 | 概念覆盖 | 越界 | 引用 | 工具轮数 |", "|---|---|---|---|---|---|---|---|---|---|---|---|"]
     for record in records:
-        lines.append("| %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |" % (
+        lines.append("| %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s | %s |" % (
             record["id"], record["type"],
             {True: "✅", False: "❌", None: "—"}[record.get("retrieval_hit")],
             record.get("retrieval_rank") or "—",
+            {True: "✅", False: "❌", None: "—"}.get(record.get("evidence_hit"), "—"),
+            ", ".join(record.get("evidence_missing") or []) or "—",
             record.get("verdict") or "—",
             record.get("expected_verdict") or "—",
             "%s/%s" % (record.get("concepts_covered") or 0, record.get("concepts_total") or "—"),
@@ -423,7 +452,11 @@ async def _main() -> None:
         records.append(record)
         flag = ""
         if record.get("retrieval_hit") is not None:
-            flag += " 检索%s" % ("✅" if record["retrieval_hit"] else "❌")
+            flag += " 页级%s" % ("✅" if record["retrieval_hit"] else "❌")
+        if record.get("evidence_hit") is not None:
+            flag += " 证据%s" % ("✅" if record["evidence_hit"] else "❌")
+            if record.get("evidence_missing"):
+                flag += "(缺:%s)" % ",".join(record["evidence_missing"])
         if record.get("judge"):
             flag += " verdict=%s%s" % (record.get("verdict"), "✅" if record.get("verdict_correct") else "❌")
             if record.get("forbidden_violations"):

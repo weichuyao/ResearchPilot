@@ -78,6 +78,57 @@ def summarise(ranks: dict[str, int | None], n: int) -> dict:
     }
 
 
+def evidence_report(items, top_k: int, use_rerank: bool) -> dict | None:
+    """每道 A 类题的「答案必需锚点」在检索结果里出现了几个。
+
+    这是页级召回之外的第二个视角。页级指标只看「期望论文 + 页码有没有被碰到」——
+    A08 要的答案是 `(iii) loading and equipment configuration`，实测它排在候选第 18 位、
+    根本没进 top-10，但同一页另一块含 `ship type`，页级照样算命中、`retrieval_recall = 1.0`。
+
+    锚点写在评估集的 `required_evidence` 字段里（已对着语料逐条验证存在）。
+    归一化用 ai/rag/textnorm.py，与导入端、run_eval 完全同一份实现。
+    """
+    from ai.rag.hybrid import hybrid_search
+    from ai.rag.rerank import rerank_hits
+    from ai.rag.textnorm import norm_for_match
+
+    graded = [item for item in items if item.get("required_evidence")]
+    if not graded:
+        return None
+
+    def found(anchors, pool):
+        text = norm_for_match("\n".join(doc.page_content for doc, _o, _s in pool))
+        return [a for a in anchors if norm_for_match(a) in text]
+
+    rows: dict[str, dict] = {}
+    hybrid_complete = rerank_complete = 0
+    for item in graded:
+        anchors = [str(a) for a in item["required_evidence"]]
+        hits, _vector_top1 = hybrid_search(item["question"], top_n=top_k)
+        ordered = rerank_hits(item["question"], hits, top_n=top_k) if use_rerank else []
+        in_hybrid = found(anchors, hits)
+        in_rerank = found(anchors, ordered) if use_rerank else []
+        if len(in_hybrid) == len(anchors):
+            hybrid_complete += 1
+        if use_rerank and len(in_rerank) == len(anchors):
+            rerank_complete += 1
+        missing = [a for a in anchors if a not in (in_rerank if use_rerank else in_hybrid)]
+        rows[item["id"]] = {
+            "required": anchors,
+            "hybrid": "%d/%d" % (len(in_hybrid), len(anchors)),
+            "rerank": "%d/%d" % (len(in_rerank), len(anchors)) if use_rerank else None,
+            "missing": missing,
+        }
+
+    return {
+        "count": len(graded),
+        "top_k": top_k,
+        "hybrid_complete": hybrid_complete,
+        "rerank_complete": rerank_complete,
+        "per_item": rows,
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--top-k", type=int, default=10, help="每次检索返回多少条")
@@ -158,6 +209,24 @@ def main() -> None:
             mark = "↑" if delta > 1e-9 else "↓" if delta < -1e-9 else "="
             print("  %-10s %6.3f -> %6.3f  %s %+.3f" % (key, base[key], rr[key], mark, delta))
 
+    evidence = evidence_report(items, args.top_k, args.rerank)
+    if evidence:
+        print()
+        rows = evidence["per_item"]
+        header = "%-5s %-9s %-9s %s" % ("题号", "混合@k", "重排@k", "缺失的锚点（重排@k）")
+        print(header)
+        print("-" * len(header))
+        for item_id, row in rows.items():
+            print("%-5s %-9s %-9s %s" % (
+                item_id, row["hybrid"], row["rerank"] or "—",
+                ", ".join(row["missing"]) or "—"))
+        print()
+        print("锚点全中: 混合 %d/%d，重排 %d/%d" % (
+            evidence["hybrid_complete"], evidence["count"],
+            evidence["rerank_complete"], evidence["count"]))
+        print("（注意：这里用的是评估题**原文**。Agent 会改写查询，所以端到端的"
+              "evidence_recall 通常比这个高。）")
+
     if args.json:
         import datetime
 
@@ -168,6 +237,7 @@ def main() -> None:
             "graded_items": graded,
             "hybrid": base,
             "rerank": reranked,
+            "evidence": evidence,
             "per_item": {
                 item["id"]: {"hybrid": before[item["id"]],
                              "rerank": after.get(item["id"]) if args.rerank else None}

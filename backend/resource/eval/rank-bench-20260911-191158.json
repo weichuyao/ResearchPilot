@@ -1,0 +1,201 @@
+{
+  "generated_at": "2026-09-11T19:11:58",
+  "eval_set": "reid_paper_eval_set.json",
+  "top_k": 10,
+  "graded_items": 12,
+  "hybrid": {
+    "hit": 12,
+    "recall@1": 0.5,
+    "recall@3": 0.6666666666666666,
+    "recall@5": 0.6666666666666666,
+    "mrr": 0.6149140211640212,
+    "mean_rank": 3.4166666666666665
+  },
+  "rerank": {
+    "hit": 12,
+    "recall@1": 0.6666666666666666,
+    "recall@3": 0.9166666666666666,
+    "recall@5": 1.0,
+    "mrr": 0.7986111111111112,
+    "mean_rank": 1.5833333333333333
+  },
+  "evidence": {
+    "count": 12,
+    "top_k": 10,
+    "hybrid_complete": 8,
+    "rerank_complete": 8,
+    "per_item": {
+      "A01": {
+        "required": [
+          "hard positive problem",
+          "instance-level"
+        ],
+        "hybrid": "2/2",
+        "rerank": "2/2",
+        "missing": []
+      },
+      "A02": {
+        "required": [
+          "pseudo-label",
+          "cluster-level"
+        ],
+        "hybrid": "2/2",
+        "rerank": "2/2",
+        "missing": []
+      },
+      "A03": {
+        "required": [
+          "30587",
+          "1248"
+        ],
+        "hybrid": "2/2",
+        "rerank": "2/2",
+        "missing": []
+      },
+      "A04": {
+        "required": [
+          "proxy token",
+          "hard attention"
+        ],
+        "hybrid": "2/2",
+        "rerank": "2/2",
+        "missing": []
+      },
+      "A05": {
+        "required": [
+          "first-order difference",
+          "kmin"
+        ],
+        "hybrid": "0/2",
+        "rerank": "0/2",
+        "missing": [
+          "first-order difference",
+          "kmin"
+        ]
+      },
+      "A06": {
+        "required": [
+          "Segment Anything",
+          "mask set"
+        ],
+        "hybrid": "2/2",
+        "rerank": "2/2",
+        "missing": []
+      },
+      "A07": {
+        "required": [
+          "cargo",
+          "viewpoint",
+          "occlusion"
+        ],
+        "hybrid": "3/3",
+        "rerank": "3/3",
+        "missing": []
+      },
+      "A08": {
+        "required": [
+          "ship type",
+          "imaging perspective",
+          "loading and equipment configuration"
+        ],
+        "hybrid": "2/3",
+        "rerank": "2/3",
+        "missing": [
+          "loading and equipment configuration"
+        ]
+      },
+      "A09": {
+        "required": [
+          "instance bank",
+          "identity-view pair"
+        ],
+        "hybrid": "1/2",
+        "rerank": "1/2",
+        "missing": [
+          "identity-view pair"
+        ]
+      },
+      "A10": {
+        "required": [
+          "480",
+          "7165",
+          "1145469"
+        ],
+        "hybrid": "3/3",
+        "rerank": "3/3",
+        "missing": []
+      },
+      "A11": {
+        "required": [
+          "Grounding DINO",
+          "Deep SORT"
+        ],
+        "hybrid": "0/2",
+        "rerank": "0/2",
+        "missing": [
+          "Grounding DINO",
+          "Deep SORT"
+        ]
+      },
+      "A12": {
+        "required": [
+          "one-fifth",
+          "364"
+        ],
+        "hybrid": "2/2",
+        "rerank": "2/2",
+        "missing": []
+      }
+    }
+  },
+  "per_item": {
+    "A01": {
+      "hybrid": 1,
+      "rerank": 1
+    },
+    "A02": {
+      "hybrid": 1,
+      "rerank": 1
+    },
+    "A03": {
+      "hybrid": 1,
+      "rerank": 1
+    },
+    "A04": {
+      "hybrid": 3,
+      "rerank": 3
+    },
+    "A05": {
+      "hybrid": 6,
+      "rerank": 2
+    },
+    "A06": {
+      "hybrid": 1,
+      "rerank": 1
+    },
+    "A07": {
+      "hybrid": 1,
+      "rerank": 1
+    },
+    "A08": {
+      "hybrid": 2,
+      "rerank": 1
+    },
+    "A09": {
+      "hybrid": 7,
+      "rerank": 2
+    },
+    "A10": {
+      "hybrid": 1,
+      "rerank": 1
+    },
+    "A11": {
+      "hybrid": 8,
+      "rerank": 4
+    },
+    "A12": {
+      "hybrid": 9,
+      "rerank": 1
+    }
+  }
+}

@@ -83,14 +83,26 @@ def find_repeated_edge_lines(pages: list[str]) -> set[str]:
     return {key for key, count in counts.items() if count >= threshold}
 
 
+def normalize_typography(text: str) -> str:
+    """还原 PDF 里的连字和特殊破折号。实现与理由见 ai/rag/textnorm.py。
+
+    这里只做一层转发，是为了让 ingest 能在**导入时**就用上同一份归一化 ——
+    归一化的三个使用方（导入、评估、名次基准）必须完全一致，所以实现在
+    textnorm.py 里只写一份。延迟导入是因为 app/ 要等 main() 才进 sys.path。
+    """
+    from ai.rag.textnorm import normalize_typography as impl
+
+    return impl(text)
+
+
 def clean_page_text(text: str, noise: set[str]) -> str:
-    """去掉页眉页脚，并修复被换行拆开的单词。"""
+    """去掉页眉页脚、还原连字、并修复被换行拆开的单词。"""
     kept = [line for line in text.split("\n") if not (line.strip() and _norm(line) in noise)]
     joined = "\n".join(kept)
     # represen-\ntation → representation
     # 注意：这也会把行尾的真实连字符合并（well-\nknown → wellknown），属于已知取舍。
     # 换行拆词在两端对齐的论文里非常常见，而真实连字符恰好落在行尾的情况少得多。
-    return re.sub(r"(\w)-\n(\w)", r"\1\2", joined)
+    return normalize_typography(re.sub(r"(\w)-\n(\w)", r"\1\2", joined))
 
 
 # ============================================================================

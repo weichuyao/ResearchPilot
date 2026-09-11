@@ -34,6 +34,12 @@ __pycache__/
 # Chroma 向量库可由 backend/tests/rag/importRag.py 从 EmployeeHandbook.pdf 重新生成
 **/chroma_db/
 
+# SQLite 运行时数据库。曾经是被跟踪的，但它每次导入论文都会变（paper 表的块数），
+# 二进制 diff 没有可读性，而且把「数据」混进了「代码」的历史里。
+# 重建方式：先跑 ingestion（会自动建表并写入 paper 记录）。
+#   python app/ai/rag/ingest.py
+/backend/resource/database.db
+
 # 早期因工作目录不对而产生的残留产物
 /backend/app/resource/
 
