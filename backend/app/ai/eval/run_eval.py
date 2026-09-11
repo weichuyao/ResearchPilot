@@ -376,7 +376,11 @@ async def _main() -> None:
     import logging
     logging.disable(logging.INFO)
 
-    judge_model = get_model(settings.DEFAULT_MODEL)
+    # 评委必须确定性：temperature=0。
+    # 实测教训：temperature=0.5 时，同一个主张、只是措辞不同的两个答案，
+    # 一次被判 scope_qualified=True、另一次被判 False —— 指标自己就在抖，
+    # 于是"改进了还是退步了"根本判断不了。
+    judge_model = get_model(settings.DEFAULT_MODEL).model_copy(update={"temperature": 0.0})
     records = []
     for index, item in enumerate(items, start=1):
         print("[%2d/%2d] %s  %s" % (index, len(items), item["id"], item["question"][:44]))
