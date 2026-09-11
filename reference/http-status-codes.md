@@ -53,6 +53,19 @@
 
 > **401 vs 403 记法：401 = "你是谁？"　403 = "我知道你是谁，但你不能。"**
 
+### 422 有两种，含义完全不同（实测）
+
+FastAPI 用同一个 422 表达"请求体不符合我声明的模型"，但底下是两类问题：
+
+| 类型 | 含义 | 层次 | 实测响应体 |
+|---|---|---|---|
+| `json_invalid` | **JSON 本身读不了**（语法错） | 传输层 | `{"detail":[{"type":"json_invalid","loc":["body",4],"msg":"JSON decode error","ctx":{"error":"Expecting property name enclosed in double quotes"}}]}` |
+| `missing` | **JSON 读懂了，但缺必需字段** | 业务契约 | `{"detail":[{"type":"missing","loc":["body","message"],"msg":"Field required"}]}` |
+
+**分清这两者的意义**：一个说明请求**根本没成型**（客户端拼错了），一个说明请求成型了但**不符合契约**（客户端漏了东西）。排查方向完全不同。
+
+> **顺带一个经验**：好的错误信息会告诉你"我查到哪个位置了、我期待什么"。上面那句 `Expecting property name enclosed in double quotes` 就是在说"位置 4 这里我期待一个键名"。**你以后自己写接口时，返回的错误也应该有这个质量。**
+
 ### 5xx 我崩了（这才是故障）
 
 | 码 | 名字 | 什么时候用 |
