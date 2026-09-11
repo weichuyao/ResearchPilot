@@ -408,10 +408,49 @@ def summarize(records: list[dict]) -> dict:
     return summary
 
 
+async def corpus_fingerprint() -> dict:
+    """当前语料的指纹：几篇、多少块。
+
+    ## 为什么评估报告必须带上它
+
+    评估集是**为特定语料状态写的固件**。它的 `source_scope` 写着「仅限四篇 PDF」，
+    B 类题的措辞是「这四篇论文是否…」，`expected_source` 指向具体的论文和页码。
+
+    **往语料里加文档会改变这些前提。** 加了之后：
+
+      · B 类题的「库里没有 X」可能变成假 —— 第 8 篇论文说不定真的用了 Mamba
+      · 那时评估会报一个失败，而那个失败**不属于系统**，属于过期的固件
+
+    最危险的形态是**静默**：拿 7 篇语料上的指标去和 4 篇时的基线对比，
+    得出"变好了/变差了"的结论。所以每次运行都把语料状态记进报告 ——
+    至少要让人在对比两份报告时看得出语料不一样。
+
+    （真正的解法是把 B 类题**钉死到具名论文**上，而不是说"这四篇"。
+    那是评估集本身要改，不是这里能补的。）
+
+    注意这里是 async 而不是包一层 `asyncio.run()` —— 调用方 `_main()` 本身就跑在
+    事件循环上，在里面调 `asyncio.run()` 会直接抛
+    「asyncio.run() cannot be called from a running event loop」。
+    """
+    from db.database import async_session_maker
+    from db.repository.paper_repo import PaperRepository
+
+    try:
+        async with async_session_maker() as session:
+            papers = await PaperRepository.count(session=session)
+            chunks = await PaperRepository.sum_chunks(session=session)
+        return {"papers": papers, "chunks": chunks}
+    except Exception as exc:
+        print("! 读语料指纹失败：%s" % exc)
+        return {"papers": None, "chunks": None}
+
+
 def to_markdown(summary: dict, records: list[dict], eval_name: str) -> str:
     lines = ["# 评估报告：%s" % eval_name, ""]
     lines.append("Agent：`%s`" % summary.get("agent", "?"))
     lines.append("模型：`%s`" % summary.get("model", "?"))
+    corpus = summary.get("corpus") or {}
+    lines.append("语料：%s 篇 / %s 块" % (corpus.get("papers", "?"), corpus.get("chunks", "?")))
     lines.append("生成时间：%s" % datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     lines.append("")
     lines.append("## 汇总")
@@ -531,6 +570,8 @@ async def _main() -> None:
     # 指标长得几乎一样；不记 agent 就没法把多次运行归组，也没法事后对比。
     summary["agent"] = args.agent
     summary["model"] = settings.DEFAULT_MODEL
+    # 语料指纹（见 corpus_fingerprint 的说明）：让"换了语料还拿旧基线对比"变得可见
+    summary["corpus"] = await corpus_fingerprint()
     out_dir = os.path.join(backend_root, "resource", "eval")
     os.makedirs(out_dir, exist_ok=True)
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
