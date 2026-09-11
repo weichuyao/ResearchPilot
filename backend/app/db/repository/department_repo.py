@@ -8,7 +8,7 @@ class DepartmentRepository:
     
     @classmethod
     async def create_department(cls, session: AsyncSession, department: Department) -> Department:
-        session.add(departmnt)
+        session.add(department)
         await session.commit()
         await session.refresh(department)
         return department
@@ -28,7 +28,7 @@ class DepartmentRepository:
 
     @classmethod
     async def update_department(cls, session: AsyncSession, department_id: int, department_data: dict) -> Optional[Department]:
-        department = await cls.get_department(department_id)
+        department = await cls.get_department(session,department_id)
         if department:
             for key, value in department_data.items():
                 setattr(department, key, value)
@@ -37,7 +37,7 @@ class DepartmentRepository:
         return department
     @classmethod
     async def delete_department(cls, session: AsyncSession, department_id: int) -> bool:
-        department = await cls.get_department(department_id)
+        department = await cls.get_department(session, department_id)
         if department:
             await session.delete(department)
             await session.commit()
