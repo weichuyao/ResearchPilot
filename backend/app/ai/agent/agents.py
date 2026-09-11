@@ -9,10 +9,15 @@ from ai.agent.research_workflow import research_workflow
 
 # 默认 agent。
 #
-# 目前仍是 ReAct 版（model ⇄ tools 的自由循环）。research-workflow 是改造 #3 的产物，
-# **刻意并存而不是替换** —— 两个图共用同一套工具和检索管线，可以用同一份评估集直接
-# 对比。等 research-workflow 在评估集上证明自己不退步（含过程指标），再切默认。
-DEFAULT_AGENT = "oa-assistant"
+# ⚠️ 这个常量只在**客户端完全不传 agent_id** 时起作用（见 api/schema/chatSchema.py：
+# 它是 UserInput.agent_id 的默认值）。网页前端每次都会显式传它选中的值，所以只改这里
+# **不会**改变浏览器里的行为 —— 前端的初始值在 frontend/app/layout.tsx 的 useState，
+# 可选项列表在 frontend/app/components/AgentSelector.tsx。
+#
+# 现在是改造 #3 的 Corrective RAG 工作流：在 20 题评估集上与原来的 ReAct 版质量打平
+# 或反超（A 类四项全 1.0），上下文少一半；代价是慢约 1.3s（要点驱动的重试多花轮次）。
+# 详见 reference/transformation-03-research-workflow-design.md。
+DEFAULT_AGENT = "research-workflow"
 
 class AgentInfo(BaseModel):
     """Info about an available agent."""

@@ -1,0 +1,3292 @@
+{
+  "summary": {
+    "total": 20,
+    "judged": 20,
+    "not_judged": 0,
+    "parse_warnings": 0,
+    "metric_reliable": true,
+    "A": {
+      "count": 12,
+      "retrieval_recall": 1.0,
+      "evidence_recall": 0.917,
+      "verdict_accuracy": 1.0,
+      "avg_concept_coverage": 0.958,
+      "citation_ok_rate": 1.0
+    },
+    "B": {
+      "count": 6,
+      "verdict_accuracy": 0.833,
+      "over_claim_rate": 0.167,
+      "scope_qualified_rate": 0.833
+    },
+    "C": {
+      "count": 2,
+      "verdict_accuracy": 1.0
+    },
+    "process": {
+      "avg_tool_calls": 2.75,
+      "avg_context_chars": 19816,
+      "avg_seconds": 4.6
+    },
+    "agent": "oa-assistant",
+    "model": "deepseek-chat"
+  },
+  "records": [
+    {
+      "id": "A01",
+      "type": "A",
+      "question": "hard positive problem（HPP）在无监督船舶 ReID 中指什么？",
+      "seconds": 6.5,
+      "tool_calls": 2,
+      "queries": [
+        "search_documents({\"query\": \"hard positive problem HPP unsupervised ship ReID\"})",
+        "search_documents({\"query\": \"hard positive samples unsupervised ship re-identification\"})"
+      ],
+      "retrieved": [
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "2",
+          "score": 0.47
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "2",
+          "score": 0.37
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "2",
+          "score": 0.43
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "11",
+          "score": 0.43
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "11",
+          "score": 0.34
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "4",
+          "score": 0.36
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "1",
+          "score": 0.38
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "8",
+          "score": 0.31
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "8",
+          "score": 0.37
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "4",
+          "score": null
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "3",
+          "score": 0.42
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "11",
+          "score": 0.48
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "10",
+          "score": 0.48
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "2",
+          "score": 0.52
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "2",
+          "score": 0.47
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "11",
+          "score": 0.47
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "1",
+          "score": 0.53
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "1",
+          "score": 0.48
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "1",
+          "score": 0.48
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "4",
+          "score": null
+        }
+      ],
+      "parse_warnings": 0,
+      "context_chars": 17578,
+      "answer": "# Hard Positive Problem (HPP) in Unsupervised Ship ReID\n\nBased on the paper *\"Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning\"* (Zhang et al., IEEE T-ITS, Vol. 24, No. 5, May 2023), the **hard positive problem (HPP)** is defined as follows:\n\n## Definition\n\nIn unsupervised vessel ReID, pseudo-labels are generated by clustering unlabeled vessel images. Because clustering is imperfect, the resulting pseudo-labels are **inaccurate** — which makes it hard to correctly treat images that actually share the same vessel identity as **positives** (i.e., as belonging to the same class). This difficulty is what the authors name the **hard positive problem (HPP)** (p.2).\n\n## Why it arises — two compounding factors\n\nThe paper identifies two factors that together make unsupervised vessel ReID especially sensitive to HPP (p.2):\n\n1. **Inaccurate pseudo-labels from clustering** — it is hard to regard images with the same vessel identity as positives.\n2. **Conventional instance-level contrastive losses treat images with the same pseudo-label as separate classes**, so even when pseudo-labels are available, discovering true positives remains difficult.\n\n## Consequences\n\n- HPP leads to an **uniform feature distribution** in the representation space, and identity-level representation learning **degenerates to instance-level** learning (p.2).\n- During training, it **pushes instances of the same vessel identity away from each other**, driving the model into a harder pattern to recover from (p.11).\n- Once the distance between a positive pair exceeds the **clustering threshold**, those images will **never be clustered together in subsequent epochs** (p.11).\n\n## Why vessel ReID is more affected than other ReID tasks\n\nThe paper notes that these two factors together make unsupervised vessel ReID **more sensitive to HPP than other ReID tasks** (p.2).\n\n## How the paper addresses it\n\nThe proposed **Multi-Level Contrastive Learning (MCL)** framework mitigates HPP in two ways (p.11):\n- **Instance-level contrastive learning (ICL):** removes potential positives (samples sharing the same pseudo-label as the anchor) from the set of negative samples, so more positives are pulled toward the anchor (p.4, p.6).\n- **Intra-batch cluster-level contrastive learning (CCL):** acts as a complement to instance-level discrimination, making learning more robust to noisy pseudo-labels (p.11).\n\nThe authors also note that methods focusing on **pseudo-label refinement** perform relatively better in vessel ReID, since improving pseudo-label quality can also solve HPP to some extent (p.8).\n\n**Source:** *Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning*, pp. 1, 2, 4, 8, 11.",
+      "expected_paper": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+      "expected_pages": [
+        "2"
+      ],
+      "retrieval_hit": true,
+      "retrieval_rank": 1,
+      "evidence_required": [
+        "hard positive problem",
+        "instance-level"
+      ],
+      "evidence_found": [
+        "hard positive problem",
+        "instance-level"
+      ],
+      "evidence_missing": [],
+      "evidence_hit": true,
+      "judge_raw": "{\n  \"verdict\": \"GROUNDED\",\n  \"verdict_reason\": \"The answer defines HPP as inaccurate pseudo-labels making it hard to treat same-vessel images as positives, and states that conventional instance-level contrastive losses treat same-pseudo-label images as separate classes, matching all required concepts and citing p.2.\",\n  \"concepts_covered\": [\n    \"inaccurate pseudo-label\",\n    \"same vessel/true positive\",\n    \"instance contrast separate classes\"\n  ],\n  \"concepts_missing\": [],\n  \"forbidden_violations\": [],\n  \"citation_ok\": true,\n  \"citation_evidence\": \"This difficulty is what the authors name th",
+      "judge": {
+        "verdict": "GROUNDED",
+        "verdict_reason": "The answer defines HPP as inaccurate pseudo-labels making it hard to treat same-vessel images as positives, and states that conventional instance-level contrastive losses treat same-pseudo-label images as separate classes, matching all required concepts and citing p.2.",
+        "concepts_covered": [
+          "inaccurate pseudo-label",
+          "same vessel/true positive",
+          "instance contrast separate classes"
+        ],
+        "concepts_missing": [],
+        "forbidden_violations": [],
+        "citation_ok": true,
+        "citation_evidence": "This difficulty is what the authors name the **hard positive problem (HPP)** (p.2).",
+        "scope_qualified": null,
+        "scope_reason": ""
+      },
+      "verdict": "GROUNDED",
+      "verdict_correct": true,
+      "concepts_covered": 3,
+      "concepts_total": 3,
+      "forbidden_violations": [],
+      "citation_ok": true,
+      "scope_qualified": null,
+      "expected_verdict": "GROUNDED"
+    },
+    {
+      "id": "A02",
+      "type": "A",
+      "question": "MCL 的训练过程交替进行的两个阶段分别是什么？",
+      "seconds": 3.3,
+      "tool_calls": 2,
+      "queries": [
+        "search_documents({\"query\": \"MCL training process alternating two stages\"})",
+        "search_documents({\"query\": \"MCL 训练 交替 两个阶段\"})"
+      ],
+      "retrieved": [
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "3",
+          "score": 0.5
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "8",
+          "score": null
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "4",
+          "score": 0.44
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "2",
+          "score": 0.45
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "1",
+          "score": 0.37
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "3",
+          "score": 0.41
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "11",
+          "score": 0.37
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "5",
+          "score": 0.36
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "4",
+          "score": 0.4
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "8",
+          "score": null
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "3",
+          "score": 0.49
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "4",
+          "score": 0.44
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "2",
+          "score": 0.45
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "1",
+          "score": 0.37
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "2",
+          "score": 0.4
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "11",
+          "score": 0.38
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "3",
+          "score": 0.4
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "4",
+          "score": 0.4
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "3",
+          "score": 0.42
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "8",
+          "score": 0.35
+        }
+      ],
+      "parse_warnings": 0,
+      "context_chars": 17734,
+      "answer": "MCL（Multi-Level Contrastive Learning）的训练过程交替进行的两个阶段是：\n\n1. **伪标签生成（pseudo-label generation）**\n2. **多级对比学习（multi-level contrastive learning）**\n\n具体来说，在第 t 个训练 epoch 之前，会用上一个 epoch 训练得到的编码器提取数据集 X 中所有船舶图像的特征，并对其进行聚类，为每张图像生成伪标签；随后在训练的每次迭代中，对采样的图像进行数据增强得到两个视图，输入到多级对比学习中进行训练。\n\n来源：*Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning*，第 3 页（Overview of MCL 一节），以及第 4 页图 2 的说明（该图用绿色和蓝色通道分别标示了这两个阶段）。",
+      "expected_paper": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+      "expected_pages": [
+        "3"
+      ],
+      "retrieval_hit": true,
+      "retrieval_rank": 1,
+      "evidence_required": [
+        "pseudo-label",
+        "cluster-level"
+      ],
+      "evidence_found": [
+        "pseudo-label",
+        "cluster-level"
+      ],
+      "evidence_missing": [],
+      "evidence_hit": true,
+      "judge_raw": "{\n  \"verdict\": \"GROUNDED\",\n  \"verdict_reason\": \"The answer correctly identifies the two alternating training stages as pseudo-label generation and multi-level contrastive learning, citing the MCL paper page 3.\",\n  \"concepts_covered\": [\n    \"pseudo-label generation\",\n    \"multi-level contrastive learning\"\n  ],\n  \"concepts_missing\": [\n    \"instance-level\",\n    \"cluster-level\"\n  ],\n  \"forbidden_violations\": [],\n  \"citation_ok\": true,\n  \"citation_evidence\": \"来源：*Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning*，第 3 页\",\n  \"scope_qualified\": null,\n  \"scope_reason\"",
+      "judge": {
+        "verdict": "GROUNDED",
+        "verdict_reason": "The answer correctly identifies the two alternating training stages as pseudo-label generation and multi-level contrastive learning, citing the MCL paper page 3.",
+        "concepts_covered": [
+          "pseudo-label generation",
+          "multi-level contrastive learning"
+        ],
+        "concepts_missing": [
+          "instance-level",
+          "cluster-level"
+        ],
+        "forbidden_violations": [],
+        "citation_ok": true,
+        "citation_evidence": "来源：*Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning*，第 3 页",
+        "scope_qualified": null,
+        "scope_reason": ""
+      },
+      "verdict": "GROUNDED",
+      "verdict_correct": true,
+      "concepts_covered": 2,
+      "concepts_total": 4,
+      "forbidden_violations": [],
+      "citation_ok": true,
+      "scope_qualified": null,
+      "expected_verdict": "GROUNDED"
+    },
+    {
+      "id": "A03",
+      "type": "A",
+      "question": "VesselReID 数据集最终包含多少张图像、多少个船舶身份？",
+      "seconds": 3.4,
+      "tool_calls": 2,
+      "queries": [
+        "search_documents({\"query\": \"VesselReID dataset number of images and vessel identities\"})",
+        "search_documents({\"query\": \"VesselReID 数据集 图像数量 船舶身份数量\"})"
+      ],
+      "retrieved": [
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "6",
+          "score": 0.68
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "6",
+          "score": 0.62
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "6",
+          "score": 0.56
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "5",
+          "score": 0.57
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "6",
+          "score": 0.58
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "3",
+          "score": 0.62
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "6",
+          "score": 0.54
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "7",
+          "score": 0.53
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "7",
+          "score": null
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "10",
+          "score": null
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "6",
+          "score": 0.68
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "6",
+          "score": 0.6
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "6",
+          "score": 0.56
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "6",
+          "score": 0.58
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "5",
+          "score": 0.6
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "7",
+          "score": 0.56
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "6",
+          "score": 0.51
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "8",
+          "score": 0.5
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "8",
+          "score": null
+        }
+      ],
+      "parse_warnings": 0,
+      "context_chars": 17033,
+      "answer": "**VesselReID 数据集最终包含 30,587 张图像、1,248 个船舶身份**（平均约每艘船 25 张图像）。\n\n来源：《Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning》第 6 页，原文为：\"the constructed VesselReID dataset consists of 30,587 images of 1,248 vessels, which means that there are approximately 25 images per vessel.\"\n\n补充说明（同一页）：\n- 原始下载数据为 361,760 张图像、1,540 个船舶身份（以 IMO 编号作为身份标识，只保留出现超过 150 次的船舶）。\n- 之后按拍摄地点筛选，选取图像最多的 6 个地点，并剔除仅出现在单一地点的船舶，最终得到上述 30,587 张 / 1,248 个身份。\n\n另一篇论文《ViV-ReID》第 5 页也独立引用了这一数字（\"30,587 images of 1,248 IDs\"），与原文一致。",
+      "expected_paper": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+      "expected_pages": [
+        "6"
+      ],
+      "retrieval_hit": true,
+      "retrieval_rank": 1,
+      "evidence_required": [
+        "30587",
+        "1248"
+      ],
+      "evidence_found": [
+        "30587",
+        "1248"
+      ],
+      "evidence_missing": [],
+      "evidence_hit": true,
+      "judge_raw": "{\n  \"verdict\": \"GROUNDED\",\n  \"verdict_reason\": \"The answer explicitly states the required numbers 30,587 images and 1,248 vessel identities and cites the correct paper and page.\",\n  \"concepts_covered\": [\"30587\", \"1248\"],\n  \"concepts_missing\": [],\n  \"forbidden_violations\": [],\n  \"citation_ok\": true,\n  \"citation_evidence\": \"《Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning》第 6 页\",\n  \"scope_qualified\": null,\n  \"scope_reason\": \"\"\n}",
+      "judge": {
+        "verdict": "GROUNDED",
+        "verdict_reason": "The answer explicitly states the required numbers 30,587 images and 1,248 vessel identities and cites the correct paper and page.",
+        "concepts_covered": [
+          "30587",
+          "1248"
+        ],
+        "concepts_missing": [],
+        "forbidden_violations": [],
+        "citation_ok": true,
+        "citation_evidence": "《Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning》第 6 页",
+        "scope_qualified": null,
+        "scope_reason": ""
+      },
+      "verdict": "GROUNDED",
+      "verdict_correct": true,
+      "concepts_covered": 2,
+      "concepts_total": 2,
+      "forbidden_violations": [],
+      "citation_ok": true,
+      "scope_qualified": null,
+      "expected_verdict": "GROUNDED"
+    },
+    {
+      "id": "A04",
+      "type": "A",
+      "question": "DPEFormer 的 DPSM 如何从遮挡图像中选择有用的 patch token？",
+      "seconds": 8.7,
+      "tool_calls": 5,
+      "queries": [
+        "search_documents({\"query\": \"DPSM select useful patch tokens from occluded image\", \"paper\": \"DPEFormer\"})",
+        "search_documents({\"query\": \"dynamic patch selection module occlusion token selection\", \"paper\": \"DPEFormer\"})",
+        "search_documents({\"query\": \"DPSM dynamic patch selection module select useful patch tokens occluded image\", \"paper\": \"Dynamic Patch-aware Enrichment Transformer\"})",
+        "search_documents({\"query\": \"occlusion noise patch token filtering selection strategy\", \"paper\": \"Dynamic Patch-aware Enrichment Transformer\"})",
+        "search_documents({\"query\": \"similarity scores sorted descending Diff maximal gradient magnitude split body tokens\", \"paper\": \"Dynamic Patch-aware Enrichment Transformer\"})"
+      ],
+      "retrieved": [
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "2",
+          "score": 0.51
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "1",
+          "score": 0.5
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "3",
+          "score": 0.57
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "2",
+          "score": 0.47
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "8",
+          "score": 0.44
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "4",
+          "score": 0.39
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "2",
+          "score": 0.41
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "2",
+          "score": 0.49
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "3",
+          "score": 0.4
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "4",
+          "score": 0.4
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "2",
+          "score": 0.43
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "4",
+          "score": 0.35
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "2",
+          "score": 0.4
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "8",
+          "score": 0.39
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "3",
+          "score": 0.4
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "3",
+          "score": 0.39
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "8",
+          "score": 0.39
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "9",
+          "score": 0.36
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "2",
+          "score": 0.35
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "4",
+          "score": 0.37
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "3",
+          "score": 0.47
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "4",
+          "score": 0.53
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "4",
+          "score": 0.52
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "4",
+          "score": 0.46
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "4",
+          "score": 0.44
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "4",
+          "score": 0.33
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "3",
+          "score": 0.32
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "2",
+          "score": 0.33
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "2",
+          "score": 0.42
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "5",
+          "score": 0.44
+        }
+      ],
+      "parse_warnings": 0,
+      "context_chars": 27196,
+      "answer": "DPEFormer 的 DPSM（Dynamic Patch Token Selection Module，动态 patch token 选择模块）从遮挡图像中选择有用 patch token 的流程如下（论文标题为 *Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification*，即 DPEFormer）：\n\n**1. 核心思路**\nDPSM 基于一个观察：属于同一个人的高层 token 之间的语义相似度，应高于与遮挡或背景区域相关的 token。因此它通过相似度计算来评估每个 patch token 的重要性，把 token 分成\"人体\"和\"背景/遮挡\"两类（p.2, p.3）。\n\n**2. 选择代理 token（proxy token）**\nViT backbone 输出的特征为 f = {f_g, f_1, ..., f_N}，其中 f_g 是 class token（全局特征）。由于所有 token 特征在 ViT 后已归一化，直接计算 f_g 与每个 patch token 的内积作为相似度，取与 class token 相似度最大的 patch token 作为代理 token f_proxy（p.3, 公式 1）。f_proxy 被认为对应行人身体区域，是可靠的表示。\n\n**3. 计算相似度并排序**\n再次计算 f_proxy 与所有 patch embedding 的点积，得到相似度分数集合 S_p（共 N 个，最大值等于 1），然后按降序排序得到 S_o = Sort(S_p)（p.3, 公式 2-3）。\n\n**4. 用一阶梯度确定分割点**\n计算排序后序列的一阶梯度 D[i] = S_o[i] − S_o[i+1]，得到 Diff = {D[1], ..., D[N−1]}。假设人体信息与背景/遮挡信息在特征空间中属于不同类别，两者交界处应出现明显的特征跃迁，因此取梯度幅值最大的位置作为分割点：k = arg max_i (Diff)（p.4, 公式 4-6）。前 k 个分数对应的 token 被选为人体特征 token，其余被视为无效 token 并丢弃（p.4）。\n\n**5. 设置最小选择数量 k_min**\n由于\"人体与遮挡/背景边界清晰\"这一假设较强，当行人与遮挡物或背景外观相似时，可能误判导致选出的 token 过少，损害性能。为此设置最小选择数 k_min（经验确定），最终选择数量为 k ← max(k, k_min)，再对选中的 k 个 token 做自适应平均池化得到 P 个 part 特征（p.4）。\n\n**补充说明**\n- DPSM 本质上是一种**硬注意力机制**，给 token 分配二值权重 {0,1}，区别于使用连续权重 [0,1] 的软注意力（p.2）。\n- 从聚类角度看，DPSM 相当于以 f_proxy 为种子做两类聚类，但比 K-means 等聚类方法更高效、更稳定（p.4-5）。\n- 实验表明，使用 patch token 作为代理优于使用全局 class token 作为代理（p.9, Table VII）。\n\n**注意**：知识库中并没有标题为 \"DPEFormer\" 的论文，我根据内容判断上述论文即为你所指的 DPEFormer。如果你指的是另一篇不同的论文，请告知。",
+      "expected_paper": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+      "expected_pages": [
+        "2"
+      ],
+      "retrieval_hit": true,
+      "retrieval_rank": 1,
+      "evidence_required": [
+        "proxy token",
+        "hard attention"
+      ],
+      "evidence_found": [
+        "proxy token",
+        "hard attention"
+      ],
+      "evidence_missing": [],
+      "evidence_hit": true,
+      "judge_raw": "{\n  \"verdict\": \"GROUNDED\",\n  \"verdict_reason\": \"The answer describes DPSM selecting informative, less-occluded patch tokens via proxy-token similarity, dynamic selection, and binary hard attention, with citations to DPEFormer pages 2-4.\",\n  \"concepts_covered\": [\n    \"proxy token\",\n    \"similarity\",\n    \"dynamic selection\",\n    \"hard attention\"\n  ],\n  \"concepts_missing\": [],\n  \"forbidden_violations\": [],\n  \"citation_ok\": true,\n  \"citation_evidence\": \"（p.2, p.3）\",\n  \"scope_qualified\": null,\n  \"scope_reason\": \"\"\n}",
+      "judge": {
+        "verdict": "GROUNDED",
+        "verdict_reason": "The answer describes DPSM selecting informative, less-occluded patch tokens via proxy-token similarity, dynamic selection, and binary hard attention, with citations to DPEFormer pages 2-4.",
+        "concepts_covered": [
+          "proxy token",
+          "similarity",
+          "dynamic selection",
+          "hard attention"
+        ],
+        "concepts_missing": [],
+        "forbidden_violations": [],
+        "citation_ok": true,
+        "citation_evidence": "（p.2, p.3）",
+        "scope_qualified": null,
+        "scope_reason": ""
+      },
+      "verdict": "GROUNDED",
+      "verdict_correct": true,
+      "concepts_covered": 4,
+      "concepts_total": 4,
+      "forbidden_violations": [],
+      "citation_ok": true,
+      "scope_qualified": null,
+      "expected_verdict": "GROUNDED"
+    },
+    {
+      "id": "A05",
+      "type": "A",
+      "question": "DPSM 如何决定保留多少个 patch token？",
+      "seconds": 4.8,
+      "tool_calls": 2,
+      "queries": [
+        "search_documents({\"query\": \"DPSM how many patch tokens to keep pruning ratio\"})",
+        "search_documents({\"query\": \"DPSM patch token selection keep number\"})"
+      ],
+      "retrieved": [
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "4",
+          "score": 0.43
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "2",
+          "score": 0.33
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "8",
+          "score": 0.41
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "4",
+          "score": 0.32
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "4",
+          "score": 0.34
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "9",
+          "score": 0.29
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "3",
+          "score": 0.36
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "2",
+          "score": 0.29
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "6",
+          "score": 0.28
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "8",
+          "score": 0.34
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "9",
+          "score": 0.35
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "8",
+          "score": 0.48
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "4",
+          "score": 0.41
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "8",
+          "score": 0.33
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "3",
+          "score": 0.4
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "1",
+          "score": 0.33
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "8",
+          "score": 0.37
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "2",
+          "score": 0.38
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "3",
+          "score": 0.33
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "2",
+          "score": 0.34
+        }
+      ],
+      "parse_warnings": 0,
+      "context_chars": 17972,
+      "answer": "DPSM 决定保留多少 patch token 的过程如下（均出自论文 *Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification*）：\n\n**1. 动态确定 k（切分点）**\nDPSM 首先计算一个标签引导的 proxy token 与所有 patch token 之间的相似度分数，得到排序后的分数序列 Sₒ。然后通过一阶导数过程找到切分点：\n\n> k = arg max_i (Diff)  （论文 p.4, 式 (6)）\n\n即选取使梯度/差分最大的位置作为 k，前 k 个分数对应的 token 被选为 body feature token，其余被视为无效而丢弃（p.4）。这个 k 是**动态**的，随每个样本自适应变化。\n\n**2. 用 kmin 做下限松弛**\n纯动态选择有时会选出过少的 token，影响性能。因此论文设置了一个最小选择数 kmin 作为松弛条件，最终选择数为：\n\n> k ← max(k, kmin)  （p.4）\n\nkmin 的值是经验确定的（见论文 Section IV-D / Table V）。\n\n**3. kmin 的具体取值**\n在 Occluded-DukeMTMC 上的参数分析（Table V, p.9）显示，kmin 从 0 到 72 变化时，**kmin = 48 取得最佳结果**（Rank-1 69.9，mAP 86.6），因此作者采用 **kmin = 48**（表中标注为 \"48 (Ours)\"）。\n\n**4. 为什么需要这个平衡**\n论文指出：patch token 过多会引入遮挡或背景信息、损害特征表示；过少则无法捕捉足够的人物信息。因此需要设置最小阈值来取得平衡（p.8）。作为对比，固定选择数的 FPSM 实验（Table IV, p.9）显示性能在 **48** 附近达到峰值，之后随选择数增加而下降。\n\n**小结**：DPSM 先用一阶导数找到动态切分点 k，再用经验确定的下限 kmin = 48 做松弛，最终保留 max(k, 48) 个 patch token。",
+      "expected_paper": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+      "expected_pages": [
+        "4"
+      ],
+      "retrieval_hit": true,
+      "retrieval_rank": 1,
+      "evidence_required": [
+        "first-order difference",
+        "kmin"
+      ],
+      "evidence_found": [
+        "kmin"
+      ],
+      "evidence_missing": [
+        "first-order difference"
+      ],
+      "evidence_hit": false,
+      "judge_raw": "{\n  \"verdict\": \"GROUNDED\",\n  \"verdict_reason\": \"The answer describes sorting similarity scores, using first-order difference to find the maximum split point k, and applying kmin as a lower bound, with citation to DPEFormer p.4.\",\n  \"concepts_covered\": [\n    \"sort\",\n    \"first-order difference\",\n    \"maximum\",\n    \"kmin\"\n  ],\n  \"concepts_missing\": [],\n  \"forbidden_violations\": [],\n  \"citation_ok\": true,\n  \"citation_evidence\": \"（论文 p.4, 式 (6)）\",\n  \"scope_qualified\": null,\n  \"scope_reason\": \"\"\n}",
+      "judge": {
+        "verdict": "GROUNDED",
+        "verdict_reason": "The answer describes sorting similarity scores, using first-order difference to find the maximum split point k, and applying kmin as a lower bound, with citation to DPEFormer p.4.",
+        "concepts_covered": [
+          "sort",
+          "first-order difference",
+          "maximum",
+          "kmin"
+        ],
+        "concepts_missing": [],
+        "forbidden_violations": [],
+        "citation_ok": true,
+        "citation_evidence": "（论文 p.4, 式 (6)）",
+        "scope_qualified": null,
+        "scope_reason": ""
+      },
+      "verdict": "GROUNDED",
+      "verdict_correct": true,
+      "concepts_covered": 4,
+      "concepts_total": 4,
+      "forbidden_violations": [],
+      "citation_ok": true,
+      "scope_qualified": null,
+      "expected_verdict": "GROUNDED"
+    },
+    {
+      "id": "A06",
+      "type": "A",
+      "question": "ROA 使用什么来源生成遮挡掩码？它是否在推理阶段使用？",
+      "seconds": 3.6,
+      "tool_calls": 2,
+      "queries": [
+        "search_documents({\"query\": \"ROA occlusion mask source generation\"})",
+        "search_documents({\"query\": \"ROA occlusion mask used at inference stage\"})"
+      ],
+      "retrieved": [
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "7",
+          "score": 0.45
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "6",
+          "score": 0.34
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "6",
+          "score": 0.36
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "9",
+          "score": 0.3
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "11",
+          "score": 0.23
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "6",
+          "score": 0.31
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "6",
+          "score": 0.29
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "2",
+          "score": 0.27
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "2",
+          "score": 0.29
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "10",
+          "score": 0.26
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "6",
+          "score": 0.47
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "2",
+          "score": 0.37
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "7",
+          "score": 0.43
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "6",
+          "score": 0.39
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "2",
+          "score": 0.35
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "8",
+          "score": 0.27
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "6",
+          "score": 0.32
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "2",
+          "score": 0.35
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "9",
+          "score": 0.3
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "9",
+          "score": 0.35
+        }
+      ],
+      "parse_warnings": 0,
+      "context_chars": 18107,
+      "answer": "根据检索到的资料（均来自论文 *Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification*）：\n\n**1. 遮挡掩码的来源**\n\nROA（Realistic Occlusion Augmentation，真实遮挡增强）的掩码集由 **Segment Anything Model (SAM)** 生成，作用于自然图像上：\n\n- \"the mask set is generated by the Segment Anything Model (SAM) [1] applied on natural images\"（p.6）\n- Algorithm 1 的输入明确写着：\"Mask set: Xmask (generated by SAM [1], detailed in Sec. IV-B)\"（p.6）\n- Fig. 5 说明：\"For ROA, we pre-generate a mask set using SAM [1], from which we randomly select masks for occlusion synthesis during training.\"（p.7）\n\n此外，掩码集所用的源图像来自 **SA-1B 数据集**：Table IX 研究的是\"the quantity of selected images from the SA-1B dataset, utilized as source images for Xmask formation\"（p.10）。\n\n**2. 是否在推理阶段使用**\n\n不使用。ROA 仅作为训练阶段的辅助策略：\n\n- \"Note that ROA is introduced as an auxiliary training strategy and does not play a role in the inference phase. This design ensures that DPEFormer remains highly flexible during real-world applications.\"（p.2）\n\n**小结：** ROA 的遮挡掩码由 SAM 在自然图像（来自 SA-1B 数据集）上预先生成，训练时从中随机选取掩码进行遮挡合成；它只在训练阶段起作用，不参与推理阶段。",
+      "expected_paper": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+      "expected_pages": [
+        "2",
+        "6"
+      ],
+      "retrieval_hit": true,
+      "retrieval_rank": 2,
+      "evidence_required": [
+        "Segment Anything",
+        "mask set"
+      ],
+      "evidence_found": [
+        "Segment Anything",
+        "mask set"
+      ],
+      "evidence_missing": [],
+      "evidence_hit": true,
+      "judge_raw": "{\n  \"verdict\": \"GROUNDED\",\n  \"verdict_reason\": \"The answer correctly states that ROA masks are generated by SAM on natural images and that ROA is only used during training, not inference, with supporting citations.\",\n  \"concepts_covered\": [\n    \"Segment Anything Model\",\n    \"training\",\n    \"not inference\"\n  ],\n  \"concepts_missing\": [],\n  \"forbidden_violations\": [],\n  \"citation_ok\": true,\n  \"citation_evidence\": \"\\\"the mask set is generated by the Segment Anything Model (SAM) [1] applied on natural images\\\"（p.6）; \\\"Note that ROA is introduced as an auxiliary training strategy and does not play a",
+      "judge": {
+        "verdict": "GROUNDED",
+        "verdict_reason": "The answer correctly states that ROA masks are generated by SAM on natural images and that ROA is only used during training, not inference, with supporting citations.",
+        "concepts_covered": [
+          "Segment Anything Model",
+          "training",
+          "not inference"
+        ],
+        "concepts_missing": [],
+        "forbidden_violations": [],
+        "citation_ok": true,
+        "citation_evidence": "\"the mask set is generated by the Segment Anything Model (SAM) [1] applied on natural images\"（p.6）; \"Note that ROA is introduced as an auxiliary training strategy and does not play a role in the inference phase.\"（p.2）",
+        "scope_qualified": null,
+        "scope_reason": ""
+      },
+      "verdict": "GROUNDED",
+      "verdict_correct": true,
+      "concepts_covered": 3,
+      "concepts_total": 3,
+      "forbidden_violations": [],
+      "citation_ok": true,
+      "scope_qualified": null,
+      "expected_verdict": "GROUNDED"
+    },
+    {
+      "id": "A07",
+      "type": "A",
+      "question": "A²RNet 认为长期船舶 ReID 中外观大幅变化的典型原因有哪些？",
+      "seconds": 3.0,
+      "tool_calls": 2,
+      "queries": [
+        "search_documents({\"query\": \"A²RNet long-term ship ReID appearance variation causes\"})",
+        "search_documents({\"query\": \"long-term ship re-identification large appearance changes reasons\"})"
+      ],
+      "retrieved": [
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "1",
+          "score": 0.53
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "1",
+          "score": 0.51
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "1",
+          "score": 0.52
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "1",
+          "score": 0.5
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "1",
+          "score": 0.46
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "3",
+          "score": 0.43
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": 0.39
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": 0.41
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "3",
+          "score": 0.43
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "8",
+          "score": 0.43
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "1",
+          "score": 0.5
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "1",
+          "score": 0.58
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": 0.46
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "9",
+          "score": 0.39
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": 0.46
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "1",
+          "score": 0.51
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": 0.39
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "1",
+          "score": 0.52
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "4",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": 0.41
+        }
+      ],
+      "parse_warnings": 0,
+      "context_chars": 17584,
+      "answer": "根据 A²RNet 论文，长期船舶 ReID 中外观大幅变化的原因可分为以下几类：\n\n**1. 运营因素（operational factors）**\n- 货物变化（cargo variation / cargo changes）\n- 设备升级（equipment upgrades）\n\n**2. 环境因素（environmental influences）**\n- 海水腐蚀（seawater corrosion）\n- 盐雾侵蚀（salt spray erosion）\n- 长期阳光照射（prolonged sunlight exposure）\n\n**3. 其他视觉变化因素**\n论文摘要中还提到：\n- 视角变化（viewpoint shifts）\n- 遮挡（occlusions）\n- 环境因素（environmental factors）\n\n论文指出，这些变化在 VesselReID 和 Warships-ReID 等公开数据集中很常见，由此产生的\"长期视觉漂移\"（long-term visual drift）源于时间演化和环境因素，对基于静态外观建模的方法构成了根本性挑战（A²RNet 论文，第 1 页）。\n\n**来源：**\n- A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification，第 1 页（摘要及引言部分，相关性 0.50–0.53）",
+      "expected_paper": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+      "expected_pages": [
+        "1"
+      ],
+      "retrieval_hit": true,
+      "retrieval_rank": 1,
+      "evidence_required": [
+        "cargo",
+        "viewpoint",
+        "occlusion"
+      ],
+      "evidence_found": [
+        "cargo",
+        "viewpoint",
+        "occlusion"
+      ],
+      "evidence_missing": [],
+      "evidence_hit": true,
+      "judge_raw": "{\n  \"verdict\": \"GROUNDED\",\n  \"verdict_reason\": \"The answer lists at least three required causes (cargo variation, viewpoint shifts, occlusions, environmental factors) and states that these changes challenge static appearance modeling, satisfying the rubric.\",\n  \"concepts_covered\": [\n    \"at least 3 of cargo/viewpoint/occlusion/environment\",\n    \"appearance stability\"\n  ],\n  \"concepts_missing\": [],\n  \"forbidden_violations\": [],\n  \"citation_ok\": true,\n  \"citation_evidence\": \"（A²RNet 论文，第 1 页）\",\n  \"scope_qualified\": null,\n  \"scope_reason\": \"\"\n}",
+      "judge": {
+        "verdict": "GROUNDED",
+        "verdict_reason": "The answer lists at least three required causes (cargo variation, viewpoint shifts, occlusions, environmental factors) and states that these changes challenge static appearance modeling, satisfying the rubric.",
+        "concepts_covered": [
+          "at least 3 of cargo/viewpoint/occlusion/environment",
+          "appearance stability"
+        ],
+        "concepts_missing": [],
+        "forbidden_violations": [],
+        "citation_ok": true,
+        "citation_evidence": "（A²RNet 论文，第 1 页）",
+        "scope_qualified": null,
+        "scope_reason": ""
+      },
+      "verdict": "GROUNDED",
+      "verdict_correct": true,
+      "concepts_covered": 2,
+      "concepts_total": 2,
+      "forbidden_violations": [],
+      "citation_ok": true,
+      "scope_qualified": null,
+      "expected_verdict": "GROUNDED"
+    },
+    {
+      "id": "A08",
+      "type": "A",
+      "question": "A²RNet 的 SAP 模块推断的三类语义属性是什么？",
+      "seconds": 2.8,
+      "tool_calls": 2,
+      "queries": [
+        "search_documents({\"query\": \"A²RNet SAP module three types of semantic attributes\", \"paper\": \"A²RNet\"})",
+        "search_documents({\"query\": \"SAP semantic attribute prediction module inferred attributes\", \"paper\": \"A²RNet\"})"
+      ],
+      "retrieved": [
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "3",
+          "score": 0.45
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "3",
+          "score": 0.49
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": 0.42
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "9",
+          "score": 0.52
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "8",
+          "score": 0.4
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "6",
+          "score": 0.37
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "7",
+          "score": 0.39
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "3",
+          "score": 0.43
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": 0.39
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "1",
+          "score": 0.39
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": 0.3
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "1",
+          "score": 0.43
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": 0.46
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "3",
+          "score": 0.33
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "3",
+          "score": 0.31
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "9",
+          "score": 0.38
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "8",
+          "score": 0.33
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "3",
+          "score": 0.34
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "3",
+          "score": 0.38
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "6",
+          "score": 0.34
+        }
+      ],
+      "parse_warnings": 0,
+      "context_chars": 18273,
+      "answer": "A²RNet 的 SAP（Semantic Association Perception，语义关联感知）模块从全局特征向量中推断出三类语义属性：\n\n1. **Ship type（船型）** — 提供稳定的身份相关信息\n2. **Imaging perspective / viewpoint（成像视角）** — 反映几何变化\n3. **Loading and equipment configuration（装载与设备配置）** — 建模动态外观变化\n\n这三类属性被设计为捕获互补的因素，共同构成一个多层次的语义先验，用于后续的关联学习（TAR 和 SAM 模块）。SAP 通过多级比较策略（multi-level comparison strategy）逐步细化这些属性的推断，而非直接分类。\n\n来源：*A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification*，第 3 页（相关度 0.45–0.34）。",
+      "expected_paper": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+      "expected_pages": [
+        "3"
+      ],
+      "retrieval_hit": true,
+      "retrieval_rank": 1,
+      "evidence_required": [
+        "ship type",
+        "imaging perspective",
+        "loading and equipment configuration"
+      ],
+      "evidence_found": [
+        "ship type",
+        "imaging perspective",
+        "loading and equipment configuration"
+      ],
+      "evidence_missing": [],
+      "evidence_hit": true,
+      "judge_raw": "{\n  \"verdict\": \"GROUNDED\",\n  \"verdict_reason\": \"The answer explicitly lists the three semantic attributes inferred by the SAP module, matching the rubric's required concepts and citing page 3 of the A²RNet paper.\",\n  \"concepts_covered\": [\n    \"ship type\",\n    \"viewpoint\",\n    \"loading/equipment configuration\"\n  ],\n  \"concepts_missing\": [],\n  \"forbidden_violations\": [],\n  \"citation_ok\": true,\n  \"citation_evidence\": \"来源：*A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification*，第 3 页\",\n  \"scope_qualified\": null,\n  \"scope_reason\": \"\"\n}",
+      "judge": {
+        "verdict": "GROUNDED",
+        "verdict_reason": "The answer explicitly lists the three semantic attributes inferred by the SAP module, matching the rubric's required concepts and citing page 3 of the A²RNet paper.",
+        "concepts_covered": [
+          "ship type",
+          "viewpoint",
+          "loading/equipment configuration"
+        ],
+        "concepts_missing": [],
+        "forbidden_violations": [],
+        "citation_ok": true,
+        "citation_evidence": "来源：*A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification*，第 3 页",
+        "scope_qualified": null,
+        "scope_reason": ""
+      },
+      "verdict": "GROUNDED",
+      "verdict_correct": true,
+      "concepts_covered": 3,
+      "concepts_total": 3,
+      "forbidden_violations": [],
+      "citation_ok": true,
+      "scope_qualified": null,
+      "expected_verdict": "GROUNDED"
+    },
+    {
+      "id": "A09",
+      "type": "A",
+      "question": "A²RNet 的 TAR 如何组织历史特征，以进行跨时间的匹配？",
+      "seconds": 7.2,
+      "tool_calls": 4,
+      "queries": [
+        "search_documents({\"query\": \"TAR temporal aggregation module organize historical features cross-time matching\", \"paper\": \"A²RNet\"})",
+        "search_documents({\"query\": \"TAR 历史特征 跨时间 匹配 组织方式\", \"paper\": \"A²RNet\"})",
+        "search_documents({\"paper\": \"A²RNet\", \"query\": \"instance bank construction store feature maps by identity and viewpoint\"})",
+        "search_documents({\"paper\": \"A²RNet\", \"query\": \"association-forgetting mechanism association factor update momentum\"})"
+      ],
+      "retrieved": [
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": 0.55
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "4",
+          "score": 0.53
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "4",
+          "score": 0.47
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": 0.43
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "1",
+          "score": 0.42
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "3",
+          "score": 0.43
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "3",
+          "score": 0.46
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": 0.49
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "3",
+          "score": 0.43
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "8",
+          "score": 0.44
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "4",
+          "score": 0.46
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": 0.51
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "4",
+          "score": 0.41
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": 0.4
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "3",
+          "score": 0.35
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "3",
+          "score": 0.38
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": 0.4
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "8",
+          "score": 0.38
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": 0.37
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "8",
+          "score": 0.37
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "4",
+          "score": 0.51
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "4",
+          "score": 0.39
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "4",
+          "score": 0.38
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "5",
+          "score": 0.35
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "5",
+          "score": 0.33
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "5",
+          "score": 0.28
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "5",
+          "score": 0.41
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "3",
+          "score": 0.32
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "6",
+          "score": 0.3
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": 0.29
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "4",
+          "score": 0.5
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "4",
+          "score": 0.46
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "8",
+          "score": 0.4
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "5",
+          "score": 0.44
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "9",
+          "score": 0.44
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "4",
+          "score": 0.35
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "9",
+          "score": 0.38
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "7",
+          "score": 0.33
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "1",
+          "score": 0.35
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "9",
+          "score": 0.45
+        }
+      ],
+      "parse_warnings": 0,
+      "context_chars": 34500,
+      "answer": "A²RNet 的 TAR（Temporal Association Reinforcement，时序关联强化）模块通过**实例库 + 多尺度区域关联 + 关联遗忘优化**三步来组织历史特征并进行跨时间匹配。具体如下：\n\n## 1. 历史特征的组织方式：按\"身份–视角\"配对索引的实例库\n\nTAR 首先构建一个**动态实例库 M**，用**身份–视角对 (y, v)** 作为索引来存储特征图，其中 y 是身份标签，v 是 SAP 模块预测的视角（A²RNet, p.4）。\n\n- 这种设计保证跨时间的关联是在**视角对齐（viewpoint-aligned）**的条件下进行的，从而提升对视角变化和外观变化的鲁棒性（p.4）。\n- 存储的是**特征图（feature maps）**而非仅全局特征向量，因为特征图保留了空间结构，同时计算复杂度可控，能支持更可靠的**区域级跨时间匹配**（p.4）。\n- 实例库只包含训练样本，排除 query 和 gallery 数据以避免数据泄漏（p.5）。\n\n## 2. 跨时间匹配：多尺度条带分区 + 注意力相似度\n\n给定当前特征 F_new 及其对应的历史特征 F_old，TAR 通过**多尺度条带分区（multi-scale strip partitioning）**做细粒度比较：在第 k 个尺度上，特征图被划分为 G_k 个区域（p.4）。\n\n- 该过程使用**基于注意力的相似度**进行细粒度的跨时间特征比较与融合（p.4）。\n- 这种多尺度关联实现了对可靠历史信息的**选择性整合**：一致的区域被保留，不一致的区域则用历史上下文来修正（p.4）。\n- 整体上，TAR 依据相似度**选择性地融合历史与当前特征**，在抑制噪声（如遮挡带来的错误特征）的同时保留判别性信息（p.2）。\n\n## 3. 长期演化的调节：关联遗忘优化机制\n\n由于多尺度感知只做短期更新，无法显式调节长期特征演化，TAR 进一步引入**关联遗忘优化机制**，包含三部分（p.4）：\n\n- **动态关联因子（Dynamic Association Factor）**：为每个身份 y 维护一个动态关联因子 θ_y ∈ R^{C×H×W}，代表其历史特征分布，并通过**基于动量的更新**融合历史与当前信息（p.4）：\n  θ(t+1)_yi = β · mean(M_yi) + (1−β) · θ(t)_yi\n  该式可解释为历史特征的指数移动平均，给近期特征更高权重，逐步衰减过时信息（p.9）。\n- **正样本挖掘（PSM）**：挖掘最难/最易正样本（余弦相似度最小/最大者），以刻画类内分布扩展（p.5）。\n- **关联遗忘损失**：通过特征差异损失、差异一致性约束等，强化身份一致特征、抑制冗余或过时成分（p.5）。\n\n## 小结\n\n简言之，TAR 把历史特征**按身份和视角存入实例库**，用**多尺度条带分区 + 注意力相似度**做视角对齐的区域级跨时间匹配，再用**动量更新的动态关联因子和关联遗忘损失**来调节长期特征演化——既保持身份一致性，又避免强制对齐带来的噪声。消融实验显示 TAR 单独带来 mAP/Rank-1/Rank-5 分别约 17.04%/16.16%/4.67% 的提升（p.8）。",
+      "expected_paper": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+      "expected_pages": [
+        "4"
+      ],
+      "retrieval_hit": true,
+      "retrieval_rank": 2,
+      "evidence_required": [
+        "instance bank",
+        "identity-view pair"
+      ],
+      "evidence_found": [
+        "instance bank",
+        "identity-view pair"
+      ],
+      "evidence_missing": [],
+      "evidence_hit": true,
+      "judge_raw": "{\n  \"verdict\": \"GROUNDED\",\n  \"verdict_reason\": \"The answer correctly describes TAR's instance bank indexed by identity-view pairs storing feature maps, with viewpoint predicted by SAP for alignment, and cites page 4.\",\n  \"concepts_covered\": [\n    \"instance bank\",\n    \"identity-view pair\",\n    \"feature map\",\n    \"SAP/viewpoint aligned\"\n  ],\n  \"concepts_missing\": [],\n  \"forbidden_violations\": [],\n  \"citation_ok\": true,\n  \"citation_evidence\": \"（A²RNet, p.4）\",\n  \"scope_qualified\": null,\n  \"scope_reason\": \"\"\n}",
+      "judge": {
+        "verdict": "GROUNDED",
+        "verdict_reason": "The answer correctly describes TAR's instance bank indexed by identity-view pairs storing feature maps, with viewpoint predicted by SAP for alignment, and cites page 4.",
+        "concepts_covered": [
+          "instance bank",
+          "identity-view pair",
+          "feature map",
+          "SAP/viewpoint aligned"
+        ],
+        "concepts_missing": [],
+        "forbidden_violations": [],
+        "citation_ok": true,
+        "citation_evidence": "（A²RNet, p.4）",
+        "scope_qualified": null,
+        "scope_reason": ""
+      },
+      "verdict": "GROUNDED",
+      "verdict_correct": true,
+      "concepts_covered": 4,
+      "concepts_total": 4,
+      "forbidden_violations": [],
+      "citation_ok": true,
+      "scope_qualified": null,
+      "expected_verdict": "GROUNDED"
+    },
+    {
+      "id": "A10",
+      "type": "A",
+      "question": "ViV-ReID 数据集的规模是多少？",
+      "seconds": 3.8,
+      "tool_calls": 2,
+      "queries": [
+        "search_documents({\"query\": \"ViV-ReID dataset size number of images identities\"})",
+        "search_documents({\"query\": \"ViV-ReID 数据集规模 图像数量 身份数量\"})"
+      ],
+      "retrieved": [
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "2",
+          "score": 0.44
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "4",
+          "score": 0.45
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "1",
+          "score": 0.38
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "6",
+          "score": 0.45
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "5",
+          "score": 0.45
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "12",
+          "score": 0.41
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "5",
+          "score": 0.45
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "6",
+          "score": 0.46
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "6",
+          "score": 0.45
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "5",
+          "score": null
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "12",
+          "score": 0.46
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "4",
+          "score": 0.5
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "2",
+          "score": 0.45
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "1",
+          "score": 0.44
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "12",
+          "score": 0.42
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "4",
+          "score": 0.42
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "5",
+          "score": 0.47
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "5",
+          "score": 0.5
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "3",
+          "score": 0.45
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "1",
+          "score": null
+        }
+      ],
+      "parse_warnings": 0,
+      "context_chars": 18389,
+      "answer": "ViV-ReID 数据集的规模如下（均出自论文 *ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset*）：\n\n**核心规模指标**\n- **480 个** 独特的船舶身份（vessel identities）\n- **20 个** 不同海域/跨港口摄像机视角（20 distinct maritime regions / cross-port camera views）\n- **7,165 条** 轨迹片段（tracklets）\n- **1,145,469 帧**（约 1.14 million frames），平均每条轨迹约 **159 帧**\n- 其中 **113 艘** 船舶存在跨区域重现（cross-region reappearances）\n\n来源：p.2（\"comprises 480 unique vessel identities captured across 20 distinct maritime regions, with 113 vessels exhibiting cross-region reappearances. The dataset contains 1,145,469 frames and 7,165 tracklets, with an average of 159 frames per tracklet\"）；p.1 与 p.12 的结论部分也一致表述为\"480 vessel IDs across 20 cross-port viewpoints (7,165 tracklets, 1.14 million frames)\"。\n\n**补充说明**\n- 该数据集由公开可获取的海事视频，通过\"自动船舶检测 + 人工核验\"的半自动流程构建（p.2）。\n- 论文将其定位为首个公开可用的大规模**基于视频**的船舶 ReID 数据集（p.1、p.12）。\n- 请注意区分：知识库中另有一篇论文的 **VesselReID** 数据集（30,587 张图像、1,248 个身份，p.6），那是图像级数据集，与 ViV-ReID 不是同一个。",
+      "expected_paper": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+      "expected_pages": [
+        "2"
+      ],
+      "retrieval_hit": true,
+      "retrieval_rank": 1,
+      "evidence_required": [
+        "480",
+        "7165",
+        "1145469"
+      ],
+      "evidence_found": [
+        "480",
+        "7165",
+        "1145469"
+      ],
+      "evidence_missing": [],
+      "evidence_hit": true,
+      "judge_raw": "{\n  \"verdict\": \"GROUNDED\",\n  \"verdict_reason\": \"The answer states all four required scale numbers (480 identities, 20 regions, 7,165 tracklets, 1,145,469 frames) and cites the ViV-ReID paper page 2.\",\n  \"concepts_covered\": [\"480\", \"20\", \"7165\", \"1145469\"],\n  \"concepts_missing\": [],\n  \"forbidden_violations\": [],\n  \"citation_ok\": true,\n  \"citation_evidence\": \"来源：p.2（\\\"comprises 480 unique vessel identities captured across 20 distinct maritime regions, with 113 vessels exhibiting cross-region reappearances. The dataset contains 1,145,469 frames and 7,165 tracklets, with an average of 159 frames p",
+      "judge": {
+        "verdict": "GROUNDED",
+        "verdict_reason": "The answer states all four required scale numbers (480 identities, 20 regions, 7,165 tracklets, 1,145,469 frames) and cites the ViV-ReID paper page 2.",
+        "concepts_covered": [
+          "480",
+          "20",
+          "7165",
+          "1145469"
+        ],
+        "concepts_missing": [],
+        "forbidden_violations": [],
+        "citation_ok": true,
+        "citation_evidence": "来源：p.2（\"comprises 480 unique vessel identities captured across 20 distinct maritime regions, with 113 vessels exhibiting cross-region reappearances. The dataset contains 1,145,469 frames and 7,165 tracklets, with an average of 159 frames per tracklet\"）",
+        "scope_qualified": null,
+        "scope_reason": ""
+      },
+      "verdict": "GROUNDED",
+      "verdict_correct": true,
+      "concepts_covered": 4,
+      "concepts_total": 4,
+      "forbidden_violations": [],
+      "citation_ok": true,
+      "scope_qualified": null,
+      "expected_verdict": "GROUNDED"
+    },
+    {
+      "id": "A11",
+      "type": "A",
+      "question": "ViV-ReID 数据集标注管线如何同时利用自动化和人工核验？",
+      "seconds": 5.7,
+      "tool_calls": 3,
+      "queries": [
+        "search_documents({\"query\": \"ViV-ReID dataset annotation pipeline automatic and manual verification\"})",
+        "search_documents({\"query\": \"ViV-ReID 数据集标注 自动化 人工核验\"})",
+        "search_documents({\"query\": \"Grounding DINO Deep SORT bounding boxes tracklets manual verification annotation steps\", \"paper\": \"ViV-ReID\"})"
+      ],
+      "retrieved": [
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "2",
+          "score": 0.38
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "5",
+          "score": null
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "1",
+          "score": 0.32
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "1",
+          "score": 0.29
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "12",
+          "score": 0.33
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "5",
+          "score": 0.32
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "2",
+          "score": 0.31
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "1",
+          "score": 0.34
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "5",
+          "score": 0.28
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "12",
+          "score": 0.36
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "2",
+          "score": 0.36
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "1",
+          "score": 0.32
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "1",
+          "score": 0.35
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "12",
+          "score": 0.38
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "12",
+          "score": 0.35
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "1",
+          "score": 0.38
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "5",
+          "score": 0.32
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "2",
+          "score": 0.32
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "1",
+          "score": 0.32
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "4",
+          "score": 0.35
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "5",
+          "score": 0.45
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "5",
+          "score": 0.51
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "6",
+          "score": 0.22
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "7",
+          "score": 0.26
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "5",
+          "score": 0.16
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "12",
+          "score": 0.18
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "11",
+          "score": 0.24
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "14",
+          "score": 0.3
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "14",
+          "score": 0.17
+        }
+      ],
+      "parse_warnings": 0,
+      "context_chars": 28142,
+      "answer": "I now have the details of the annotation pipeline. Here's how ViV-ReID combines automation and manual verification:\n\n## ViV-ReID 标注管线：自动化 + 人工核验\n\nViV-ReID 采用**半自动管线（semi-automatic pipeline）**，将自动检测方法与人工核验相结合（p.2）。论文明确指出，之所以需要这种组合，是因为虽然当前目标检测技术已能较容易地从视频帧中检测船只，但在多目标共存的场景下难以区分身份，且人工剪辑的视频常包含多段拼接，导致时间维度上的数据不连续、轨迹连贯性受损（p.5）。\n\n### 自动化阶段（Automated）\n\n1. **目标检测**：使用 **Grounding DINO** 生成船只的边界框（bounding boxes）（p.5）。\n2. **轨迹划分**：使用 **Deep SORT** 对轨迹进行划分（divide the trajectories）（p.5）。\n\n### 人工核验阶段（Manual verification）\n\n由于复杂场景会导致**漏帧（frame omission）**和**跟踪偏差（tracking deviation）**，因此需要人工介入（p.5）：\n\n1. **人工筛选（Manually screening）**：剔除非目标船只的轨迹，保留相关轨迹——耗时 **200 小时**。\n2. **逐帧核验（frame-by-frame verification）**：移除错误帧（如存在偏移或无关内容的帧）——耗时 **1000 小时**。\n\n### 最终产出\n\n经过上述流程，从原始约 **500 万帧**视频中保留 **114 万帧**，生成 **7,165 条轨迹（tracklets）**（p.5）。\n\n---\n\n**补充说明**：整个数据整理管线最初汇集了 2,958 个地理标记视频片段（15,291,533 帧，26.23 FPS，1080p），覆盖 64 个地理区域和 1,034 个独特船只；为缓解船只 ID 分布的地理偏差，强制要求每个区域至少包含 5 艘船，最终精炼为 20 个区域、480 艘船（5,511,770 帧）（p.5）。所有视频素材均严格采用 Creative Commons 许可，以确保合规（p.5）。\n\n*来源：ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset, 第 2 页与第 5 页。*",
+      "expected_paper": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+      "expected_pages": [
+        "5"
+      ],
+      "retrieval_hit": true,
+      "retrieval_rank": 2,
+      "evidence_required": [
+        "Grounding DINO",
+        "Deep SORT"
+      ],
+      "evidence_found": [
+        "Grounding DINO",
+        "Deep SORT"
+      ],
+      "evidence_missing": [],
+      "evidence_hit": true,
+      "judge_raw": "{\n  \"verdict\": \"GROUNDED\",\n  \"verdict_reason\": \"The answer correctly describes the semi-automatic pipeline using Grounding DINO for detection, Deep SORT for trajectory division, and manual screening plus frame-by-frame verification, with citations to pages 2 and 5.\",\n  \"concepts_covered\": [\n    \"Grounding DINO\",\n    \"Deep SORT\",\n    \"manual verification\",\n    \"frame-by-frame\"\n  ],\n  \"concepts_missing\": [],\n  \"forbidden_violations\": [],\n  \"citation_ok\": true,\n  \"citation_evidence\": \"第 2 页与第 5 页\",\n  \"scope_qualified\": null,\n  \"scope_reason\": \"\"\n}",
+      "judge": {
+        "verdict": "GROUNDED",
+        "verdict_reason": "The answer correctly describes the semi-automatic pipeline using Grounding DINO for detection, Deep SORT for trajectory division, and manual screening plus frame-by-frame verification, with citations to pages 2 and 5.",
+        "concepts_covered": [
+          "Grounding DINO",
+          "Deep SORT",
+          "manual verification",
+          "frame-by-frame"
+        ],
+        "concepts_missing": [],
+        "forbidden_violations": [],
+        "citation_ok": true,
+        "citation_evidence": "第 2 页与第 5 页",
+        "scope_qualified": null,
+        "scope_reason": ""
+      },
+      "verdict": "GROUNDED",
+      "verdict_correct": true,
+      "concepts_covered": 4,
+      "concepts_total": 4,
+      "forbidden_violations": [],
+      "citation_ok": true,
+      "scope_qualified": null,
+      "expected_verdict": "GROUNDED"
+    },
+    {
+      "id": "A12",
+      "type": "A",
+      "question": "ViV-ReID 的 query set 是怎样从 gallery set 形成的，包含多少条 tracklet？",
+      "seconds": 3.0,
+      "tool_calls": 2,
+      "queries": [
+        "search_documents({\"query\": \"ViV-ReID query set formed from gallery set number of tracklets\"})",
+        "search_documents({\"query\": \"query set construction gallery set tracklet split\", \"paper\": \"ViV-ReID\"})"
+      ],
+      "retrieved": [
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "12",
+          "score": 0.47
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "12",
+          "score": 0.37
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "6",
+          "score": 0.37
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "12",
+          "score": 0.42
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "2",
+          "score": 0.45
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "2",
+          "score": 0.4
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "4",
+          "score": 0.36
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "5",
+          "score": 0.42
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "11",
+          "score": 0.35
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "4",
+          "score": 0.4
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "2",
+          "score": 0.2
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "6",
+          "score": 0.38
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "11",
+          "score": 0.29
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "11",
+          "score": 0.33
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "5",
+          "score": 0.32
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "12",
+          "score": 0.2
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "6",
+          "score": 0.24
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "7",
+          "score": 0.21
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "6",
+          "score": 0.25
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "7",
+          "score": 0.23
+        }
+      ],
+      "parse_warnings": 0,
+      "context_chars": 18401,
+      "answer": "根据 ViV-ReID 论文：\n\n**query set 的形成方式**：ViV-ReID 的划分流程是先把数据按 ship ID 以 3:1 的比例分成 train 和 gallery 两个集合（train 和 gallery 的 tracklet 数分别为 5344 和 1821）。然后**从 gallery set 中抽取五分之一的 tracklet 构成 query set**。划分时以船舶类别作为约束（保证训练集不包含其他集合中没有的类别），并确保每个区域都被包含在划分中，query set 与 gallery set 的船舶类别保持一致，样本来自所有区域（ViV-ReID, p.6）。\n\n**包含的 tracklet 数量**：query set 包含 **364 条 tracklet**（ViV-ReID, p.6）。\n\n另外提示一点，避免混淆：论文 p.12 中出现的\"query set consists of 630 tracklets from 587 identities\"指的是**另一个数据集 VRAI-Video（车辆 ReID 对比数据集）**的划分，不是 ViV-ReID 的 query set（ViV-ReID, p.12）。",
+      "expected_paper": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+      "expected_pages": [
+        "6"
+      ],
+      "retrieval_hit": true,
+      "retrieval_rank": 3,
+      "evidence_required": [
+        "one-fifth",
+        "364"
+      ],
+      "evidence_found": [
+        "one-fifth",
+        "364"
+      ],
+      "evidence_missing": [],
+      "evidence_hit": true,
+      "judge_raw": "{\n  \"verdict\": \"GROUNDED\",\n  \"verdict_reason\": \"The answer correctly states that the query set is formed by taking one-fifth of the gallery set and contains 364 tracklets, citing ViV-ReID p.6.\",\n  \"concepts_covered\": [\n    \"one-fifth\",\n    \"364\"\n  ],\n  \"concepts_missing\": [],\n  \"forbidden_violations\": [],\n  \"citation_ok\": true,\n  \"citation_evidence\": \"（ViV-ReID, p.6）\",\n  \"scope_qualified\": null,\n  \"scope_reason\": \"\"\n}",
+      "judge": {
+        "verdict": "GROUNDED",
+        "verdict_reason": "The answer correctly states that the query set is formed by taking one-fifth of the gallery set and contains 364 tracklets, citing ViV-ReID p.6.",
+        "concepts_covered": [
+          "one-fifth",
+          "364"
+        ],
+        "concepts_missing": [],
+        "forbidden_violations": [],
+        "citation_ok": true,
+        "citation_evidence": "（ViV-ReID, p.6）",
+        "scope_qualified": null,
+        "scope_reason": ""
+      },
+      "verdict": "GROUNDED",
+      "verdict_correct": true,
+      "concepts_covered": 2,
+      "concepts_total": 2,
+      "forbidden_violations": [],
+      "citation_ok": true,
+      "scope_qualified": null,
+      "expected_verdict": "GROUNDED"
+    },
+    {
+      "id": "B01",
+      "type": "B",
+      "question": "这四篇论文的提出方法是否采用 Mamba 或 state-space model 架构？",
+      "seconds": 2.3,
+      "tool_calls": 2,
+      "queries": [
+        "list_papers({})",
+        "search_documents({\"query\": \"Mamba state-space model architecture\"})"
+      ],
+      "retrieved": [],
+      "parse_warnings": 0,
+      "context_chars": 822,
+      "answer": "I searched the knowledge base for Mamba or state-space model content, and no relevant passages were found.\n\n**Answer:** Based on the available documents, I cannot confirm that any of the four papers propose methods using Mamba or state-space model architectures. The knowledge base does not contain relevant information on this topic.\n\nFor transparency, the four papers in the knowledge base are:\n- A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification\n- Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification\n- Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning\n- ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset\n\nNote that this is a \"not found\" result, not evidence that these papers do not use such architectures — the documents simply do not contain passages addressing Mamba or state-space models. If you'd like, I can search for the specific architectures each paper does propose (e.g., transformers, graph networks, contrastive learning).",
+      "retrieval_hit": null,
+      "retrieval_rank": null,
+      "evidence_required": [],
+      "evidence_found": [],
+      "evidence_missing": [],
+      "evidence_hit": null,
+      "judge_raw": "{\n  \"verdict\": \"NOT_FOUND_IN_CORPUS\",\n  \"verdict_reason\": \"The answer correctly reports that no relevant passages about Mamba or state-space models were found in the provided four papers and explicitly avoids making an absolute negative claim.\",\n  \"concepts_covered\": [\n    \"限于当前四篇论文，报告未找到证据，不作绝对否定\",\n    \"provided four papers/current corpus\"\n  ],\n  \"concepts_missing\": [],\n  \"forbidden_violations\": [],\n  \"citation_ok\": null,\n  \"citation_evidence\": \"\",\n  \"scope_qualified\": true,\n  \"scope_reason\": \"The answer limits its claim to the provided corpus, stating 'Based on the available documents' and '",
+      "judge": {
+        "verdict": "NOT_FOUND_IN_CORPUS",
+        "verdict_reason": "The answer correctly reports that no relevant passages about Mamba or state-space models were found in the provided four papers and explicitly avoids making an absolute negative claim.",
+        "concepts_covered": [
+          "限于当前四篇论文，报告未找到证据，不作绝对否定",
+          "provided four papers/current corpus"
+        ],
+        "concepts_missing": [],
+        "forbidden_violations": [],
+        "citation_ok": null,
+        "citation_evidence": "",
+        "scope_qualified": true,
+        "scope_reason": "The answer limits its claim to the provided corpus, stating 'Based on the available documents' and 'the documents simply do not contain passages addressing Mamba or state-space models', and explicitly notes this is a 'not found' result rather than evidence of absence."
+      },
+      "verdict": "NOT_FOUND_IN_CORPUS",
+      "verdict_correct": true,
+      "concepts_covered": 2,
+      "concepts_total": null,
+      "forbidden_violations": [],
+      "citation_ok": null,
+      "scope_qualified": true,
+      "expected_verdict": "NOT_FOUND_IN_CORPUS"
+    },
+    {
+      "id": "B02",
+      "type": "B",
+      "question": "这些方法是否用大语言模型（LLM）或文本 prompt 来生成 ReID 的语义特征？",
+      "seconds": 8.6,
+      "tool_calls": 5,
+      "queries": [
+        "search_documents({\"query\": \"large language model LLM text prompt semantic features for person re-identification\"})",
+        "search_documents({\"query\": \"CLIP text prompt semantic attribute ReID feature generation\"})",
+        "search_documents({\"query\": \"semantic attributes generated by classifier network prediction one-hot encoding\", \"paper\": \"A²RNet\"})",
+        "search_documents({\"query\": \"text prompt CLIP language model semantic supervision vessel ship ReID\", \"paper\": \"ViV-ReID\"})",
+        "search_documents({\"query\": \"semantic parsing pose estimation external cues for semantic features\", \"paper\": \"Dynamic Patch-aware Enrichment Transformer\"})"
+      ],
+      "retrieved": [
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "11",
+          "score": 0.44
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": 0.45
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "1",
+          "score": 0.44
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "12",
+          "score": 0.46
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "11",
+          "score": 0.44
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "13",
+          "score": 0.42
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "4",
+          "score": null
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "3",
+          "score": 0.35
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "8",
+          "score": 0.37
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "1",
+          "score": 0.35
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "8",
+          "score": 0.32
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "7",
+          "score": 0.34
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "13",
+          "score": 0.35
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "13",
+          "score": 0.32
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "3",
+          "score": 0.35
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "3",
+          "score": 0.25
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "3",
+          "score": 0.28
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "3",
+          "score": 0.26
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "9",
+          "score": 0.29
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": 0.25
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": 0.3
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "1",
+          "score": 0.29
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "6",
+          "score": 0.28
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "7",
+          "score": 0.24
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "8",
+          "score": 0.46
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "1",
+          "score": 0.47
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "8",
+          "score": 0.46
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "12",
+          "score": 0.44
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "12",
+          "score": 0.41
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "2",
+          "score": 0.43
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "13",
+          "score": null
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "13",
+          "score": null
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "1",
+          "score": 0.39
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "1",
+          "score": 0.61
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "3",
+          "score": 0.34
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "3",
+          "score": 0.37
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "1",
+          "score": 0.42
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "1",
+          "score": 0.41
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "11",
+          "score": 0.37
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "11",
+          "score": 0.38
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "11",
+          "score": 0.29
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "12",
+          "score": 0.3
+        }
+      ],
+      "parse_warnings": 0,
+      "context_chars": 44328,
+      "answer": "Based on my searches of the knowledge base, here is what the documents say about how these methods generate semantic features for ReID:\n\n## 结论：这些方法**没有**使用 LLM 或文本 prompt 来生成语义特征\n\n从检索到的三篇论文来看，它们生成语义特征的方式都是**基于视觉的分类器/检测器**，而非大语言模型或文本 prompt：\n\n### 1. A²RNet（Ship ReID）— 用分类器推断属性\n该方法通过 **Semantic Association Perception (SAP)** 模块生成语义特征，方式是训练**分类器**对视觉特征进行分类，而非使用文本 prompt：\n- 从全局特征向量 `f` 推断三个属性：ship type、imaging perspective、loading configuration（p.3）\n- 采用**多级比较推理策略**：训练主分类器 `Dmain` 和辅助分类器 `Daux`，通过 `softmax(Dmain(f))` 计算概率分布，迭代剔除低置信度类别（p.3）\n- 预测出的属性被编码为 **one-hot 向量**并拼接成语义向量 `s = [one_hot(ŷtype), one_hot(ŷview), one_hot(ŷload)]`，再投影到特征空间（p.4）\n\n### 2. ViV-ReID（Vessel ReID）— 用 landmark 检测 + 图网络\n该方法使用**船舶 landmark 检测**和结构关系先验来建模，通过 **Bi-SSTN 图网络**解耦全局/对称结构信息（p.12）。值得注意的是，论文在相关工作部分提到 **TF-CLIP** 是\"text-free CLIP\"（无文本 CLIP），即刻意**不使用文本语义监督**来弥合视觉-语言模态差距（p.3）。\n\n### 3. DPEFormer（Occluded Person ReID）— 用语义分割/姿态估计\n该方法依赖**外部线索**：预训练的 **semantic parsing（语义分割）** 或 **pose estimation（姿态估计）** 检测器来定位身体部位和关键点（p.1）。论文还提到 Wang et al. [34] 的 ADGC 模型\"learn semantic features\"（学习语义特征），但同样是通过图卷积网络而非 LLM（p.3）。\n\n---\n\n**总结**：在知识库收录的这三篇论文中，语义特征的生成均基于**视觉分类器、属性预测、landmark 检测或语义分割/姿态估计**，没有一篇使用 LLM 或文本 prompt。其中 ViV-ReID 反而明确强调了\"text-free\"（无文本）的 CLIP 适配方向。\n\n需要说明的是，这只是基于当前知识库检索到的内容——如果某篇论文未提及 LLM 或文本 prompt，并不代表该领域不存在这类方法，只是这些文档中没有相关描述。",
+      "retrieval_hit": null,
+      "retrieval_rank": null,
+      "evidence_required": [],
+      "evidence_found": [],
+      "evidence_missing": [],
+      "evidence_hit": null,
+      "judge_raw": "{\n  \"verdict\": \"NOT_FOUND_IN_CORPUS\",\n  \"verdict_reason\": \"The answer reports that no evidence of LLM or text prompt usage was found in the provided papers, while explicitly limiting the claim to the current knowledge base.\",\n  \"concepts_covered\": [\n    \"限于当前四篇论文\",\n    \"报告未找到证据\",\n    \"不作绝对否定\"\n  ],\n  \"concepts_missing\": [],\n  \"forbidden_violations\": [],\n  \"citation_ok\": true,\n  \"citation_evidence\": \"从检索到的三篇论文来看\",\n  \"scope_qualified\": true,\n  \"scope_reason\": \"The answer limits its conclusion to the provided corpus with phrases like '在知识库收录的这三篇论文中' and '这只是基于当前知识库检索到的内容'.\"\n}",
+      "judge": {
+        "verdict": "NOT_FOUND_IN_CORPUS",
+        "verdict_reason": "The answer reports that no evidence of LLM or text prompt usage was found in the provided papers, while explicitly limiting the claim to the current knowledge base.",
+        "concepts_covered": [
+          "限于当前四篇论文",
+          "报告未找到证据",
+          "不作绝对否定"
+        ],
+        "concepts_missing": [],
+        "forbidden_violations": [],
+        "citation_ok": true,
+        "citation_evidence": "从检索到的三篇论文来看",
+        "scope_qualified": true,
+        "scope_reason": "The answer limits its conclusion to the provided corpus with phrases like '在知识库收录的这三篇论文中' and '这只是基于当前知识库检索到的内容'."
+      },
+      "verdict": "NOT_FOUND_IN_CORPUS",
+      "verdict_correct": true,
+      "concepts_covered": 3,
+      "concepts_total": null,
+      "forbidden_violations": [],
+      "citation_ok": true,
+      "scope_qualified": true,
+      "expected_verdict": "NOT_FOUND_IN_CORPUS"
+    },
+    {
+      "id": "B03",
+      "type": "B",
+      "question": "这些船舶 ReID 方法是否融合 AIS（船舶自动识别系统）信号作为输入特征？",
+      "seconds": 7.8,
+      "tool_calls": 6,
+      "queries": [
+        "search_documents({\"query\": \"ship re-identification AIS signal fusion input features\"})",
+        "search_documents({\"query\": \"vessel ReID multi-modal AIS trajectory fusion\"})",
+        "search_documents({\"query\": \"AIS automatic identification system vessel trajectory metadata\"})",
+        "search_documents({\"query\": \"AIS data integration ship identity matching\", \"paper\": \"ViV-ReID\"})",
+        "search_documents({\"query\": \"AIS\"})",
+        "search_documents({\"query\": \"external complementary information multimodal fusion SAR imagery\"})"
+      ],
+      "retrieved": [
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "1",
+          "score": 0.41
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "1",
+          "score": 0.41
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": 0.43
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "10",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "7",
+          "score": 0.48
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "10",
+          "score": null
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "8",
+          "score": 0.43
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": 0.43
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "9",
+          "score": 0.38
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "9",
+          "score": 0.39
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "8",
+          "score": 0.44
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "9",
+          "score": null
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "1",
+          "score": 0.47
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "1",
+          "score": 0.45
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "8",
+          "score": 0.38
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "12",
+          "score": 0.4
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "8",
+          "score": 0.42
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "7",
+          "score": null
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "12",
+          "score": 0.44
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "1",
+          "score": 0.39
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "5",
+          "score": 0.39
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "12",
+          "score": null
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "1",
+          "score": 0.41
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "13",
+          "score": 0.35
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "8",
+          "score": 0.4
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "11",
+          "score": null
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "13",
+          "score": 0.39
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "1",
+          "score": 0.38
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "5",
+          "score": 0.36
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "1",
+          "score": 0.4
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "6",
+          "score": 0.42
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "5",
+          "score": 0.41
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "5",
+          "score": 0.36
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "7",
+          "score": 0.38
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "14",
+          "score": 0.4
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "14",
+          "score": 0.35
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "3",
+          "score": 0.36
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "1",
+          "score": 0.46
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "1",
+          "score": 0.36
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "6",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": 0.38
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "14",
+          "score": 0.35
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "10",
+          "score": 0.37
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "12",
+          "score": 0.34
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "10",
+          "score": 0.33
+        }
+      ],
+      "parse_warnings": 0,
+      "context_chars": 45797,
+      "answer": "根据知识库中的检索结果，我可以回答如下：\n\n**知识库中没有找到任何关于 AIS（船舶自动识别系统）信号作为输入特征的信息。** 针对 \"AIS\" 的直接检索返回\"未找到相关文档\"，因此我无法确认这些方法是否使用了 AIS 信号。\n\n不过，检索结果确实显示了这些船舶 ReID 方法实际使用的输入特征类型：\n\n**1. A²RNet（长时船舶 ReID）**\n- 输入为**图像**，经 ResNet-50 骨干网络提取特征图（A²RNet, p.3）。\n- 论文明确讨论了\"引入外部互补信息\"的方向，但举的例子是**多模态融合（如 SAR 影像）**，而非 AIS；并且指出这类方法存在跨模态差异和特征对齐问题（A²RNet, p.1、p.2）。\n- 其核心模块（SAP 语义关联感知、TAR 时序关联强化、SAM 结构关联挖掘）均基于视觉特征，SAP 推断的是船舶类型等语义属性（A²RNet, p.1、p.6）。\n\n**2. ViV-ReID / Bi-SSTN（视频船舶 ReID）**\n- 输入为**视频帧**，融合图像特征、船舶结构关系特征（基于 20 个船舶关键点/landmark）以及成对关系特征（ViV-ReID, p.7、p.9）。\n- 论文提到的跨模态方向是**可见光-红外**以及**光学-SAR**（如引文 [73] \"Cross-modal ship re-identification via optical and SAR imagery\"），同样未提及 AIS（ViV-ReID, p.12、p.14）。\n\n**3. Unsupervised Maritime Vessel Re-ID with Multi-Level Contrastive Learning**\n- 基于视觉图像的对比学习，未提及 AIS（该文 p.1）。\n\n**小结：** 从知识库现有内容看，这些船舶 ReID 方法使用的是视觉输入（图像/视频帧、船舶结构关键点），以及 SAR、红外等其他**影像模态**的融合；知识库中**没有**任何证据表明它们融合了 AIS 信号作为输入特征。需要说明的是，这只是\"文档中未提及\"，并不等于这些方法在现实中一定不使用 AIS。",
+      "retrieval_hit": null,
+      "retrieval_rank": null,
+      "evidence_required": [],
+      "evidence_found": [],
+      "evidence_missing": [],
+      "evidence_hit": null,
+      "judge_raw": "{\n  \"verdict\": \"NOT_FOUND_IN_CORPUS\",\n  \"verdict_reason\": \"The answer reports that no evidence of AIS input/fusion was found in the provided corpus and explicitly limits the claim to the knowledge base.\",\n  \"concepts_covered\": [\n    \"限于当前四篇论文，报告未找到 AIS 输入或融合的证据，不作绝对否定\"\n  ],\n  \"concepts_missing\": [],\n  \"forbidden_violations\": [],\n  \"citation_ok\": true,\n  \"citation_evidence\": \"A²RNet, p.3\",\n  \"scope_qualified\": true,\n  \"scope_reason\": \"The answer limits the claim to the knowledge base/current corpus and explicitly states that lack of mention does not mean the methods definitely do not use AIS.\"\n",
+      "judge": {
+        "verdict": "NOT_FOUND_IN_CORPUS",
+        "verdict_reason": "The answer reports that no evidence of AIS input/fusion was found in the provided corpus and explicitly limits the claim to the knowledge base.",
+        "concepts_covered": [
+          "限于当前四篇论文，报告未找到 AIS 输入或融合的证据，不作绝对否定"
+        ],
+        "concepts_missing": [],
+        "forbidden_violations": [],
+        "citation_ok": true,
+        "citation_evidence": "A²RNet, p.3",
+        "scope_qualified": true,
+        "scope_reason": "The answer limits the claim to the knowledge base/current corpus and explicitly states that lack of mention does not mean the methods definitely do not use AIS."
+      },
+      "verdict": "NOT_FOUND_IN_CORPUS",
+      "verdict_correct": true,
+      "concepts_covered": 1,
+      "concepts_total": null,
+      "forbidden_violations": [],
+      "citation_ok": true,
+      "scope_qualified": true,
+      "expected_verdict": "NOT_FOUND_IN_CORPUS"
+    },
+    {
+      "id": "B04",
+      "type": "B",
+      "question": "这些论文是否使用声呐、LiDAR 或其他三维点云来完成 ReID？",
+      "seconds": 5.7,
+      "tool_calls": 5,
+      "queries": [
+        "search_documents({\"query\": \"sonar LiDAR 3D point cloud person re-identification\"})",
+        "list_papers({})",
+        "search_documents({\"query\": \"sensor modality camera RGB infrared imaging data collection\"})",
+        "search_documents({\"query\": \"point cloud depth 3D structure geometric information\"})",
+        "search_documents({\"query\": \"SAR optical imagery cross-modal ship re-identification\"})"
+      ],
+      "retrieved": [
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "1",
+          "score": 0.44
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "2",
+          "score": 0.44
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "14",
+          "score": 0.4
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "12",
+          "score": 0.44
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "13",
+          "score": 0.37
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "12",
+          "score": 0.42
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "7",
+          "score": null
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "page": "13",
+          "score": null
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "5",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "1",
+          "score": 0.43
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "page": "14",
+          "score": 0.51
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "10",
+          "score": 0.51
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": 0.46
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "10",
+          "score": 0.49
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "1",
+          "score": 0.46
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": 0.52
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": 0.47
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": null
+        }
+      ],
+      "parse_warnings": 0,
+      "context_chars": 18350,
+      "answer": "Based on my searches of the knowledge base, here's what I found:\n\n**The four papers in the knowledge base are:**\n\n1. **A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification**\n2. **Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification**\n3. **Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning**\n4. **ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset**\n\n**Regarding sonar, LiDAR, or 3D point clouds:**\n\nThe documents do **not** contain relevant information about the use of sonar, LiDAR, or 3D point clouds for ReID. My searches for these sensor modalities returned no relevant passages.\n\n**What the documents *do* mention as sensor/modality-related content:**\n\n- **SAR (Synthetic Aperture Radar) imagery** is discussed as a complementary modality for ship ReID. A²RNet notes that some existing studies introduce \"external complementary information, such as multimodal fusion (e.g., SAR imagery [12])\" to enhance feature robustness, though it cautions that such approaches \"often suffer from cross-modal discrepancies and feature misalignment\" (A²RNet, p.1, relevance 0.46). It also references cross-satellite SAR ship re-identification work (A²RNet, p.10).\n- **Optical and SAR imagery** for cross-modal ship ReID is cited in ViV-ReID's references (ViV-ReID, p.14, relevance 0.51).\n- **3D CNNs** appear in ViV-ReID, but only as a *video processing architecture* (\"3D CNNs [25], [26] preserve temporal context through volumetric operations\"), not as a 3D point cloud sensor (ViV-ReID, p.2, relevance 0.40).\n- One author biography mentions research interests in \"3D shape analysis and 3D visual perception,\" but this is not described as used in the paper's method (Unsupervised Maritime Vessel Re-ID, p.13).\n\n**Summary:** The documents do not contain information indicating that these papers use sonar, LiDAR, or 3D point clouds for ReID. The closest related modality discussed is SAR/optical imagery for ship ReID. I cannot conclude from the documents' silence that such approaches are absent from the broader field — only that the knowledge base does not contain relevant information on sonar, LiDAR, or point-cloud-based ReID.",
+      "retrieval_hit": null,
+      "retrieval_rank": null,
+      "evidence_required": [],
+      "evidence_found": [],
+      "evidence_missing": [],
+      "evidence_hit": null,
+      "judge_raw": "{\n  \"verdict\": \"NOT_FOUND_IN_CORPUS\",\n  \"verdict_reason\": \"The answer correctly reports that the provided four papers contain no relevant evidence about sonar, LiDAR, or 3D point clouds for ReID, while explicitly limiting the claim to the knowledge base.\",\n  \"concepts_covered\": [\n    \"限于当前四篇论文，报告未找到相关证据，不作绝对否定\"\n  ],\n  \"concepts_missing\": [],\n  \"forbidden_violations\": [],\n  \"citation_ok\": true,\n  \"citation_evidence\": \"The documents do **not** contain relevant information about the use of sonar, LiDAR, or 3D point clouds for ReID.\",\n  \"scope_qualified\": true,\n  \"scope_reason\": \"The answer limits",
+      "judge": {
+        "verdict": "NOT_FOUND_IN_CORPUS",
+        "verdict_reason": "The answer correctly reports that the provided four papers contain no relevant evidence about sonar, LiDAR, or 3D point clouds for ReID, while explicitly limiting the claim to the knowledge base.",
+        "concepts_covered": [
+          "限于当前四篇论文，报告未找到相关证据，不作绝对否定"
+        ],
+        "concepts_missing": [],
+        "forbidden_violations": [],
+        "citation_ok": true,
+        "citation_evidence": "The documents do **not** contain relevant information about the use of sonar, LiDAR, or 3D point clouds for ReID.",
+        "scope_qualified": true,
+        "scope_reason": "The answer limits its negative finding to the provided corpus, stating 'The documents do not contain information indicating...' and 'I cannot conclude from the documents' silence that such approaches are absent from the broader field — only that the knowledge base does not contain relevant information.'"
+      },
+      "verdict": "NOT_FOUND_IN_CORPUS",
+      "verdict_correct": true,
+      "concepts_covered": 1,
+      "concepts_total": null,
+      "forbidden_violations": [],
+      "citation_ok": true,
+      "scope_qualified": true,
+      "expected_verdict": "NOT_FOUND_IN_CORPUS"
+    },
+    {
+      "id": "B05",
+      "type": "B",
+      "question": "DPEFormer 是否用 GAN（生成对抗网络）生成遮挡训练图像？",
+      "seconds": 4.7,
+      "tool_calls": 4,
+      "queries": [
+        "search_documents({\"query\": \"DPEFormer occluded training images generation GAN\", \"paper\": \"DPEFormer\"})",
+        "list_papers({})",
+        "search_documents({\"query\": \"occluded training images generation GAN synthesized occlusion augmentation\", \"paper\": \"Dynamic Patch-aware Enrichment Transformer\"})",
+        "search_documents({\"query\": \"how are occluded training samples generated\", \"paper\": \"Dynamic Patch-aware Enrichment Transformer\"})"
+      ],
+      "retrieved": [
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "9",
+          "score": 0.43
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "6",
+          "score": 0.46
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "11",
+          "score": 0.4
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "2",
+          "score": 0.42
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "7",
+          "score": 0.43
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "6",
+          "score": 0.45
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "7",
+          "score": 0.39
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "3",
+          "score": 0.4
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "6",
+          "score": 0.4
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "9",
+          "score": 0.55
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "6",
+          "score": 0.32
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "7",
+          "score": 0.46
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "7",
+          "score": 0.38
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "6",
+          "score": 0.35
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "9",
+          "score": 0.3
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "6",
+          "score": 0.38
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "2",
+          "score": 0.34
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "7",
+          "score": 0.29
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "9",
+          "score": 0.35
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "6",
+          "score": 0.31
+        }
+      ],
+      "parse_warnings": 0,
+      "context_chars": 17937,
+      "answer": "**No — DPEFormer does not use a GAN to generate occluded training images.**\n\nAccording to the paper *Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification* (which is the paper referred to as \"DPEFormer\"), the occlusion augmentation is done by **Realistic Occlusion Augmentation (ROA)**, which is based on the **Segment Anything Model (SAM)**, not a GAN:\n\n- \"we present Realistic Occlusion Augmentation (ROA) that significantly diminishes data redundancy and greatly enhances the realism of generated images, better simulating real-world occlusions. The procedure of the proposed ROA is outlined in Algorithm 1, whose mask set is generated by the Segment Anything Model (SAM) [1] applied on natural images\" (p.6)\n\n- \"We propose Realistic Occlusion Augmentation (ROA) utilizing the Segment Anything Model (SAM) [1]. ROA serves the dual purpose of reducing information redundancy during image augmentation while faithfully emulating realistic occlusion scenarios, including variations in contour details.\" (p.2)\n\n- \"substantial improvement validates the effectiveness of ROA, which leverages the Segment Anything Model (SAM) [1] to generate realistic occluded images.\" (p.9)\n\nThe paper contrasts ROA with earlier augmentation strategies — Random Erasing (RE) and cut-and-paste approaches (p.6) — and notes that ROA is used only as an auxiliary training strategy, not at inference (p.2). No GAN-based generation is mentioned in the retrieved passages.",
+      "retrieval_hit": null,
+      "retrieval_rank": null,
+      "evidence_required": [],
+      "evidence_found": [],
+      "evidence_missing": [],
+      "evidence_hit": null,
+      "judge_raw": "{\n  \"verdict\": \"NOT_FOUND_IN_CORPUS\",\n  \"verdict_reason\": \"The answer reports that no GAN-based generation is mentioned in the retrieved passages, but it also makes a forbidden absolute negative claim that DPEFormer does not use a GAN.\",\n  \"concepts_covered\": [\n    \"限于当前论文库，报告未找到 GAN 生成遮挡的证据\"\n  ],\n  \"concepts_missing\": [\n    \"不从 ROA 反推绝对否定\"\n  ],\n  \"forbidden_violations\": [\n    \"No — DPEFormer does not use a GAN to generate occluded training images.\"\n  ],\n  \"citation_ok\": true,\n  \"citation_evidence\": \"According to the paper *Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Iden",
+      "judge": {
+        "verdict": "NOT_FOUND_IN_CORPUS",
+        "verdict_reason": "The answer reports that no GAN-based generation is mentioned in the retrieved passages, but it also makes a forbidden absolute negative claim that DPEFormer does not use a GAN.",
+        "concepts_covered": [
+          "限于当前论文库，报告未找到 GAN 生成遮挡的证据"
+        ],
+        "concepts_missing": [
+          "不从 ROA 反推绝对否定"
+        ],
+        "forbidden_violations": [
+          "No — DPEFormer does not use a GAN to generate occluded training images."
+        ],
+        "citation_ok": true,
+        "citation_evidence": "According to the paper *Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification* (which is the paper referred to as \"DPEFormer\")",
+        "scope_qualified": false,
+        "scope_reason": "Although the answer later says no GAN-based generation is mentioned in the retrieved passages, its opening claim is an unqualified absolute denial that DPEFormer does not use a GAN."
+      },
+      "verdict": "NOT_FOUND_IN_CORPUS",
+      "verdict_correct": true,
+      "concepts_covered": 1,
+      "concepts_total": null,
+      "forbidden_violations": [
+        "No — DPEFormer does not use a GAN to generate occluded training images."
+      ],
+      "citation_ok": true,
+      "scope_qualified": false,
+      "expected_verdict": "NOT_FOUND_IN_CORPUS"
+    },
+    {
+      "id": "B06",
+      "type": "B",
+      "question": "这些论文是否通过强化学习来决定船舶/人体 patch 的选择策略？",
+      "seconds": 3.2,
+      "tool_calls": 2,
+      "queries": [
+        "search_documents({\"query\": \"reinforcement learning to select ship patch or human patch\"})",
+        "search_documents({\"query\": \"patch selection strategy adversarial patch placement\"})"
+      ],
+      "retrieved": [
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "2",
+          "score": 0.39
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "2",
+          "score": 0.35
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "2",
+          "score": 0.41
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "1",
+          "score": 0.34
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "2",
+          "score": 0.37
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": 0.38
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": 0.36
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "page": "2",
+          "score": 0.38
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "8",
+          "score": 0.35
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "4",
+          "score": 0.37
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "8",
+          "score": 0.33
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "6",
+          "score": 0.32
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "2",
+          "score": 0.31
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "2",
+          "score": 0.31
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "2",
+          "score": 0.32
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "3",
+          "score": 0.31
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "8",
+          "score": 0.34
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "page": "9",
+          "score": 0.32
+        }
+      ],
+      "parse_warnings": 0,
+      "context_chars": 17876,
+      "answer": "No — based on the retrieved passages, neither paper uses reinforcement learning to decide patch selection.\n\n**Person re-ID paper (DPEFormer):**\n- The patch selection is done by the **Dynamic Patch Token Selection Module (DPSM)**, which assesses each patch token's significance via **similarity calculations with a label-guided proxy token**, then selects tokens through a **first-order derivative process** — described explicitly as a **hard attention mechanism** with binary weights {0,1}, not RL (Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification, p.2).\n- The proxy token itself is chosen from patch tokens by similarity to the class token (p.3), and the number of selected tokens is bounded by an empirical minimum k_min (p.4).\n- The paper also mentions a memory bank for regularizing feature learning (p.6), but nothing about reinforcement learning.\n\n**Ship re-ID paper (A²RNet):**\n- Its \"reinforcement\" terminology refers to **feature reinforcement**, not RL: the Temporal Association Reinforcement (TAR) module captures cross-temporal relationships with an association-forgetting mechanism, and Structural Association Mining (SAM) models spatial relationships among ship components (A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification, p.1–2). No RL-based patch selection is described.\n\nSo the answer is: the documents do not describe reinforcement learning as the mechanism for choosing ship or human patches. The person paper uses a similarity/derivative-based hard-attention selection, and the ship paper uses association-based feature reinforcement.",
+      "retrieval_hit": null,
+      "retrieval_rank": null,
+      "evidence_required": [],
+      "evidence_found": [],
+      "evidence_missing": [],
+      "evidence_hit": null,
+      "judge_raw": "{\n  \"verdict\": \"GROUNDED\",\n  \"verdict_reason\": \"The answer correctly reports that the retrieved corpus does not describe reinforcement learning for patch selection, and explicitly distinguishes DPSM and TAR from RL.\",\n  \"concepts_covered\": [\n    \"限于当前论文库，报告未找到强化学习用于 patch 选择的证据，不将 DPSM/TAR 误称为强化学习。\"\n  ],\n  \"concepts_missing\": [],\n  \"forbidden_violations\": [],\n  \"citation_ok\": true,\n  \"citation_evidence\": \"(Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification, p.2)\",\n  \"scope_qualified\": true,\n  \"scope_reason\": \"The answer limits its claim to the retrieved passages a",
+      "judge": {
+        "verdict": "GROUNDED",
+        "verdict_reason": "The answer correctly reports that the retrieved corpus does not describe reinforcement learning for patch selection, and explicitly distinguishes DPSM and TAR from RL.",
+        "concepts_covered": [
+          "限于当前论文库，报告未找到强化学习用于 patch 选择的证据，不将 DPSM/TAR 误称为强化学习。"
+        ],
+        "concepts_missing": [],
+        "forbidden_violations": [],
+        "citation_ok": true,
+        "citation_evidence": "(Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification, p.2)",
+        "scope_qualified": true,
+        "scope_reason": "The answer limits its claim to the retrieved passages and the documents, not asserting a universal absence beyond the corpus."
+      },
+      "verdict": "GROUNDED",
+      "verdict_correct": false,
+      "concepts_covered": 1,
+      "concepts_total": null,
+      "forbidden_violations": [],
+      "citation_ok": true,
+      "scope_qualified": true,
+      "expected_verdict": "NOT_FOUND_IN_CORPUS"
+    },
+    {
+      "id": "C01",
+      "type": "C",
+      "question": "如何做红烧肉？",
+      "seconds": 2.2,
+      "tool_calls": 1,
+      "queries": [
+        "search_documents({\"query\": \"红烧肉 做法 烹饪 食谱 braised pork recipe\"})"
+      ],
+      "retrieved": [],
+      "parse_warnings": 0,
+      "context_chars": 304,
+      "answer": "The knowledge base does not contain any relevant information about how to make 红烧肉 (braised pork). The documents I have access to are scientific papers and technical documents, so cooking recipes are outside their scope.\n\nIf you have a research question about the papers in the knowledge base — for example about a specific method, model, dataset, or finding — I'd be glad to help. I can also list what papers are available if you'd like to see what's covered.",
+      "retrieval_hit": null,
+      "retrieval_rank": null,
+      "evidence_required": [],
+      "evidence_found": [],
+      "evidence_missing": [],
+      "evidence_hit": null,
+      "judge_raw": "{\n  \"verdict\": \"OUT_OF_SCOPE\",\n  \"verdict_reason\": \"The answer correctly refuses the cooking question and states that recipes are outside the scope of the ReID paper corpus.\",\n  \"concepts_covered\": [\"简短拒绝，说明超出当前 ReID 论文库范围\"],\n  \"concepts_missing\": [],\n  \"forbidden_violations\": [],\n  \"citation_ok\": null,\n  \"citation_evidence\": \"\",\n  \"scope_qualified\": true,\n  \"scope_reason\": \"The answer limits the claim to the provided corpus by saying the knowledge base does not contain relevant information and cooking recipes are outside the scope of the scientific papers and technical documents it has access",
+      "judge": {
+        "verdict": "OUT_OF_SCOPE",
+        "verdict_reason": "The answer correctly refuses the cooking question and states that recipes are outside the scope of the ReID paper corpus.",
+        "concepts_covered": [
+          "简短拒绝，说明超出当前 ReID 论文库范围"
+        ],
+        "concepts_missing": [],
+        "forbidden_violations": [],
+        "citation_ok": null,
+        "citation_evidence": "",
+        "scope_qualified": true,
+        "scope_reason": "The answer limits the claim to the provided corpus by saying the knowledge base does not contain relevant information and cooking recipes are outside the scope of the scientific papers and technical documents it has access to."
+      },
+      "verdict": "OUT_OF_SCOPE",
+      "verdict_correct": true,
+      "concepts_covered": 1,
+      "concepts_total": null,
+      "forbidden_violations": [],
+      "citation_ok": null,
+      "scope_qualified": true,
+      "expected_verdict": "OUT_OF_SCOPE"
+    },
+    {
+      "id": "C02",
+      "type": "C",
+      "question": "现在应该买哪只股票，才能在下个月获得最高收益？",
+      "seconds": 1.9,
+      "tool_calls": 0,
+      "queries": [],
+      "retrieved": [],
+      "parse_warnings": 0,
+      "context_chars": 0,
+      "answer": "我不能回答这个问题。我是 ResearchPilot，一个用于科学论文和技术文档的文献检索助手，我的知识库只包含研究论文，不包含股票行情、财务数据或投资建议。\n\n具体来说：\n\n- 我的工具只能检索知识库里的论文段落，无法获取任何实时或历史的股票价格、财报或市场数据。\n- 即便知识库里恰好有金融相关的论文，那也只是学术研究内容，不能作为\"下个月买哪只股票收益最高\"的依据。\n- 预测下个月哪只股票收益最高，本质上是不可能的——这需要预知未来，任何人都无法可靠做到。\n\n如果你有投资方面的需求，建议咨询持牌的财务顾问，并注意任何声称能保证短期最高收益的说法都值得警惕。\n\n如果你其实是想问文献相关的问题——比如知识库里有没有关于股票收益预测、资产定价或量化投资的研究论文——我可以帮你检索。需要的话告诉我，我可以先列出知识库中现有的论文。",
+      "retrieval_hit": null,
+      "retrieval_rank": null,
+      "evidence_required": [],
+      "evidence_found": [],
+      "evidence_missing": [],
+      "evidence_hit": null,
+      "judge_raw": "{\n  \"verdict\": \"OUT_OF_SCOPE\",\n  \"verdict_reason\": \"The answer briefly refuses the investment question and states the knowledge base only contains research papers, not stock data or investment advice.\",\n  \"concepts_covered\": [\n    \"简短拒绝，说明超出当前 ReID 论文库范围\"\n  ],\n  \"concepts_missing\": [],\n  \"forbidden_violations\": [],\n  \"citation_ok\": null,\n  \"citation_evidence\": \"\",\n  \"scope_qualified\": null,\n  \"scope_reason\": \"\"\n}",
+      "judge": {
+        "verdict": "OUT_OF_SCOPE",
+        "verdict_reason": "The answer briefly refuses the investment question and states the knowledge base only contains research papers, not stock data or investment advice.",
+        "concepts_covered": [
+          "简短拒绝，说明超出当前 ReID 论文库范围"
+        ],
+        "concepts_missing": [],
+        "forbidden_violations": [],
+        "citation_ok": null,
+        "citation_evidence": "",
+        "scope_qualified": null,
+        "scope_reason": ""
+      },
+      "verdict": "OUT_OF_SCOPE",
+      "verdict_correct": true,
+      "concepts_covered": 1,
+      "concepts_total": null,
+      "forbidden_violations": [],
+      "citation_ok": null,
+      "scope_qualified": null,
+      "expected_verdict": "OUT_OF_SCOPE"
+    }
+  ]
+}

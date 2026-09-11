@@ -402,6 +402,8 @@ def summarize(records: list[dict]) -> dict:
 
 def to_markdown(summary: dict, records: list[dict], eval_name: str) -> str:
     lines = ["# 评估报告：%s" % eval_name, ""]
+    lines.append("Agent：`%s`" % summary.get("agent", "?"))
+    lines.append("模型：`%s`" % summary.get("model", "?"))
     lines.append("生成时间：%s" % datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     lines.append("")
     lines.append("## 汇总")
@@ -467,6 +469,7 @@ async def _main() -> None:
         items = items[: args.limit]
 
     print("评估集   : %s" % os.path.basename(eval_path))
+    print("Agent    : %s" % args.agent)
     print("题目数   : %d" % len(items))
     print("")
 
@@ -516,6 +519,10 @@ async def _main() -> None:
         print("        %s" % flag)
 
     summary = summarize(records)
+    # 报告里必须记住是**哪个 agent** 跑出来的。两个图共用同一套工具与检索管线，
+    # 指标长得几乎一样；不记 agent 就没法把多次运行归组，也没法事后对比。
+    summary["agent"] = args.agent
+    summary["model"] = settings.DEFAULT_MODEL
     out_dir = os.path.join(backend_root, "resource", "eval")
     os.makedirs(out_dir, exist_ok=True)
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")

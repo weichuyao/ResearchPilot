@@ -28,7 +28,10 @@ export default function RootLayout({ children }: { children: any }) {
 
   const [currentThreadId, setCurrentThreadId] = useState(null);
 
-  const [agentId, setAgentId] = useState("oa-assistant");
+  // 打开页面时默认用哪个 agent。
+  // 这个值会随每次请求发给后端（useStreamChat.ts 的 agent_id），所以它是**真正生效**
+  // 的默认值 —— 后端 agents.py 里的 DEFAULT_AGENT 只在客户端完全不传 agent_id 时起作用。
+  const [agentId, setAgentId] = useState("research-workflow");
 
 
   //listen new-chat event
