@@ -41,14 +41,40 @@ B04 的问题是「这些论文是否使用声呐、LiDAR 或三维点云」—�
 ### 证据二：「未找到」是模型说的，不是系统判的
 
 `NOT_FOUND_IN_CORPUS` 目前**只是一个提示词规则**（`instructions` 第 4 条）——
-图上没有任何节点负责得出这个结论。后果是它不稳定：
+图上没有任何节点负责得出这个结论。
 
-| 题 | 183422 | 184316 | 184813 | 185322 |
-|---|---|---|---|---|
-| B06（是否用强化学习选 patch） | ❌ GROUNDED | ✅ | ✅ | ✅ |
+> ## ⚠️ 这里原来有一条错误的证据，2026-09-11 晚更正
+>
+> 原文写的是：B06 在四次运行里翻过一次（GROUNDED / NOT_FOUND / NOT_FOUND / NOT_FOUND），
+> 说明「未找到」由模型自由心证产生时会**随采样抖动**。
+>
+> **这个归因是错的。** 翻当时的原始回答，183422 和 184316 两次的答案是**几乎一字不差**的：
+>
+> ```
+> 183422  verdict=GROUNDED
+>   "Based on my searches of the knowledge base, the answer is **no** —
+>    none of the papers use reinforcement learning to decide patch selection
+>    strategies. What the papers actually use for patch selection: …"
+>
+> 184316  verdict=NOT_FOUND_IN_CORPUS
+>   "Based on my searches of the knowledge base, the answer is **no** —
+>    neither paper uses reinforcement learning to decide patch selection
+>    strategies. Here's what the documents actually show: …"
+> ```
+>
+> 同一个结论、同一个结构，一次被判 GROUNDED、一次被判 NOT_FOUND。
+> **抖的是尺子，不是被测的东西。**
+>
+> 真正的原因后来查清了（见 `design-decisions.md` 决策九）：**评委提示词里
+> 四个 verdict 只在 JSON schema 里列了名字，从来没定义过**。评委看到答案里既有
+> "the answer is no"、又有"这些方法实际用的是 DPSP/注意力机制"这一大段有依据的
+> 内容，就凭直觉选了 GROUNDED。
+>
+> **教训**：把测量缺陷当成系统缺陷，是这套流程里最容易犯、也最贵的一个错。
+> 我为这条错误的归因花了很久去"追查系统的不稳定"，而系统一直是稳的。
 
-同一个问题、同一份语料，**同一句话在四次运行里翻过一次**。当"未找到"由模型自由心证
-产生时，它就会随采样抖动 —— 而这正是这个项目最想守住的行为（不把"没找到"说成"不存在"）。
+**结构上的问题依然成立**：`NOT_FOUND_IN_CORPUS` 确实只是提示词规则，图上没有节点
+负责得出它。这是改造 #3 要补的东西 —— 但理由要换成下面这条，不是"它不稳定"。
 
 更关键的是：**现在无法区分两种"未找到"**：
 
