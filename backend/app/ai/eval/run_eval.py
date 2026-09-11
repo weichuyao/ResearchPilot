@@ -41,18 +41,21 @@ from langchain_core.messages import HumanMessage, SystemMessage
 # search_documents 返回的每段开头长这样（末段是「怎么匹配上的」，格式会演进）：
 #   [source 1 | Unsupervised Maritime Vessel ... | p.15 | relevance 0.83]
 #   [source 2 | Dynamic Patch-aware ... | p.4 | relevance 0.56 + exact terms]
-#   [source 3 | ViV-ReID: ... | p.9 | matched on exact terms]
+#   [source 3 | README | sec.2 | matched on exact terms]
+#
+# 位置前缀是**格式相关的**（p. / sec. / blk.，见 ai/rag/parsers.py），
+# 所以这里用 `[a-z]+\.` 而不是写死 `p\.` —— 非 PDF 文档也能解析。
 #
 # 这里刻意把末段整体吞下来再单独解析分数，而不是写死 "relevance X.XX]" ——
 # 之前就是因为写死了，工具返回格式一变，retrieval_recall 直接静默掉到 0.25。
 _SOURCE_RE = re.compile(
-    r"\[source\s+\d+\s*\|\s*(?P<title>.+?)\s*\|\s*p\.(?P<page>[^\s|]+)\s*\|\s*(?P<how>[^\]]+)\]"
+    r"\[source\s+\d+\s*\|\s*(?P<title>.+?)\s*\|\s*(?P<prefix>[a-z]+)\.(?P<page>[^\s|]+)\s*\|\s*(?P<how>[^\]]+)\]"
 )
 _SCORE_RE = re.compile(r"relevance\s+(?P<score>[\d.]+)")
 
 
 def parse_sources(tool_output: str) -> list[dict]:
-    """从工具返回的文本里把「论文 / 页码 / 分数」抽出来。"""
+    """从工具返回的文本里把「标题 / 位置 / 分数」抽出来。"""
     out = []
     for match in _SOURCE_RE.finditer(tool_output or ""):
         how = match.group("how")
@@ -60,6 +63,7 @@ def parse_sources(tool_output: str) -> list[dict]:
         out.append(
             {
                 "title": match.group("title").strip(),
+                "prefix": match.group("prefix").strip(),
                 "page": match.group("page").strip(),
                 "score": float(score.group("score")) if score else None,
             }
@@ -271,7 +275,11 @@ async def run_item(item: dict, model, agent, model_name: str) -> dict:
         for rank, source in enumerate(sources, start=1):
             title_ok = want_title and (want_title[:40] in norm_text(source["title"]) or
                                        norm_text(source["title"])[:40] in want_title)
-            if title_ok and (not want_pages or source["page"] in want_pages):
+            # 必须同时是**页码**类型的定位（prefix == "p"）。
+            # 评估集的 expected_source 给的是 PDF 页码，而 Markdown 文档的
+            # `sec.3` 里那个 3 是章节号 —— 不区分的话会假命中。
+            page_ok = source.get("prefix") == "p" and (not want_pages or source["page"] in want_pages)
+            if title_ok and page_ok:
                 matched_rank = rank
                 break
         record["expected_paper"] = source_spec.get("paper")

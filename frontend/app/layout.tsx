@@ -4,13 +4,14 @@ import React from "react";
 
 import { Layout, Menu, Button, Select } from "antd";
 import { useState, useEffect, useRef } from "react";
-import { BarsOutlined, PlusOutlined } from "@ant-design/icons";
+import { BarsOutlined, DatabaseOutlined, PlusOutlined } from "@ant-design/icons";
 import "./globals.css";
 import { v4 as uuidv4 } from "uuid";
 import { LayoutContext } from "./layout-context";
 import SessionListItem from './components/SessionListItem';
 import AgentSelector from './components/AgentSelector';
 import SiderComponent from './components/SiderComponent';
+import KnowledgeBaseDrawer from './components/KnowledgeBaseDrawer';
 
 const { Header, Content } = Layout;
 
@@ -32,6 +33,10 @@ export default function RootLayout({ children }: { children: any }) {
   // 这个值会随每次请求发给后端（useStreamChat.ts 的 agent_id），所以它是**真正生效**
   // 的默认值 —— 后端 agents.py 里的 DEFAULT_AGENT 只在客户端完全不传 agent_id 时起作用。
   const [agentId, setAgentId] = useState("research-workflow");
+
+  // 知识库抽屉的开合。state 放在 layout 层而不是抽屉内部，
+  // 这样以后想从别处（比如"没有相关文档"的提示里）打开它也有地方挂。
+  const [kbOpen, setKbOpen] = useState(false);
 
 
   //listen new-chat event
@@ -135,10 +140,18 @@ export default function RootLayout({ children }: { children: any }) {
                   <span className="text-base">AI-Agent:</span>
                   <AgentSelector value={agentId} onChange={selectAgent} />
                 </div>
+                <div className="flex items-center ml-4 flex-none shrink-0">
+                  {/* 知识库入口。放在 Header 而不是侧边栏：它和"选哪个 agent"一样，
+                      属于"这次对话在哪个上下文里进行"的设置，而不是会话列表的一部分。 */}
+                  <Button icon={<DatabaseOutlined />} onClick={() => setKbOpen(true)}>
+                    知识库
+                  </Button>
+                </div>
               </Header>
               <Content className="m-4 p-6 bg-white min-h-[calc(100vh-120px)]">
                   {children}
               </Content>
+              <KnowledgeBaseDrawer open={kbOpen} onClose={() => setKbOpen(false)} />
             </Layout>
           </Layout>
         </body>

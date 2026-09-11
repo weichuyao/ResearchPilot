@@ -34,6 +34,7 @@ from fastapi import APIRouter, BackgroundTasks, File, Form, HTTPException, Uploa
 from fastapi import status as http
 
 from ai.rag.ingest import index_pdf
+from ai.rag.parsers import describe_formats, parser_for, supported_extensions
 from api.schema.documentSchema import (
     DocumentList,
     DocumentOut,
@@ -56,11 +57,17 @@ logger = logging.getLogger(__name__)
 
 document_router = APIRouter(prefix="/documents", tags=["documents"])
 
-# 只收 PDF。为什么写死扩展名而不是 Content-Type：浏览器给出的 MIME 常常是
-# application/octet-stream，甚至是错的，靠它判断会既拒绝合法文件又放过非法文件。
-# 真正的判据是内容（PDF 头是 %PDF-），所以这里只看扩展名，下面再验文件头。
-ALLOWED_EXTENSIONS = (".pdf",)
-PDF_MAGIC = b"%PDF-"
+# 支持哪些格式**不在接口层定义**，而是问解析器注册表（ai/rag/parsers.py）。
+#
+# 为什么：格式清单只能有一处。写两份的话，必然出现「上传接口收了 .docx 但
+# 导入管道不认」或者反过来 —— 而那种不一致的表现是"文件传上去了、状态一直失败"，
+# 排查起来要跨两个文件。
+#
+# 校验分两步，都从注册表取：
+#   扩展名 → 决定用哪个解析器（不认识就 415）
+#   文件头 → 确认内容真的是那个格式（参数化的魔数）
+# 为什么不看 Content-Type：浏览器给出的 MIME 常常是 application/octet-stream，
+# 甚至干脆是错的，靠它判断会既拒绝合法文件又放过非法文件。
 
 # 读上传流的分片大小。用分片读而不是 file.read() 一把梭：
 # UploadFile 背后是 SpooledTemporaryFile，**不读它就不占内存**；
@@ -140,10 +147,11 @@ async def upload_document(
     # ---- 1) 便宜的检查：扩展名（415）----
     original = file.filename or ""
     ext = os.path.splitext(original)[1].lower()
-    if ext not in ALLOWED_EXTENSIONS:
+    parser = parser_for(original)
+    if parser is None:
         raise HTTPException(
             status_code=http.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            detail="只支持 PDF（收到 %r）。其它格式的解析器还没接。" % (ext or original),
+            detail="只支持 %s（收到 %r）。" % (describe_formats(), ext or original),
         )
 
     # ---- 2) 读内容，边读边算大小（413）----
@@ -151,10 +159,21 @@ async def upload_document(
     payload = await _read_with_cap(file, max_bytes)
 
     # ---- 3) 验文件头。扩展名叫 .pdf 不代表内容是 PDF ----
-    if not payload.startswith(PDF_MAGIC):
+    magic = parser.info.magic
+    if magic and not payload.startswith(magic):
         raise HTTPException(
             status_code=http.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            detail="文件内容不是 PDF（缺少 %%PDF- 文件头）。改个扩展名是没用的。",
+            detail="文件内容不是 %s（缺少%s）。改个扩展名是没用的。"
+                   % (ext, parser.info.magic_note),
+        )
+    if magic is None and b"\x00" in payload[:4096]:
+        # 没有魔数的格式（Markdown / 纯文本）做一次粗筛：
+        # 前 4KB 里出现 NUL 字节，基本可以断定不是文本文件。
+        # 这拦不住所有伪装，但能把「把 .exe 改名成 .md」这种挡在外面 ——
+        # 否则它会被当作乱码文本索引进去，污染检索。
+        raise HTTPException(
+            status_code=http.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail="%s 是文本格式，但内容里含二进制数据 —— 大概率只是改了扩展名。" % ext,
         )
 
     # ---- 4) 落盘。用内容哈希命名 ----
@@ -275,6 +294,90 @@ async def _ingest_in_background(paper_id: int, pdf_path: str, source_file: str, 
         return
     await mark(STATUS_INDEXED, chunk_count=row.get("chunks") or 0)
     logger.info("upload: 索引完成 id=%s，%d 块", paper_id, row.get("chunks") or 0)
+
+
+@document_router.post("/{paper_id}/reindex", status_code=http.HTTP_202_ACCEPTED,
+                      response_model=UploadAccepted)
+async def reindex_document(background: BackgroundTasks, paper_id: int) -> UploadAccepted:
+    """重新索引一个已存在的文档 → 202。
+
+    ## 什么时候需要它
+
+    改了切块参数、换了 embedding 模型、或者上次索引失败之后。上传接口对同一份文件
+    返回 409（"已经在知识库里了，需要重新索引请先删除该文档"）—— 在没有这个接口之前，
+    那句话让用户去做一件他做不到的事。
+
+    ## 为什么要先删旧块
+
+    **不删的话新块会和旧块叠加**：同一段内容会在向量库里存在两份，检索时互相竞争，
+    引用看起来还很正常（同一页、两个不同分数）。这种重复不会报错，只会让结果变差 ——
+    又是一次静默失败。
+
+    删在前面的代价是：如果重新解析失败，旧索引已经没了，文档变成 status=failed。
+    这个取舍是**故意**的：
+      · 重新索引的前提就是旧内容已经过时，留着它并没有价值
+      · 失败会明确落在记录里（status=2 + error），用户看得到、可以重试
+      · 反过来（先加后删）会在加成功、删失败时留下重复，而那是**看不见**的坏状态
+    宁可要一个看得见的失败，不要一个看不见的重复。
+
+    ## 为什么不需要额外的 task 表
+
+    设计文档当时预计需要，但真做下来发现不需要：**「一篇文档同时只有一个索引操作」
+    这个不变量对重索引同样成立**，所以 `paper.status` 依然够用。
+    task 表真正会被需要是在这些场景：需要**操作历史**（第几次、什么时候、失败原因）、
+    需要**批量重索引整个知识库**（任务就不挂在单个文档上了）、或者要**多 worker 并发**
+    （那时需要跨进程的任务认领机制）。现在一个都不成立，提前建表只会多一处不一致。
+    """
+    async with async_session_maker() as session:
+        paper = await PaperRepository.get_by_id(session=session, paper_id=paper_id)
+        if paper is None:
+            raise HTTPException(
+                status_code=http.HTTP_404_NOT_FOUND, detail="没有 id=%s 的文档" % paper_id
+            )
+        if paper.status in (STATUS_PENDING, STATUS_INDEXING):
+            raise HTTPException(
+                status_code=http.HTTP_409_CONFLICT,
+                detail="这篇文档已经在处理中（%s），等它结束再重试。" % status_text(paper.status),
+            )
+
+        source_file = paper.source_file
+        pdf_path = paper.pdf_path
+        title = paper.title
+
+        # 源文件可能已经被删掉了（比如手动清理过 uploads 目录）。
+        # 没有源文件就无从重新解析 —— 这不是 404（文档记录还在），是状态不允许这个操作。
+        if not pdf_path or not os.path.isfile(pdf_path):
+            raise HTTPException(
+                status_code=http.HTTP_409_CONFLICT,
+                detail="源文件不在磁盘上了（%s），无法重新索引。"
+                       "请重新上传，或者先删除这条记录。" % (pdf_path or "路径为空"),
+            )
+
+        # 先删旧块（理由见 docstring）
+        from ai.rag.chromaClient import document_vector_store
+
+        removed = 0
+        got = document_vector_store.get(where={"source": source_file})
+        ids = got.get("ids") or []
+        if ids:
+            document_vector_store.delete(ids=ids)
+            removed = len(ids)
+
+        # 状态回到「待处理」，后台任务会把它推进到「处理中」→「已索引」
+        await PaperRepository.update_progress(
+            session=session, paper_id=paper_id, status=STATUS_PENDING, chunk_count=0
+        )
+
+    background.add_task(_ingest_in_background, paper_id, pdf_path, source_file, title)
+    logger.info("reindex: 受理 id=%s（先清掉 %d 个旧块）", paper_id, removed)
+
+    return UploadAccepted(
+        id=paper_id,
+        title=title,
+        status=STATUS_PENDING,
+        status_text=status_text(STATUS_PENDING),
+        poll="/documents/%s" % paper_id,
+    )
 
 
 @document_router.get("", response_model=DocumentList)

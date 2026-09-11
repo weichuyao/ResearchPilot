@@ -32,9 +32,6 @@ from datetime import datetime
 
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from pdfminer.high_level import extract_pages
-from pdfminer.layout import LTContainer, LTFigure, LTTextLine
-from pypdf import PdfReader
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +46,13 @@ CHUNK_OVERLAP = 150
 # 标题清单的文件名（相对于论文目录）
 MANIFEST_NAME = "titles.json"
 
+# 一个位置片段短于这个字符数就丢掉。
+#
+# 页眉页脚剥离、图表文字过滤之后，PDF 里会剩下一堆只有一个词甚至一个公式符号的
+# 残片。它们进向量库只会污染检索 —— 实测这类残片的余弦分数虚高
+# （和查询字面重合度高但没有信息量），会把真正有内容的段落挤下去。
+MIN_SECTION_CHARS = 50
+
 _MANIFEST_HELP = (
     "只需要填写每篇论文的 title 字段（留空则使用脚本自动推导的结果）。"
     "带下划线前缀的字段由脚本生成，每次运行都会被覆写，请不要修改它们。"
@@ -58,59 +62,55 @@ _MANIFEST_HELP = (
 # ============================================================================
 # 文本清洗
 # ============================================================================
-
-def _norm(line: str) -> str:
-    """归一化一行，用于判断它是否在每页重复。数字会被抹掉，因为页码会变。"""
-    return re.sub(r"\s+", " ", re.sub(r"\d+", "#", line)).strip().lower()
-
-
-def find_repeated_edge_lines(pages: list[str]) -> set[str]:
-    """找出在超过一半页面上重复出现的首行/末行 —— 也就是页眉和页脚。
-
-    用「跨页重复」来识别，而不是硬编码某本刊物的页眉格式，这样换一批论文也能用。
-    """
-    if len(pages) < 3:
-        return set()
-    counts: dict[str, int] = {}
-    for text in pages:
-        lines = [line for line in text.split("\n") if line.strip()]
-        if not lines:
-            continue
-        for edge in {_norm(lines[0]), _norm(lines[-1])}:
-            if edge:
-                counts[edge] = counts.get(edge, 0) + 1
-    threshold = max(2, len(pages) // 2)
-    return {key for key, count in counts.items() if count >= threshold}
-
-
-def normalize_typography(text: str) -> str:
-    """还原 PDF 里的连字和特殊破折号。实现与理由见 ai/rag/textnorm.py。
-
-    这里只做一层转发，是为了让 ingest 能在**导入时**就用上同一份归一化 ——
-    归一化的三个使用方（导入、评估、名次基准）必须完全一致，所以实现在
-    textnorm.py 里只写一份。延迟导入是因为 app/ 要等 main() 才进 sys.path。
-    """
-    from ai.rag.textnorm import normalize_typography as impl
-
-    return impl(text)
-
-
-def clean_page_text(text: str, noise: set[str]) -> str:
-    """去掉页眉页脚、还原连字、并修复被换行拆开的单词。"""
-    kept = [line for line in text.split("\n") if not (line.strip() and _norm(line) in noise)]
-    joined = "\n".join(kept)
-    # represen-\ntation → representation
-    # 注意：这也会把行尾的真实连字符合并（well-\nknown → wellknown），属于已知取舍。
-    # 换行拆词在两端对齐的论文里非常常见，而真实连字符恰好落在行尾的情况少得多。
-    return normalize_typography(re.sub(r"(\w)-\n(\w)", r"\1\2", joined))
+#
+# PDF 专属的清洗（页眉页脚剥离、换行断词合并、连字还原）已经搬到 ai/rag/parsers.py，
+# 由 PdfParser.clean() 负责 —— 那里才是"格式相关的处理"该待的地方。
+# 放在这里会导致 parsers 反过来 import ingest，形成循环。
+#
+# 这里的 normalize_typography 只是一层转发，给还在用它的旧调用点留个名字。
 
 
 # ============================================================================
 # 标题：三层优先级
 # ============================================================================
 
-def _auto_title(path: str, metadata: dict) -> tuple[str, str]:
-    """自动推导标题，返回 (标题, 来源)。来源只会是 metadata 或 filename。"""
+def _iter_supported_files(folder: str) -> list[str]:
+    """列出目录下所有**注册表认识的**文件。
+
+    以前这里是 `glob("*.pdf")`。改成查注册表之后，目录里放 Markdown / DOCX
+    也能一起导入 —— 而「支持哪些格式」只有 `parsers.py` 一处定义，
+    不会出现「上传接口收了 .docx 但批量导入只认 .pdf」这种不一致。
+    """
+    from ai.rag.parsers import supported_extensions
+
+    found: list[str] = []
+    for ext in supported_extensions():
+        found.extend(glob.glob(os.path.join(folder, "*" + ext)))
+    return found
+
+
+def _pdf_title_metadata(path: str) -> dict:
+    """读 PDF 的 `/Title`。非 PDF 返回空 dict（它们没有这个概念）。"""
+    if os.path.splitext(path)[1].lower() != ".pdf":
+        return {}
+    try:
+        from pypdf import PdfReader
+
+        return PdfReader(path).metadata or {}
+    except Exception as exc:
+        logger.warning("读 PDF 元数据失败（%s），改用文件名推标题：%s",
+                       type(exc).__name__, path)
+        return {}
+
+
+def _auto_title(path: str, metadata: dict | None = None) -> tuple[str, str]:
+    """自动推导标题，返回 (标题, 来源)。来源只会是 metadata 或 filename。
+
+    `metadata` 可以显式传入（批量导入时读一次就够），不传就按格式自己读。
+    """
+    if metadata is None:
+        metadata = _pdf_title_metadata(path)
+
     raw = metadata.get("/Title")
     if raw is not None:
         title = html.unescape(str(raw)).strip()
@@ -189,61 +189,6 @@ def save_manifest(folder: str, rows: list[dict]) -> str:
 # 导入
 # ============================================================================
 
-def _collect_text_lines(obj, out: list[str]) -> None:
-    """递归收集 LTTextLine 的文本，遇到 LTFigure 整棵子树跳过。"""
-    if isinstance(obj, LTFigure):
-        return
-    if isinstance(obj, LTTextLine):
-        text = obj.get_text().rstrip()
-        if text:
-            out.append(text)
-        return
-    if isinstance(obj, LTContainer):
-        for child in obj:
-            _collect_text_lines(child, out)
-
-
-def extract_pages_text(path: str, fallback: PdfReader | None = None) -> list[str]:
-    """用 pdfminer 抽取每一页的文本，跳过图表子树。
-
-    为什么不用 pypdf 的 `page.extract_text()`：它是**流式抽取，没有版面感知**。
-    A²RNet 第 3 页上，正文那句
-
-        "...(i) ship type, (ii) imaging perspective, and (iii) loading and
-         equipment configuration"
-
-    被 Fig. 3 的图形标签、图注和一张概率表隔开了约 **1600 字符**，而 pypdf
-    忠实地还原了这个错乱的顺序。后果有两层：句子被切断（模型只能答出前两项），
-    而且含答案的那一块被数字稀释、embedding 质量下降、排不进候选。
-
-    pdfminer 会把用 Form XObject 画的图包成 LTFigure 节点，**整棵子树跳过**即可。
-    图内文字（`Instance Bank` / `Conv` / `MP` / `0.9977` 这类）根本不会出现。
-    实测同一页：图内标签和概率表数字全部消失，`(iii) loading and equipment
-    configuration` 回到正文里，与前半句的距离从约 1600 字符降到约 350 字符 ——
-    足够让它们落进同一个 800 字符的块。
-
-    注意 pypdf 仍然保留：`/Title` 元数据的读取比 pdfminer 方便，且抽取失败时要靠它兜底。
-
-    抽取失败时退回 pypdf（结果差，但总比整篇丢掉好）—— 和 rerank 的降级是同一个思路。
-    """
-    try:
-        pages: list[str] = []
-        for layout in extract_pages(path):
-            lines: list[str] = []
-            _collect_text_lines(layout, lines)
-            pages.append("\n".join(lines))
-        if pages:
-            return pages
-        logger.warning("pdfminer 没有抽出任何页面，改用 pypdf：%s", path)
-    except Exception as exc:
-        logger.warning("pdfminer 抽取失败（%s: %s），改用 pypdf：%s",
-                       type(exc).__name__, exc, path)
-
-    if fallback is not None:
-        return [page.extract_text() or "" for page in fallback.pages]
-    return []
-
-
 def build_splitter() -> RecursiveCharacterTextSplitter:
     """切块器。抽成函数是为了让「整库导入」和「上传单个文件」用**同一套**参数 ——
     两处各写一份的话，上传进来的块和批量导入的块粒度会悄悄不一致。"""
@@ -255,62 +200,77 @@ def build_splitter() -> RecursiveCharacterTextSplitter:
     )
 
 
-def chunk_pdf(path: str, source_file: str, title: str,
-              splitter: RecursiveCharacterTextSplitter | None = None
-              ) -> tuple[list[Document], dict]:
-    """解析**单个** PDF → (切好的块, 报告行)。
+def chunk_document(path: str, source_file: str, title: str,
+                   splitter: RecursiveCharacterTextSplitter | None = None
+                   ) -> tuple[list[Document], dict]:
+    """解析**单个**文件 → (切好的块, 报告行)。
+
+    格式由 `ai/rag/parsers.py` 的注册表决定（PDF / Markdown / DOCX / 纯文本），
+    这里只负责「切块 + 打 metadata」，不关心文件是什么格式。
 
     `source_file` 和 `title` 由调用方决定，不在这里从文件名推 ——
     上传的文件名是带哈希前缀的存储名，不能拿来当标题用。
+
+    metadata 里的三个位置字段：
+      · `page_label`     —— 位置标签（PDF 是页码，Markdown 是章节号，纯文本是块号）
+      · `locator_prefix` —— 引用里的前缀（`p` / `sec` / `blk`），检索工具据此拼引用
+      · `locator_kind`   —— page / section / block，让模型知道自己在说什么
+
+    **为什么不统一叫 page**：Markdown 没有页。硬套的话引用会写「第 2 页」，
+    而那个文件根本没有页 —— 引用是用户唯一会核对的东西，说错比不说更糟。
     """
+    from ai.rag.parsers import parse_document
+
     splitter = splitter or build_splitter()
-    reader = PdfReader(path)
-    raw_pages = extract_pages_text(path, fallback=reader)
-    noise = find_repeated_edge_lines(raw_pages)
+    sections, info = parse_document(path)
 
     chunks: list[Document] = []
-    for page_index, raw in enumerate(raw_pages):
-        cleaned = clean_page_text(raw, noise)
-        if len(cleaned.strip()) < 50:
+    for section in sections:
+        text = section.text
+        if len(text.strip()) < MIN_SECTION_CHARS:
             continue
-        page_doc = Document(
-            page_content=cleaned,
+        piece = Document(
+            page_content=text,
             metadata={
                 "source": source_file,
                 "paper_title": title,
-                "page": page_index,
-                "page_label": str(page_index + 1),
+                # `page` 保留成 0 基序号，只为兼容既有代码（Chroma 里的旧数据也有它）；
+                # 真正表达位置的是下面两个。
+                "page": int(section.label) - 1 if section.label.isdigit() else 0,
+                "page_label": section.label,
+                "locator_prefix": info.prefix,
+                "locator_kind": info.kind,
             },
         )
-        chunks.extend(splitter.split_documents([page_doc]))
+        chunks.extend(splitter.split_documents([piece]))
 
     return chunks, {
         "file": source_file,
         "title": title,
-        "pages": len(raw_pages),
+        "pages": len(sections),
+        "sections": len(sections),
         "chunks": len(chunks),
-        "noise_lines": len(noise),
+        "locator_kind": info.kind,
     }
 
 
-def load_pdf_chunks(folder: str, manifest: dict) -> tuple[list[Document], list[dict]]:
-    """读取目录下所有 PDF，返回 (切好的块, 每篇的处理报告)。"""
+def load_folder_chunks(folder: str, manifest: dict) -> tuple[list[Document], list[dict]]:
+    """读取目录下所有**受支持格式**的文件，返回 (切好的块, 每篇的处理报告)。"""
     splitter = build_splitter()
 
     chunks: list[Document] = []
     report: list[dict] = []
 
-    for path in sorted(glob.glob(os.path.join(folder, "*.pdf"))):
+    for path in sorted(_iter_supported_files(folder)):
         name = os.path.basename(path)
-        reader = PdfReader(path)
-        auto_title, auto_source = _auto_title(path, reader.metadata or {})
+        auto_title, auto_source = _auto_title(path)
 
         entry = manifest.get(name, {}) or {}
         manual_title = str(entry.get("title", "") or "").strip()
         title = manual_title or auto_title
         title_source = "manual" if manual_title else auto_source
 
-        file_chunks, row = chunk_pdf(path, name, title, splitter)
+        file_chunks, row = chunk_document(path, name, title, splitter)
         chunks.extend(file_chunks)
         row["title_source"] = title_source
         row["auto_title"] = auto_title
@@ -350,7 +310,7 @@ def index_pdf(pdf_path: str, source_file: str, title: str) -> dict:
     from ai.rag.chromaClient import document_vector_store
     from ai.rag.hybrid import invalidate_index
 
-    chunks, row = chunk_pdf(pdf_path, source_file=source_file, title=title)
+    chunks, row = chunk_document(pdf_path, source_file=source_file, title=title)
     if not chunks:
         raise ValueError("没有解析出任何内容，检查一下是不是扫描件（没有文本层）")
 
@@ -439,7 +399,7 @@ def ingest(folder: str, reset: bool = True, collection_name: str = "reid-papers"
         raise SystemExit("找不到论文目录: %s" % folder)
 
     manifest = load_manifest(folder)
-    chunks, report = load_pdf_chunks(folder, manifest)
+    chunks, report = load_folder_chunks(folder, manifest)
     if not chunks:
         raise SystemExit("没有解析出任何内容，检查一下 PDF 是不是扫描件")
 
@@ -456,12 +416,18 @@ def ingest(folder: str, reset: bool = True, collection_name: str = "reid-papers"
         time.sleep(0.2)
 
     manifest_path = save_manifest(folder, report)
-    _sync_paper_table(report, folder, collection_name)
+    _sync_paper_table(report, folder, collection_name, prune=reset)
     return len(chunks), report, manifest_path
 
 
-def _sync_paper_table(report: list[dict], folder: str, collection_name: str) -> None:
-    """把这一批论文的结构化元数据写进 paper 表（按 source_file upsert）。"""
+def _sync_paper_table(report: list[dict], folder: str, collection_name: str,
+                      prune: bool = False) -> None:
+    """把这一批论文的结构化元数据写进 paper 表（按 source_file upsert）。
+
+    `prune=True`（整库重建时）会顺带删掉**这个知识库里已经不存在的**记录，
+    让关系库和向量库保持一致。理由见 PaperRepository.delete_not_in 的说明 ——
+    不删的话，从语料目录移走一篇论文之后，`list_papers` 还会把它列出来。
+    """
     import asyncio
 
     from db.database import async_session_maker, create_db_and_tables
@@ -475,6 +441,14 @@ def _sync_paper_table(report: list[dict], folder: str, collection_name: str) -> 
             collection = await CollectionRepository.get_or_create(
                 session=session, name=collection_name, description="ResearchPilot 论文知识库"
             )
+            if prune:
+                removed = await PaperRepository.delete_not_in(
+                    session=session,
+                    collection_id=collection.id or 0,
+                    keep_source_files=[row["file"] for row in report],
+                )
+                for name in removed:
+                    print("  已清理 paper 表中不再存在的记录: %s" % name)
             for row in report:
                 meta = row.get("meta") or {}
                 paper = Paper(
@@ -518,13 +492,14 @@ def main() -> None:
     total, report, manifest_path = ingest(folder, reset=reset)
 
     print("")
-    print("%-50s %5s %6s %7s %8s" % ("标题", "页数", "块数", "噪声行", "标题来源"))
-    print("-" * 82)
+    print("%-50s %6s %6s %9s %8s" % ("标题", "片段数", "块数", "位置类型", "标题来源"))
+    print("-" * 88)
     for row in report:
-        print("%-50s %5d %6d %7d %8s" % (
-            row["title"][:48], row["pages"], row["chunks"], row["noise_lines"], row["title_source"]
+        print("%-50s %6d %6d %9s %8s" % (
+            row["title"][:48], row["sections"], row["chunks"],
+            row.get("locator_kind", "?"), row["title_source"]
         ))
-    print("-" * 82)
+    print("-" * 88)
     print("共 %d 篇，%d 块" % (len(report), total))
     print("")
 

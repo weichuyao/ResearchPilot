@@ -117,6 +117,37 @@ class PaperRepository:
         return list(result.scalars().all())
 
     @classmethod
+    async def delete_not_in(
+        cls, session: AsyncSession, collection_id: int, keep_source_files: list[str]
+    ) -> list[str]:
+        """删掉这个知识库里、但不在 keep 列表中的论文记录，返回被删的 source_file。
+
+        ## 为什么需要它
+
+        `ingest(reset=True)` 会先清空整个 Chroma collection 重建，但**不会**动 paper 表 ——
+        而 paper 表里的行是靠 upsert 写入的，只增不减。于是从语料目录里移走一篇论文之后：
+
+            向量库：4 篇 411 块        ← 干净
+            paper 表：5 篇 434 块     ← 还留着那篇
+
+        后果是 `list_papers` 会列出一篇**根本搜不到**的论文，而 `/health` 的
+        `index.papers` 也会虚高。这种不一致不会报错，只会让人对数据失去信任。
+
+        实测就是这么发现的：把评估集文档从语料目录移走、重跑导入之后，
+        Chroma 是 411 而 paper 表还是 434。
+        """
+        statement = select(Paper).where(Paper.collection_id == collection_id)
+        if keep_source_files:
+            statement = statement.where(Paper.source_file.notin_(keep_source_files))
+        result = await session.execute(statement)
+        stale = list(result.scalars().all())
+        for paper in stale:
+            await session.delete(paper)
+        if stale:
+            await session.commit()
+        return [p.source_file for p in stale]
+
+    @classmethod
     async def count(cls, session: AsyncSession) -> int:
         result = await session.execute(select(func.count()).select_from(Paper))
         return int(result.scalar() or 0)

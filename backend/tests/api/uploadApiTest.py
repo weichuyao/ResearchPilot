@@ -1,15 +1,12 @@
-"""改造 #5 上传接口的端到端测试。
+"""改造 #5 的端到端测试：上传（多格式）/ 状态 / 检索 / 删除 / 重索引。
 
     python tests/api/uploadApiTest.py
 
-## 为什么是"造一个 PDF"而不是用现成的那 4 篇
+## 为什么现场造文件而不是用现成的语料
 
 用现成的会被 409 挡住（去重按内容哈希），而且就算改名绕过，也会往真实知识库里塞
-重复内容、改变 411 个块这个基线。所以这里**现场生成**一个有文本层的 PDF，
-跑完把它产生的 paper 行和向量块都删掉 —— 测试不该改变被测试系统的状态。
-
-手写 PDF 的交叉引用表很难算对，但 pypdf 读的时候会重建它，
-因此「手写 + pypdf 转存」就能得到一个完全合法的 PDF，不需要额外依赖。
+重复内容、改变 411 个块这个基线。所以这里**现场生成**四种格式的测试文件，
+跑完把它们产生的 paper 行、向量块、磁盘文件都删掉 —— 测试不该改变被测试系统的状态。
 
 ## 为什么用 TestClient 而不是起一个服务
 
@@ -18,12 +15,10 @@
 
 ## 验收标准（对应设计文档第七节）
 
-    415 扩展名 / 415 文件头 / 413 超限 / 202 受理 / 状态变 indexed
-    → **检索得到**（向量那一路）
-    → **BM25 也看得到**（验证 invalidate_index 生效）
-    → 409 重复 / 列表可见
-
-中间那条「检索得到」才是真正的验收点，前面全是手段。
+    **上传的文档真的能被检索到** ← 这一条才是目的，其余全是手段
+    **位置标签跟着格式走**（PDF→p. / Markdown→sec. / 纯文本→blk.）
+    **重索引不会留下重复块**（旧块必须先清掉）
+    415 扩展名与文件头 / 413 超限 / 202 受理 / 409 重复与处理中 / 204 删除 / 404
 """
 
 from __future__ import annotations
@@ -32,6 +27,10 @@ import io
 import os
 import sys
 import time
+
+# 每种格式一个独特的关键词，用来验证"上传的东西真的能被检索到"。
+# 这些词在整个语料里不存在，所以命中必然是本次测试带进去的。
+MARKER = "xylophone-calibration"
 
 
 def _bootstrap() -> str:
@@ -46,27 +45,31 @@ def _bootstrap() -> str:
     return backend_root
 
 
-BODY = """ResearchPilot upload test document.
-
-This paragraph exists only to give the extraction pipeline something to chunk.
-It mentions a distinctive term, xylophone-calibration, which appears nowhere in
-the real corpus. That makes it possible to verify end to end that a newly
-uploaded document is actually retrievable, rather than merely stored.
-
-The second paragraph repeats a few technical words so that the BM25 keyword
-index has something to match: calibration, xylophone, upload, pipeline.
-"""
-
-
+# ---------------------------------------------------------------------------
+# 造四种格式的测试文件
+# ---------------------------------------------------------------------------
 def make_pdf() -> bytes:
+    """手写 + pypdf 转存。
+
+    手写 PDF 的交叉引用表很难算对，但 pypdf 读的时候会重建它，
+    所以「手写 + 转存」就能得到一个完全合法的 PDF，不需要额外依赖。
+    """
     from pypdf import PdfReader, PdfWriter
 
-    text_ops = ["BT", "/F1 11 Tf", "72 720 Td", "14 TL"]
-    for line in BODY.strip().splitlines():
+    body = """ResearchPilot upload test document.
+
+This paragraph exists only to give the extraction pipeline something to chunk.
+It mentions a distinctive term, %s, which appears nowhere in the real corpus.
+
+A second paragraph mentions the same term again so the keyword index has
+something to match: %s.""" % (MARKER, MARKER)
+
+    ops = ["BT", "/F1 11 Tf", "72 720 Td", "14 TL"]
+    for line in body.strip().splitlines():
         escaped = line.replace("\\", r"\\").replace("(", r"\(").replace(")", r"\)")
-        text_ops.append("(%s) Tj T*" % escaped)
-    text_ops.append("ET")
-    stream = "\n".join(text_ops).encode("latin-1")
+        ops.append("(%s) Tj T*" % escaped)
+    ops.append("ET")
+    stream = "\n".join(ops).encode("latin-1")
 
     objects = [
         b"<< /Type /Catalog /Pages 2 0 R >>",
@@ -76,7 +79,6 @@ def make_pdf() -> bytes:
         b"<< /Length %d >>\nstream\n" % len(stream) + stream + b"\nendstream",
         b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
     ]
-
     out = bytearray(b"%PDF-1.4\n")
     for index, payload in enumerate(objects, start=1):
         out += b"%d 0 obj\n" % index + payload + b"\nendobj\n"
@@ -91,35 +93,61 @@ def make_pdf() -> bytes:
     return buf.getvalue()
 
 
-def cleanup(paper_id: int | None, source_file: str | None) -> None:
-    """把测试产生的记录和向量块删掉。"""
-    import asyncio
+def make_markdown() -> bytes:
+    return ("""# ResearchPilot 上传测试（Markdown）
 
-    from ai.rag.chromaClient import document_vector_store
-    from ai.rag.hybrid import invalidate_index
-    from db.database import async_session_maker
-    from db.repository.paper_repo import PaperRepository
+这是第一节的内容，用来验证按标题切段是对的。里面出现了一个独特术语
+%s，它在真实语料里不存在。
 
-    if source_file:
-        got = document_vector_store.get(where={"source": source_file})
-        ids = got.get("ids") or []
-        if ids:
-            document_vector_store.delete(ids=ids)
-            print("   清理：删掉 %d 个向量块" % len(ids))
-        invalidate_index()
+## 第二节：关于检索
 
-    if paper_id:
-        async def run() -> None:
-            async with async_session_maker() as session:
-                paper = await PaperRepository.get_by_id(session=session, paper_id=paper_id)
-                if paper:
-                    await session.delete(paper)
-                    await session.commit()
-
-        asyncio.run(run())
-        print("   清理：删掉 paper 行 id=%s" % paper_id)
+这一节再次提到 %s，这样关键词那一路也有东西可以匹配。
+Markdown 的定位标签应该是 sec.N（章节序号），而不是页码 ——
+这个文件根本没有页。
+""" % (MARKER, MARKER)).encode("utf-8")
 
 
+def make_text() -> bytes:
+    return ("""ResearchPilot upload test (plain text).
+
+    First block. The distinctive term is %s and it appears again below so that
+    the keyword index has something to match.
+
+    Second block. %s.
+""" % (MARKER, MARKER)).encode("utf-8")
+
+
+def make_docx() -> bytes:
+    import docx
+
+    document = docx.Document()
+    document.add_heading("ResearchPilot upload test (DOCX)", level=1)
+    document.add_paragraph(
+        "第一节内容。独特术语 %s 在这里出现，用来验证 DOCX 也能被解析和检索。" % MARKER
+    )
+    document.add_heading("第二节：表格也要抽出来", level=2)
+    document.add_paragraph("技术文档里的事实常常只写在表格里，所以表格不能跳过。")
+    table = document.add_table(rows=2, cols=2)
+    table.cell(0, 0).text = "term"
+    table.cell(0, 1).text = "value"
+    table.cell(1, 0).text = MARKER
+    table.cell(1, 1).text = "present"
+
+    buf = io.BytesIO()
+    document.save(buf)
+    return buf.getvalue()
+
+
+CASES = [
+    ("pdf", "upload-test.pdf", make_pdf, "p", "application/pdf"),
+    ("markdown", "upload-test.md", make_markdown, "sec", "text/markdown"),
+    ("text", "upload-test.txt", make_text, "blk", "text/plain"),
+    ("docx", "upload-test.docx", make_docx, "sec",
+     "application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
+]
+
+
+# ---------------------------------------------------------------------------
 def set_status(paper_id: int, status: int) -> None:
     """直接改库里的状态，用来确定性地构造「处理中」这种中间态。
 
@@ -140,6 +168,70 @@ def set_status(paper_id: int, status: int) -> None:
     asyncio.run(run())
 
 
+def wait_for(client, paper_id: int, timeout: float = 180.0) -> dict | None:
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        state = client.get("/documents/%s" % paper_id).json()
+        if state.get("status_text") in ("indexed", "failed"):
+            return state
+        time.sleep(0.4)
+    return None
+
+
+TRACKED: list[tuple[int, str]] = []
+
+
+def cleanup() -> None:
+    """把测试产生的一切都清掉：向量块、paper 行、磁盘文件。
+
+    倒着删除，这样即使中途失败也不会留下"记录没了但向量还在"的孤儿。
+    """
+    import asyncio
+
+    from ai.rag.chromaClient import document_vector_store
+    from ai.rag.hybrid import invalidate_index
+    from db.database import async_session_maker
+    from db.repository.paper_repo import PaperRepository
+
+    chunks = 0
+    for paper_id, source_file in TRACKED:
+        try:
+            got = document_vector_store.get(where={"source": source_file})
+            ids = got.get("ids") or []
+            if ids:
+                document_vector_store.delete(ids=ids)
+                chunks += len(ids)
+        except Exception as exc:
+            print("   清理向量失败 %s: %s" % (source_file, exc))
+
+    if chunks:
+        invalidate_index()
+
+    async def run() -> None:
+        async with async_session_maker() as session:
+            for paper_id, _ in TRACKED:
+                paper = await PaperRepository.get_by_id(session=session, paper_id=paper_id)
+                if paper is not None:
+                    await session.delete(paper)
+                    await session.commit()
+
+    asyncio.run(run())
+
+    from core.config import settings
+
+    files = 0
+    for _, source_file in TRACKED:
+        path = os.path.join(settings.UPLOAD_DIR, source_file)
+        if os.path.isfile(path):
+            os.remove(path)
+            files += 1
+
+    if TRACKED:
+        print("   清理：%d 条记录 / %d 个向量块 / %d 个文件"
+              % (len(TRACKED), chunks, files))
+    TRACKED.clear()
+
+
 def report(failures: list[str]) -> int:
     print()
     if failures:
@@ -151,6 +243,7 @@ def report(failures: list[str]) -> int:
     return 0
 
 
+# ---------------------------------------------------------------------------
 def main() -> int:
     _bootstrap()
 
@@ -161,137 +254,162 @@ def main() -> int:
     from db.models.paper import STATUS_INDEXED, STATUS_INDEXING
 
     failures: list[str] = []
-    paper_id = None
-    source_file = None
-    baseline_chunks = 0
 
     with TestClient(main.app) as client:
-        r = client.get("/health")
-        print("[health] HTTP %s  %s" % (r.status_code, r.json()))
-        if r.status_code != 200:
-            failures.append("health 不是 200")
-        # 上传前记下基线，删除之后要比对它 —— 这才是"删干净了"的判据
-        baseline_chunks = r.json()["index"]["chunks"]
+        health = client.get("/health").json()
+        print("[health] %s" % health)
+        baseline_chunks = health["index"]["chunks"]
+        baseline_papers = health["index"]["papers"]
 
-        r = client.post("/documents", files={"file": ("notes.txt", b"hello", "text/plain")})
-        ok = r.status_code == 415
-        print("[415 扩展名] HTTP %s  %s" % (r.status_code, r.json().get("detail", "")[:60]))
-        if not ok:
-            failures.append("非 PDF 扩展名应为 415，实际 %s" % r.status_code)
+        # ---------- 校验分支 ----------
+        r = client.post("/documents", files={"file": ("notes.exe", b"xx", "application/octet-stream")})
+        print("[415 扩展名] HTTP %s  %s" % (r.status_code, r.json().get("detail", "")[:70]))
+        if r.status_code != 415:
+            failures.append("不支持的扩展名应为 415，实际 %s" % r.status_code)
 
         r = client.post("/documents", files={"file": ("fake.pdf", b"not a pdf", "application/pdf")})
-        print("[415 文件头] HTTP %s  %s" % (r.status_code, r.json().get("detail", "")[:60]))
+        print("[415 文件头] HTTP %s  %s" % (r.status_code, r.json().get("detail", "")[:70]))
         if r.status_code != 415:
             failures.append("假 PDF 应为 415，实际 %s" % r.status_code)
 
+        r = client.post("/documents", files={"file": ("fake.md", b"\x00\x01\x02binary", "text/markdown")})
+        print("[415 伪装文本] HTTP %s  %s" % (r.status_code, r.json().get("detail", "")[:70]))
+        if r.status_code != 415:
+            failures.append("含 NUL 的伪文本应为 415，实际 %s" % r.status_code)
+
         saved_cap = cfg.MAX_UPLOAD_MB
-        cfg.MAX_UPLOAD_MB = 1          # 临时压到 1MB，免得真造一个 50MB 文件
-        big = b"%PDF-1.4\n" + b"x" * (2 * 1024 * 1024)
-        r = client.post("/documents", files={"file": ("big.pdf", big, "application/pdf")})
+        cfg.MAX_UPLOAD_MB = 1
+        r = client.post("/documents",
+                        files={"file": ("big.pdf", b"%PDF-1.4\n" + b"x" * (2 * 1024 * 1024), "application/pdf")})
         print("[413 超限] HTTP %s  %s" % (r.status_code, r.json().get("detail", "")[:70]))
         if r.status_code != 413:
             failures.append("超限文件应为 413，实际 %s" % r.status_code)
         cfg.MAX_UPLOAD_MB = saved_cap
 
-        pdf = make_pdf()
-        print("[上传] PDF %d 字节" % len(pdf))
-        r = client.post(
-            "/documents",
-            files={"file": ("upload-test.pdf", pdf, "application/pdf")},
-            data={"title": "ResearchPilot Upload Test", "collection": "reid-papers"},
-        )
-        print("[202 受理] HTTP %s  %s" % (r.status_code, r.json()))
-        if r.status_code != 202:
-            failures.append("正常上传应为 202，实际 %s" % r.status_code)
-            return report(failures)
-        paper_id = r.json()["id"]
-
-        deadline = time.time() + 120
-        final = None
-        while time.time() < deadline:
-            state = client.get("/documents/%s" % paper_id).json()
-            if state["status_text"] in ("indexed", "failed"):
-                final = state
-                break
-            time.sleep(0.5)
-        print("[状态] %s" % final)
-        if not final or final["status_text"] != "indexed":
-            failures.append("索引没有变成 indexed：%s" % final)
-            cleanup(paper_id, None)
-            return report(failures)
-
-        source_file = final["source_file"]
-        if final["chunk_count"] <= 0:
-            failures.append("chunk_count 为 0")
-
-        from ai.rag.hybrid import hybrid_search
+        # ---------- 四种格式：上传 → 索引 → 检索 ----------
         from ai.rag.pipeline import retrieve
 
-        outcome = retrieve("xylophone calibration upload pipeline", allowed_sources=[source_file])
-        hit = any("xylophone" in d.page_content.lower() for d, _o, _s in outcome.hits)
-        print("[检索] 命中 %d 条，含关键词: %s（top1 向量分 %.4f）"
-              % (len(outcome.hits), hit, outcome.vector_top1))
-        if not hit:
-            failures.append("上传的文档检索不到（向量那一路）")
+        pdf_bytes = None
+        pdf_paper_id = None
+        for label, filename, maker, want_prefix, mime in CASES:
+            payload = maker()
+            if label == "pdf":
+                pdf_bytes = payload
+            r = client.post("/documents",
+                            files={"file": (filename, payload, mime)},
+                            data={"title": "Upload Test (%s)" % label, "collection": "reid-papers"})
+            if r.status_code != 202:
+                failures.append("%s 上传应为 202，实际 %s %s" % (label, r.status_code, r.text[:120]))
+                continue
+            paper_id = r.json()["id"]
+            state = wait_for(client, paper_id)
+            if not state or state["status_text"] != "indexed":
+                failures.append("%s 索引失败：%s" % (label, state))
+                TRACKED.append((paper_id, state["source_file"] if state else ""))
+                continue
+            TRACKED.append((paper_id, state["source_file"]))
+            if label == "pdf":
+                pdf_paper_id = paper_id
 
-        hits, _vt = hybrid_search("xylophone-calibration", allowed_sources=[source_file], top_n=5)
-        bm25_ok = any("xylophone" in d.page_content.lower() for d, _o, _s in hits)
-        print("[BM25] 命中 %d 条，含关键词: %s" % (len(hits), bm25_ok))
-        if not bm25_ok:
-            failures.append("BM25 索引没看到新文档（invalidate_index 可能没生效）")
+            # 检索：不只验证"存进去了"，而是验证"能查出来"
+            outcome = retrieve(MARKER, allowed_sources=[state["source_file"]])
+            hits_text = "\n".join(d.page_content for d, _o, _s in outcome.hits)
+            found = MARKER in hits_text
+            prefixes = {d.metadata.get("locator_prefix") for d, _o, _s in outcome.hits}
+            print("[%s] id=%s 块数=%s 检索命中=%s 位置前缀=%s"
+                  % (label, paper_id, state["chunk_count"], found, prefixes or "—"))
+            if not found:
+                failures.append("%s 上传后检索不到" % label)
+            if prefixes and prefixes != {want_prefix}:
+                failures.append("%s 的位置前缀应为 %s，实际 %s" % (label, want_prefix, prefixes))
 
-        r = client.post("/documents", files={"file": ("upload-test.pdf", pdf, "application/pdf")})
-        print("[409 重复] HTTP %s  %s" % (r.status_code, r.json().get("detail", "")[:70]))
-        if r.status_code != 409:
-            failures.append("重复上传应为 409，实际 %s" % r.status_code)
+            # BM25 那一路也要看得见（验证 invalidate_index 生效）
+            from ai.rag.hybrid import hybrid_search
 
-        r = client.get("/documents")
-        ids = [item["id"] for item in r.json()["items"]]
-        print("[列表] total=%s，含测试文档: %s" % (r.json()["total"], paper_id in ids))
+            bm, _vt = hybrid_search(MARKER, allowed_sources=[state["source_file"]], top_n=5)
+            if not any(MARKER in d.page_content for d, _o, _s in bm):
+                failures.append("%s 的 BM25 索引没看到新文档" % label)
 
-        # ---- 10) 409：处理中的文档不允许删 ----
-        # 直接改库把状态改成「处理中」，模拟"后台任务还在跑"。这样测是确定性的，
-        # 靠真实上传去抢那个时间窗是不稳定的。
-        set_status(paper_id, STATUS_INDEXING)
-        r = client.delete("/documents/%s" % paper_id)
-        print("[409 处理中] HTTP %s  %s" % (r.status_code, r.json().get("detail", "")[:70]))
-        if r.status_code != 409:
-            failures.append("处理中的文档应拒绝删除（409），实际 %s" % r.status_code)
-        set_status(paper_id, STATUS_INDEXED)
+        # ---------- 409 重复上传 ----------
+        if pdf_bytes:
+            r = client.post("/documents", files={"file": ("upload-test.pdf", pdf_bytes, "application/pdf")})
+            print("[409 重复] HTTP %s  %s" % (r.status_code, r.json().get("detail", "")[:70]))
+            if r.status_code != 409:
+                failures.append("重复上传应为 409，实际 %s" % r.status_code)
 
-        # ---- 11) 正常删除 → 204 ----
-        r = client.delete("/documents/%s" % paper_id)
-        print("[204 删除] HTTP %s  响应体长度 %d" % (r.status_code, len(r.content)))
-        if r.status_code != 204:
-            failures.append("删除应为 204，实际 %s" % r.status_code)
-        if r.content:
-            failures.append("204 不该有响应体")
+        # ---------- 重索引 ----------
+        if pdf_paper_id:
+            before = client.get("/health").json()["index"]["chunks"]
 
-        # ---- 12) 删完再查 → 404 ----
-        r = client.get("/documents/%s" % paper_id)
-        print("[404 已删] HTTP %s" % r.status_code)
-        if r.status_code != 404:
-            failures.append("已删除的文档应返回 404，实际 %s" % r.status_code)
+            # 处理中不允许重索引
+            set_status(pdf_paper_id, STATUS_INDEXING)
+            r = client.post("/documents/%s/reindex" % pdf_paper_id)
+            print("[409 重索引中] HTTP %s  %s" % (r.status_code, r.json().get("detail", "")[:60]))
+            if r.status_code != 409:
+                failures.append("处理中的文档应拒绝重索引，实际 %s" % r.status_code)
+            set_status(pdf_paper_id, STATUS_INDEXED)
 
-        # ---- 13) 向量块真的没了（这条才是删除的实质）----
-        # 记录没了不代表向量没了；如果只删了行，向量会变成永远清不掉的孤儿，
-        # 而且它还会被检索到 —— 那是最糟的一种"删除成功"。
-        health = client.get("/health").json()["index"]
-        print("[删除后] papers=%s chunks=%s" % (health["papers"], health["chunks"]))
-        if health["chunks"] != baseline_chunks:
-            failures.append(
-                "删除后向量块数没回到基线：%s != %s" % (health["chunks"], baseline_chunks)
-            )
+            # 正常重索引
+            r = client.post("/documents/%s/reindex" % pdf_paper_id)
+            print("[202 重索引] HTTP %s  %s" % (r.status_code, r.json().get("status_text")))
+            if r.status_code != 202:
+                failures.append("重索引应为 202，实际 %s" % r.status_code)
+            else:
+                state = wait_for(client, pdf_paper_id)
+                after = client.get("/health").json()["index"]["chunks"]
+                print("[重索引后] 状态=%s 块数=%s  总块数 %s -> %s"
+                      % (state and state["status_text"], state and state["chunk_count"],
+                         before, after))
+                if not state or state["status_text"] != "indexed":
+                    failures.append("重索引后状态不是 indexed：%s" % state)
+                # 这条是重索引最容易错的地方：旧块没清掉的话，同一段内容会有两份，
+                # 检索时互相竞争，而引用看起来完全正常 —— 一次看不见的退化。
+                if after != before:
+                    failures.append("重索引后总块数变了（%s -> %s），可能留下了重复块"
+                                    % (before, after))
 
-        # ---- 14) 再删一次 → 404 ----
-        r = client.delete("/documents/%s" % paper_id)
-        print("[404 重复删] HTTP %s" % r.status_code)
-        if r.status_code != 404:
-            failures.append("重复删除应为 404，实际 %s" % r.status_code)
+            # 源文件不在磁盘上时不允许重索引
+            state = client.get("/documents/%s" % pdf_paper_id).json()
+            disk = os.path.join(cfg.UPLOAD_DIR, state["source_file"])
+            os.remove(disk)
+            r = client.post("/documents/%s/reindex" % pdf_paper_id)
+            print("[409 源文件缺失] HTTP %s  %s" % (r.status_code, r.json().get("detail", "")[:60]))
+            if r.status_code != 409:
+                failures.append("源文件缺失时应拒绝重索引，实际 %s" % r.status_code)
 
-        paper_id = None          # 已删干净，不需要 cleanup 再处理
+        # ---------- 删除 ----------
+        if pdf_paper_id:
+            r = client.delete("/documents/%s" % pdf_paper_id)
+            print("[204 删除] HTTP %s  响应体 %d 字节" % (r.status_code, len(r.content)))
+            if r.status_code != 204:
+                failures.append("删除应为 204，实际 %s" % r.status_code)
+            if r.content:
+                failures.append("204 不该有响应体")
+            r = client.get("/documents/%s" % pdf_paper_id)
+            print("[404 已删] HTTP %s" % r.status_code)
+            if r.status_code != 404:
+                failures.append("已删除的文档应返回 404，实际 %s" % r.status_code)
+            TRACKED[:] = [t for t in TRACKED if t[0] != pdf_paper_id]
 
-    cleanup(paper_id, source_file)
+        # ---------- 收尾：列表 + 基线 ----------
+        listing = client.get("/documents").json()
+        print("[列表] total=%s" % listing["total"])
+        if listing["total"] < baseline_papers:
+            failures.append("文档列表丢东西了")
+
+    cleanup()
+
+    # 清理之后再确认一次基线 —— 只删记录不删向量的"删除成功"是最糟的一种
+    from fastapi.testclient import TestClient as _TC
+
+    with _TC(main.app) as client:
+        index = client.get("/health").json()["index"]
+    print("[清理后] papers=%s chunks=%s（基线 %s / %s）"
+          % (index["papers"], index["chunks"], baseline_papers, baseline_chunks))
+    if index["papers"] != baseline_papers or index["chunks"] != baseline_chunks:
+        failures.append("清理后没回到基线：%s/%s != %s/%s"
+                        % (index["papers"], index["chunks"], baseline_papers, baseline_chunks))
+
     return report(failures)
 
 

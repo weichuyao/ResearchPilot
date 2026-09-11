@@ -182,9 +182,17 @@ NO_HITS_MESSAGE = (
 def format_hits(hits: list[tuple[Document, str, float | None]]) -> str:
     """把命中结果拼成给模型看的文本块。
 
-    格式：`[source N | 论文标题 | p.X | 匹配方式]` + 正文。
-    末段说明「怎么匹配上的」，格式会演进 —— 评估脚本解析它时不要把格式写死
-    （run_eval.py 顶部有这条教训）。
+    格式：`[source N | 标题 | <locator> | 匹配方式]` + 正文。
+
+    **`<locator>` 是格式相关的**，例如 `p.5`（PDF 第 5 页）、`sec.2`（Markdown 第 2 节）、
+    `blk.4`（纯文本第 4 段）。前缀来自块的 metadata（`locator_prefix`，由解析器写入）。
+
+    为什么不统一写成 `p.`：Markdown 根本没有页。硬套的话模型会引用「第 2 页」，
+    而那个文件没有页 —— **引用是用户唯一会核对的东西，说错比不说更糟。**
+
+    ⚠️ 改这个格式会**同时**影响 ai/eval/run_eval.py 的 `_SOURCE_RE`。
+    今天已经因为「改了输出格式、解析正则没跟着改」导致 retrieval_recall
+    静默掉到 0.25 一次 —— 评估脚本里的 `parse_warnings` 自检就是为这件事加的。
     """
     import os
 
@@ -192,7 +200,8 @@ def format_hits(hits: list[tuple[Document, str, float | None]]) -> str:
     for index, (doc, origin, score) in enumerate(hits, start=1):
         meta = doc.metadata or {}
         title = meta.get("paper_title") or os.path.basename(str(meta.get("source", "unknown")))
-        page = meta.get("page_label") or meta.get("page", "?")
+        prefix = meta.get("locator_prefix") or "p"
+        label = meta.get("page_label") or meta.get("page", "?")
         if score is None:
             how = "matched on exact terms"
         elif origin == "hybrid":
@@ -200,6 +209,7 @@ def format_hits(hits: list[tuple[Document, str, float | None]]) -> str:
         else:
             how = "relevance %.2f" % score
         blocks.append(
-            "[source %d | %s | p.%s | %s]\n%s" % (index, title, page, how, doc.page_content)
+            "[source %d | %s | %s.%s | %s]\n%s"
+            % (index, title, prefix, label, how, doc.page_content)
         )
     return "\n\n".join(blocks)
