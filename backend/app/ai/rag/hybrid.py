@@ -40,6 +40,28 @@ RRF 的分数是排名算出来的（0.016 这种量级），和余弦相似度�
     过了阀门  ->  交给 RRF 排序
 
 这样既保住了「查不到就说未找到」的行为，又让排序用上了关键词信号。
+
+## 并列分数必须显式打破（否则检索结果不可复现）
+
+这个 bug 是被 rank_bench.py 抓出来的：同一个问题连跑三次，A09 的期望段落
+一次排第 6、一次排第 7。查下来不是 embedding 的问题（同一段文本嵌入三次，
+1024 维逐位相同），而是 **Chroma 对分数并列的条目，返回顺序在进程之间不稳定**：
+
+    两次运行：前 6 名的分数和内容哈希完全一致
+             第 20 名的整体顺序哈希不同
+
+Chroma 用的是 HNSW 近似检索，并列项之间没有定义的先后。而原来的代码
+`for doc, score in vector_results:` 直接吃返回顺序、RRF 也只按分数排序
+（Python 的 sort 是稳定的，于是并列项保持插入顺序）—— 也就是说，
+**排序结果里混进了 Chroma 内部的、进程间不稳定的顺序**。
+
+后果不只是「结果会飘」：评估脚本拿它做前后对比时，一名的差异分不清是改动
+带来的还是这个不确定性带来的。所以这里三处都改成显式按 `(-分数, key)` 排序，
+并列项一律由稳定的 key 决定先后：
+
+  1. 向量召回结果的排序
+  2. BM25 的排序
+  3. RRF 融合后的排序
 """
 
 from __future__ import annotations
@@ -250,16 +272,19 @@ def hybrid_search(query: str, allowed_sources: list[str] | None = None,
     vector_results = document_vector_store.similarity_search_with_relevance_scores(
         query, k=VECTOR_TOP_K, filter=where
     )
-    vector_score_by_key: dict[str, float] = {}
-    vector_rank: list[str] = []
-    doc_by_key: dict[str, Document] = {}
+    rows = []
     for doc, score in vector_results:
         key = doc_key(doc.metadata, doc.page_content)
-        vector_score_by_key[key] = float(score)
-        vector_rank.append(key)
-        doc_by_key[key] = doc
+        rows.append((key, float(score), doc))
 
-    vector_top1 = vector_rank and vector_score_by_key[vector_rank[0]] or 0.0
+    # 显式排序：并列项由 key 决定先后，不能依赖 Chroma 的返回顺序（见模块文档）。
+    rows.sort(key=lambda row: (-row[1], row[0]))
+
+    vector_score_by_key: dict[str, float] = {key: score for key, score, _doc in rows}
+    vector_rank: list[str] = [key for key, _score, _doc in rows]
+    doc_by_key: dict[str, Document] = {key: doc for key, _score, doc in rows}
+
+    vector_top1 = rows[0][1] if rows else 0.0
 
     # 2) BM25 召回
     index, documents, keys = get_index()
@@ -269,7 +294,9 @@ def hybrid_search(query: str, allowed_sources: list[str] | None = None,
         allowed = set(allowed_sources)
         candidates = [i for i in range(len(documents)) if documents[i].metadata.get("source") in allowed]
 
-    ranked = sorted((i for i in candidates if scores[i] > 0), key=lambda i: -scores[i])[:BM25_TOP_K]
+    ranked = sorted(
+        (i for i in candidates if scores[i] > 0), key=lambda i: (-scores[i], keys[i])
+    )[:BM25_TOP_K]
     bm25_rank = [keys[i] for i in ranked]
     for i in ranked:
         doc_by_key.setdefault(keys[i], documents[i])
@@ -277,7 +304,7 @@ def hybrid_search(query: str, allowed_sources: list[str] | None = None,
     # 3) RRF 融合
     fused = rrf_fuse([vector_rank, bm25_rank])
 
-    ordered = sorted(fused.items(), key=lambda item: -item[1])[:top_n]
+    ordered = sorted(fused.items(), key=lambda item: (-item[1], item[0]))[:top_n]
     hits = []
     for key, _rrf in ordered:
         doc = doc_by_key.get(key)
