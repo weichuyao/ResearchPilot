@@ -50,6 +50,12 @@ __pycache__/
 # 在模型缺失时静默降级回纯混合检索，而不是报错。
 /backend/resource/models/
 
+# --- 用户上传的文档 ---
+# 通过 POST /documents 上传的 PDF。和数据库一样属于运行时数据：
+# 内容可重建（重新上传），而且用户传的东西不该进版本库。
+# 命名是 <内容哈希前12位>_<清洗过的原名>.pdf，所以同名不同内容不会互相覆盖。
+/backend/resource/uploads/
+
 # --- 编辑器 / 操作系统 ---
 /.vscode/
 /.idea/
