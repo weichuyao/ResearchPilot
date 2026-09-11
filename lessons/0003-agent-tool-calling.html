@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>第三课 · Agent 为什么会自己决定调用工具？</title>
+  <style>
+    :root { --ink:#15242d; --muted:#5d6b73; --paper:#fffefa; --ground:#edf2f0; --accent:#0e6b5c; --accent2:#e6f3ee; --warn:#8a5a00; --warnbg:#fdf6e3; --line:#d9dfdb; --bad:#a13737; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--ground); color:var(--ink); font:17px/1.68 ui-sans-serif,system-ui,"Microsoft YaHei",sans-serif; }
+    main { max-width:840px; margin:34px auto; padding:44px 46px; background:var(--paper); box-shadow:0 10px 36px #1b2d2215; }
+    h1 { margin:0 0 8px; font-size:33px; letter-spacing:-.4px; }
+    h2 { margin:36px 0 11px; font-size:22px; }
+    h3 { margin:24px 0 6px; font-size:18px; }
+    p { margin:10px 0; }
+    .kicker { color:var(--accent); font-weight:700; letter-spacing:.08em; font-size:13px; text-transform:uppercase; }
+    .lead { color:var(--muted); font-size:19px; }
+    .box { margin:18px 0; padding:17px 19px; background:var(--accent2); border-left:4px solid var(--accent); }
+    .warnbox { margin:18px 0; padding:17px 19px; background:var(--warnbg); border-left:4px solid var(--warn); }
+    .exp { margin:22px 0; padding:0 0 4px; border-top:1px solid var(--line); }
+    .exp h3 { color:var(--accent); }
+    .step { display:grid; grid-template-columns:32px 1fr; gap:12px; margin:14px 0; }
+    .num { width:30px; height:30px; text-align:center; border-radius:50%; background:var(--ink); color:white; font-weight:700; line-height:30px; font-size:15px; }
+    .say { display:inline-block; padding:2px 8px; background:#eef3f1; border:1px dashed #b9c7c1; border-radius:5px; font-weight:650; }
+    .see { margin:10px 0 10px 44px; padding:12px 15px; background:#f7faf9; border-left:3px solid var(--accent); font-size:16px; }
+    button { display:block; width:100%; margin:8px 0; padding:12px 14px; background:white; border:1px solid var(--line); border-radius:7px; color:var(--ink); cursor:pointer; text-align:left; font:inherit; }
+    button:hover { border-color:var(--accent); }
+    .feedback { min-height:26px; margin:9px 0 20px; font-weight:650; }
+    .ok { color:var(--accent); } .no { color:var(--bad); }
+    code { padding:2px 6px; background:#edf0ee; border-radius:4px; font-size:15px; }
+    pre { padding:14px 16px; background:#0f172a; color:#e2e8f0; border-radius:9px; overflow-x:auto; font-size:14.5px; line-height:1.55; }
+    a { color:var(--accent); }
+    table { border-collapse:collapse; width:100%; margin:14px 0; font-size:16px; }
+    th,td { padding:10px 11px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+    th { background:#f2f6f4; }
+    footer { margin-top:40px; padding-top:16px; border-top:1px solid var(--line); color:var(--muted); font-size:14px; }
+    @media (max-width:660px) { main { margin:0; padding:30px 22px; } h1 { font-size:27px; } .see { margin-left:0; } }
+  </style>
+</head>
+<body><main>
+  <div class="kicker">AI ChatKit · 黑盒课程 03 · 约 18 分钟 · 不读源码</div>
+  <h1>Agent 为什么会自己决定调用工具？</h1>
+  <p class="lead">这一课要拆掉一个最容易误解的印象：<strong>不是程序去查数据库，是模型"申请"去查。</strong> 分清这两者，你后面才可能自己给 ResearchPilot 加工具。</p>
+  <div class="box"><strong>本课的单一收获：</strong>能说清「模型决定 → Graph 编排 → Tool 执行 → 模型收结果」这条回路，并知道<em>决策权到底在谁手里</em>。</div>
+
+  <div class="warnbox"><strong>动手前先确认一件事。</strong>在新开的 PowerShell 窗口里运行
+  <code>scripts\start-ai-chatkit.ps1</code>，必须看到这一行：
+  <pre>Loopback check: httpx reaches Ollama directly. OK</pre>
+  如果看到的是黄色警告，说明检索链是坏的，做实验三会得到错误的结论。先解决它，再回来。</div>
+
+  <h2>为什么这一课重要</h2>
+  <p>你最终要把 OA Assistant 换成 ResearchPilot，而 ResearchPilot 的核心是<strong>一批新工具</strong>：检索论文、抓取全文、查引用关系……</p>
+  <p>这些工具全都遵循今天要拆的这个回路。更关键的是：面试里最高频的那道题——<em>"你怎么保证 Agent 不乱调工具、不乱编答案？"</em>——答案就藏在这一课里。</p>
+
+  <h2>四个实验</h2>
+  <p>打开 <a href="http://localhost:3000">http://localhost:3000</a>。每个问题都开一个<strong>新对话</strong>，避免上下文干扰。</p>
+
+  <div class="exp">
+    <h3>实验一：决策权在谁手里？</h3>
+    <div class="step"><div class="num">1</div><div>问：<span class="say">你能做什么？</span><br>观察：回答前有没有出现工具调用折叠面板？</div></div>
+    <div class="step"><div class="num">2</div><div>新对话，问：<span class="say">jack 在哪个部门？</span><br>观察：这次有没有出现工具面板？点开它，看工具名和 input。</div></div>
+    <div class="step"><div class="num">3</div><div>记住这两次的差别，然后往下看。</div></div>
+    <div class="see"><strong>你会看到：</strong>两句话从同一个输入框、走同一个接口、发给同一个 Agent。<strong>唯一的差别是文字内容。</strong> 所以"要不要用工具"这个决定，不可能来自前端，也不可能来自那个固定的脚本——它只能来自<em>模型读完你的话之后的判断</em>。</div>
+    <p><strong>这一节课最重要的结论就在这里：</strong>Tool 是一个<strong>被申请调用</strong>的能力，不是一个<strong>被自动执行</strong>的步骤。模型像研究员，它只能"申请使用仪器"，不能自己动手。</p>
+  </div>
+
+  <div class="exp">
+    <h3>实验二：工具的参数是谁写出来的？</h3>
+    <div class="step"><div class="num">1</div><div>回到刚才 <span class="say">jack 在哪个部门？</span> 那条消息，展开工具面板，看 <code>input</code> 那一行。</div></div>
+    <div class="step"><div class="num">2</div><div>你现在应该看到类似这样的内容：<pre>Tool 1: get_user_department
+input：{"user_name": "jack"}</pre></div></div>
+    <div class="step"><div class="num">3</div><div>新对话，换成 <span class="say">请问 human resource 这个部门都有谁？</span> 再观察一次工具名和 input 的变化。</div></div>
+    <div class="see"><strong>你会看到：</strong>那个 JSON 里的字段名 <code>user_name</code> 是<strong>开发者预先定义</strong>的（写在工具函数上），但里面的<strong>值</strong> <code>"jack"</code> 是<strong>模型从你的自然语言里抽出来</strong>的。</div>
+    <p>这就是 Tool Calling 的本质：<strong>你提供"说明书的格式"，模型负责填内容。</strong> 也解释了为什么工具的名字和参数描述写得越清楚，模型用得越准——它只看得见这些。</p>
+  </div>
+
+  <div class="exp">
+    <h3>实验三（核心）：当手册里没有答案时，会发生什么？</h3>
+    <div class="step"><div class="num">1</div><div>新对话，问一个<strong>员工手册里没有</strong>的问题：<br><span class="say">公司为员工提供宠物保险吗？请务必查阅员工手册并给出手册中的依据。</span></div></div>
+    <div class="step"><div class="num">2</div><div>等它答完，展开工具面板，<strong>仔细看 tool 的 result</strong>——工具到底交给了模型什么材料？</div></div>
+    <div class="step"><div class="num">3</div><div><strong>最关键的一步</strong>：把模型的<em>结论</em>和它引用的<em>证据</em>并排放好，然后问自己一个问题——<strong>那些证据，真的支持那个结论吗？</strong></div></div>
+    <div class="see"><strong>你会看到（实测）：</strong>工具确实被调用，而且<strong>检索结果大部分是相关的</strong>——手册里关于保险、福利、工伤的段落被找出来了。模型通常还会自作主张换几个说法再查一遍（这叫"查询改写"，是它自己想到的）。</div>
+    <div class="see">但注意两个细节：<br>
+    <strong>①</strong> 10 段材料里有 2 到 3 段其实是无关的，比如 <code>may take any action deemed appropriate to recover or protect its property.</code><br>
+    <strong>②</strong> 模型的措辞可能有两种，而它们<strong>差别很大</strong>：<br>
+    &nbsp;&nbsp;· 「<em>手册中并未提及</em>宠物保险」——证据支持的表述 ✅<br>
+    &nbsp;&nbsp;· 「<em>公司不提供</em>宠物保险」——证据<strong>不</strong>支持的表述 ⚠️</div>
+    <div class="warnbox"><strong>本课的核心结论：</strong>这两句话<strong>不是一回事</strong>。<br><br>
+    「手册没写」≠「事实上不存在」。公司完全可能通过手册之外的方式提供这项福利——补充保险、地方政策、单独协议。<br><br>
+    而系统里<strong>没有任何一层</strong>能发现这个落差：检索层只管交材料，模型只管读材料，<strong>没人负责检查"结论有没有超出证据"</strong>。你多跑几次可能会看到不同的措辞——这正说明它是<strong>概率性的软约束</strong>，不是保证。</div>
+    <p>所以真正的失败模式<strong>不是</strong>"凭空编造"（模型通常不会），而是<strong>"从证据不足跳到结论成立"</strong>——也就是<strong>无根据的否定</strong>。这比防编造难得多，也有价值得多。</p>
+    <p><strong>这正是 ResearchPilot 改造 #3（判断证据充分性 → 补充检索）要解决的问题。</strong> 也是面试高频题："你的 RAG 检索不到内容时你的系统怎么办？"</p>
+  </div>
+
+  <div class="exp">
+    <h3>实验四：当工具坏掉时，系统会告诉你吗？</h3>
+    <div class="step"><div class="num">1</div><div>停掉 Ollama（在终端里结束它，或在它的界面里退出）。确认它真的停了。</div></div>
+    <div class="step"><div class="num">2</div><div>新对话，问：<span class="say">请查阅员工手册，告诉我年假规定。</span></div></div>
+    <div class="step"><div class="num">3</div><div>观察两件事：<strong>①</strong> 界面上有没有出现任何"错误"提示？<strong>②</strong> 模型的回答是什么口吻？</div></div>
+    <div class="see"><strong>你会看到（我们实测过）：</strong>工具返回的是一条错误<em>文本</em>——<code>Error: ConnectionError('Failed to connect to Ollama...')</code>，模型重试一次、又失败，然后用很客气的语气告诉你"手册查询暂时故障"。<br><br>而<strong>界面上没有任何错误</strong>：HTTP 状态 200、SSE 正常结束、错误事件数量为 <strong>0</strong>。</div>
+    <div class="step"><div class="num">4</div><div><strong>关键对照实验：</strong>Ollama 保持关闭，新对话问：<span class="say">请用 get_user_department 工具查询 jack 所在的部门。</span></div></div>
+    <div class="see"><strong>你会看到：这一次它成功了。</strong> 模型照样申请调用工具，工具照样返回了 <code>{"name": "human resource", ...}</code>。<br><br>同一个后端、同一个模型、同一个 Graph、<strong>Ollama 同样不可用</strong>——一个工具失败，另一个成功。唯一的差别是模型选了哪个工具。</div>
+    <p><strong>为什么？</strong>因为 <code>get_user_department</code> 内部只查 SQLite；而 <code>search_handbook</code> 内部必须先用 bge-m3 把 query 变成向量，而 bge-m3 跑在 Ollama 上。<br>
+    所以：<strong>Ollama 只是某一个工具的实现细节，不是这个 Agent 的必需品。</strong> 这一点直接决定你将来能不能把 embedding 换成云端 API 或本地 ONNX 模型——而模型、Graph、Prompt 一行都不用改。</p>
+    <div class="step"><div class="num">5</div><div>做完记得重新启动 Ollama，否则实验一到三都会失败。</div></div>
+    <p><strong>这一课的第二条重要结论：</strong>错误被<em>转换</em>成了语言。Tool 层的异常变成了 ToolMessage 里的文本，模型读到文本后决定"礼貌地失败"而不是崩溃。用户看到的不是一个故障，而是一句道歉——<strong>从系统监控的角度看，这等于什么都没发生。</strong></p>
+    <p>这就是"分层排查"为什么是硬功夫：同一句"查不到"，可能来自<strong>前端、HTTP、Graph、模型决策、Tool、Embedding、向量库</strong>中的任何一层，而现象看起来一模一样。</p>
+  </div>
+
+  <h2>把观察翻译成系统职责</h2>
+  <pre>你的提问
+   ↓
+模型读懂意图  ←──── 决定权在这一层（它读你给它的工具"说明书"）
+   ↓  输出"结构化意图"：我要调用 get_user_department，参数 user_name="jack"
+Graph 接住这个意图，把请求路由到对应工具
+   ↓
+工具真正动手：查 SQLite 或查 Chroma
+   ↓  把结果包成一条 ToolMessage
+模型收到结果  ←──── 也可能收到空字符串、无关片段、或一段错误文本
+   ↓
+写最终回答（或再申请一次工具调用，形成循环）</pre>
+
+  <div class="warnbox"><strong>注意上面这张图容易读错一个地方：Graph 画在中间，但它其实是<em>最外层的框</em>。</strong><br><br>
+  这里有<strong>两个不同的看问题的角度</strong>，别混：<br><br>
+  <strong>角度一 · 时间顺序</strong>（事件按先后发生，用户视角）：<br>
+  <code>模型判断 → Graph 路由 → 工具执行 → 模型再判断 → 模型写答案</code><br>
+  这个顺序是对的。<br><br>
+  <strong>角度二 · 调用归属</strong>（谁启动谁）：<br>
+  <code>FastAPI → Graph → [ model 节点 → LLM ] + [ tools 节点 → Tool ]</code><br>
+  这个角度下，<strong>Graph 在最外层</strong>——是它决定"现在该跑 model 节点了"，于是去调用 LLM。<br><br>
+  为什么值得分清：<strong>如果 Graph 只是"中间一步"，它就管不了循环；正因为它是最外层的框，它才能决定"能循环几次""哪条边合法"。</strong>这才是它能约束一个 Agent 的原因。</div>
+  <table>
+    <thead><tr><th>角色</th><th>负责</th><th>不负责</th></tr></thead>
+    <tbody>
+      <tr><td>模型（DeepSeek）</td><td>决定用不用工具、填什么参数、怎么用结果写答案</td><td>不直接碰数据库，也不能执行任何代码</td></tr>
+      <tr><td>Graph（LangGraph）</td><td>规定"思考→用工具→再思考"的合法顺序，并接住模型的申请</td><td>不判断该不该用工具</td></tr>
+      <tr><td>Tool</td><td>真正执行查询，把结果包成消息</td><td>不判断结果是否相关、是否足够</td></tr>
+      <tr><td>Embedding + 向量库</td><td>把文字变成可比较的向量，再找"最近的 N 条"</td><td>不设"够不够近"的门槛，也不说"没找到"</td></tr>
+    </tbody>
+  </table>
+  <p><strong>记忆句：</strong>模型提议，Graph 编排，工具执行，结果回读；<em>没有人负责判断证据够不够。</em></p>
+
+  <h2>30 秒自测</h2>
+  <p><strong>第 1 题：</strong>「jack 在哪个部门」这个答案，从提问到最终回答，先后经过了哪几层？（按顺序说出关键角色即可）</p>
+  <button onclick="answer('q1',false)">A. 前端 → SQLite 查询 → 返回结果 → 模型润色文字</button>
+  <button onclick="answer('q1',true)">B. 前端 → 模型判断需要工具 → Graph 路由到工具 → 工具查 SQLite → 结果回到模型 → 模型写答案</button>
+  <button onclick="answer('q1',false)">C. 前端 → 模型直接凭记忆回答（数据库只用于后台统计）</button>
+  <div id="q1" class="feedback"></div>
+
+  <p><strong>第 2 题：</strong>工具面板里 <code>input：{"user_name": "jack"}</code> 这段 JSON，是谁写出来的？</p>
+  <button onclick="answer('q2',false)">A. 前端根据输入框内容拼出来的</button>
+  <button onclick="answer('q2',false)">B. 工具函数自己从用户消息里解析出来的</button>
+  <button onclick="answer('q2',true)">C. 模型输出的：字段名由开发者预先声明，值由模型从你的自然语言里抽取</button>
+  <div id="q2" class="feedback"></div>
+
+  <p><strong>第 3 题（连到你的项目）：</strong>实验三里，证据只支持「手册中<em>未提及</em>宠物保险」，而模型的措辞可能是「公司<em>不提供</em>宠物保险」。如果你要给 ResearchPilot 加一个 <code>search_papers</code> 工具，你会怎么处理这个落差？</p>
+  <button onclick="answer('q3',false)">A. 在提示词里写"不许编造"就够了</button>
+  <button onclick="answer('q3',true)">B. 两手都要：检索层设相关性门槛，分数不够就明确返回"未找到相关文献"；同时让 Graph 有一个节点专门核对"结论有没有超出证据"，证据不足就声明未找到，而不是从"没找到"推出"不存在"</button>
+  <button onclick="answer('q3',false)">C. 把模型换成更强的，它就不会过度断言了</button>
+  <div id="q3" class="feedback"></div>
+
+  <div class="box"><strong>你可以这样向我汇报：</strong>「实验三里，工具返回的是……，模型的回答是……。我的判断是：缺的是……那一层的能力。如果加 search_papers，我会……」<br>不用答得完美。把观察发给我，我会只纠正关键概念，并带你把这一课变成<strong>改造 #3 的设计草稿</strong>。</div>
+
+  <h2>简历视角：这一课对应的面试问题</h2>
+  <table>
+    <thead><tr><th>面试官会问</th><th>你今天能答的部分</th></tr></thead>
+    <tbody>
+      <tr><td>模型是怎么知道可以调用你的工具的？</td><td>开发者把工具的名称、参数和用途描述交给模型；模型只看得见这些说明，所以描述质量决定调用准确率</td></tr>
+      <tr><td>模型会不会乱调工具？你怎么控制？</td><td>决策权在模型，但可用工具集合、参数格式和 Graph 的合法路径都由你定义——控制点是"给它什么说明书"和"允许它走哪些路"</td></tr>
+      <tr><td>RAG 检索不到内容时你的系统怎么办？</td><td>（今天只到这里：现有系统<em>没有</em>处理，这正是你要在 ResearchPilot 里加的能力）</td></tr>
+      <tr><td>线上报错你怎么定位？</td><td>先判断是哪一层：前端 / HTTP / Graph / 模型决策 / Tool / Embedding / 向量库。今天你已经见过一个"HTTP 200 但答案是错的"案例</td></tr>
+    </tbody>
+  </table>
+
+  <h2>下一课预告</h2>
+  <p>你已经在界面上"看见"了调用链。第 4 课我们绕开界面，直接用 <a href="http://localhost:8001/docs">FastAPI 的 /docs</a> 手动发一次请求，看清浏览器和后端之间<strong>实际传的 JSON 和 SSE 长什么样</strong>——为什么同一个回答，界面上是逐字出现的，而接口里是一行行 <code>data:</code>。那一课之后，你就有能力给 ResearchPilot 设计新的 API 了。</p>
+  <p><strong>任何一句不清楚都可以直接问我。你不需要先会代码。</strong></p>
+
+  <footer>延伸阅读：<a href="https://docs.langchain.com/oss/python/langchain/tools">LangChain 官方 Tools 文档</a>（工具如何声明与绑定）、<a href="https://docs.langchain.com/oss/python/langgraph/overview">LangGraph 官方概览</a>（Graph 如何编排循环）。主资料：项目内 <code>reference/agent-rag-system-map.html</code>。</footer>
+</main>
+<script>
+  function answer(id, correct) {
+    const node = document.getElementById(id);
+    node.className = 'feedback ' + (correct ? 'ok' : 'no');
+    node.textContent = correct
+      ? '正确。你已经把"谁决定、谁执行、谁判断"分开了——这正是设计 Agent 的起点。'
+      : '再想一层：先问"这一步是谁在做决定"，再问"它有没有能力判断结果够不够好"。';
+  }
+</script>
+</body></html>

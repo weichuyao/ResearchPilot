@@ -1,0 +1,5 @@
+# 统一换行符处理：
+# 仓库内一律按 LF 存储，检出时由 git 按平台自动处理。
+# 不加这一行的话，Windows 上每次提交都会刷一堆 "LF will be replaced by CRLF" 警告，
+# 而且以后在 Linux/macOS 上 clone 会出现"每一行都被改过"的假 diff。
+* text=auto

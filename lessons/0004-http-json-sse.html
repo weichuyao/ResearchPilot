@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>第四课 · 一次请求在网络上长什么样？</title>
+  <style>
+    :root { --ink:#15242d; --muted:#5d6b73; --paper:#fffefa; --ground:#edf2f0; --accent:#0e6b5c; --accent2:#e6f3ee; --warn:#8a5a00; --warnbg:#fdf6e3; --line:#d9dfdb; --bad:#a13737; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--ground); color:var(--ink); font:17px/1.68 ui-sans-serif,system-ui,"Microsoft YaHei",sans-serif; }
+    main { max-width:860px; margin:34px auto; padding:44px 46px; background:var(--paper); box-shadow:0 10px 36px #1b2d2215; }
+    h1 { margin:0 0 8px; font-size:33px; letter-spacing:-.4px; }
+    h2 { margin:36px 0 11px; font-size:22px; }
+    h3 { margin:24px 0 6px; font-size:18px; }
+    p { margin:10px 0; }
+    .kicker { color:var(--accent); font-weight:700; letter-spacing:.08em; font-size:13px; text-transform:uppercase; }
+    .lead { color:var(--muted); font-size:19px; }
+    .box { margin:18px 0; padding:17px 19px; background:var(--accent2); border-left:4px solid var(--accent); }
+    .warnbox { margin:18px 0; padding:17px 19px; background:var(--warnbg); border-left:4px solid var(--warn); }
+    .exp { margin:22px 0; padding:0 0 4px; border-top:1px solid var(--line); }
+    .exp h3 { color:var(--accent); }
+    .step { display:grid; grid-template-columns:32px 1fr; gap:12px; margin:14px 0; }
+    .num { width:30px; height:30px; text-align:center; border-radius:50%; background:var(--ink); color:white; font-weight:700; line-height:30px; font-size:15px; }
+    .say { display:inline-block; padding:2px 8px; background:#eef3f1; border:1px dashed #b9c7c1; border-radius:5px; font-weight:650; }
+    .see { margin:10px 0 10px 44px; padding:12px 15px; background:#f7faf9; border-left:3px solid var(--accent); font-size:16px; }
+    button { display:block; width:100%; margin:8px 0; padding:12px 14px; background:white; border:1px solid var(--line); border-radius:7px; color:var(--ink); cursor:pointer; text-align:left; font:inherit; }
+    button:hover { border-color:var(--accent); }
+    .feedback { min-height:26px; margin:9px 0 20px; font-weight:650; }
+    .ok { color:var(--accent); } .no { color:var(--bad); }
+    code { padding:2px 6px; background:#edf0ee; border-radius:4px; font-size:15px; }
+    pre { padding:14px 16px; background:#0f172a; color:#e2e8f0; border-radius:9px; overflow-x:auto; font-size:14px; line-height:1.55; }
+    a { color:var(--accent); }
+    table { border-collapse:collapse; width:100%; margin:14px 0; font-size:16px; }
+    th,td { padding:10px 11px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+    th { background:#f2f6f4; }
+    footer { margin-top:40px; padding-top:16px; border-top:1px solid var(--line); color:var(--muted); font-size:14px; }
+    @media (max-width:680px) { main { margin:0; padding:30px 20px; } h1 { font-size:26px; } .see { margin-left:0; } }
+  </style>
+</head>
+<body><main>
+  <div class="kicker">AI ChatKit · 黑盒课程 04 · 约 20 分钟 · 不读源码</div>
+  <h1>一次请求在网络上长什么样？</h1>
+  <p class="lead">前三课讲的是"系统内部谁负责什么"。这一课往下钻一层：<strong>浏览器和后端之间，真正被传来传去的到底是什么东西。</strong> 做完这一课，你就能自己设计 ResearchPilot 的新接口了。</p>
+  <div class="box"><strong>本课的单一收获：</strong>能看懂一次 HTTP 请求与响应，并说清 <strong>SSE 到底是什么</strong>——它不是新协议，它只是一个<em>不结束的 HTTP 响应</em>。</div>
+
+  <div class="warnbox"><strong>前置检查。</strong>这一课<strong>不需要 Ollama</strong>（我们只问常识问题，不触发检索）。只需要：后端在 8001、前端在 3000 上跑着。检查一下
+  <a href="http://localhost:8001/docs">http://localhost:8001/docs</a> 能打开就行。</div>
+
+  <h2>先破除一个印象</h2>
+  <p>你之前可能觉得 <code>localhost:8001/docs</code> 是个"网页"，所以后端也能做前端。不是的——那个页面是 <strong>FastAPI 自动生成</strong>的开发者调试工具（基于 OpenAPI 规范）。它是后端<em>顺手送的</em>一张"说明书"，不是产品界面。</p>
+  <p>而它最有用的一点是：<strong>你可以绕过前端，直接和后端说话。</strong> 这一课我们全程用它。</p>
+
+  <div class="exp">
+    <h3>实验一：认清后端的"门牌号"</h3>
+    <div class="step"><div class="num">1</div><div>打开 <a href="http://localhost:8001/docs">http://localhost:8001/docs</a>。你看到的是这个后端<strong>公开的所有接口</strong>。</div></div>
+    <div class="step"><div class="num">2</div><div>找到 <strong>chat</strong> 这一组，注意里面有两个很像的接口：<code>POST /chat/invoke</code> 和 <code>POST /chat/stream</code>。</div></div>
+    <div class="step"><div class="num">3</div><div>数一下整个后端一共有多少个接口。（提示：除了 chat，还有 employee 和 department 两组。）</div></div>
+    <div class="see"><strong>你会看到：</strong>后端一共公开了 <strong>15 个接口</strong>：2 个 chat、6 个 employee、7 个 department。<br><br>
+    观察两件事：<strong>①</strong> 每个接口都由"方法 + 路径"唯一确定，比如 <code>POST /chat/stream</code>——<em>方法不同或路径不同，就是不同的接口</em>（<code>GET /employee/get/1</code> 和 <code>DELETE /employee/delete/1</code> 是两回事）。<strong>②</strong> 前端只用了其中 <strong>1 个</strong>（<code>POST /chat/stream</code>）。其余 14 个接口前端根本没碰——它们是为别的用途准备的。</div>
+  </div>
+
+  <div class="exp">
+    <h3>实验二：手动发一次"非流式"请求</h3>
+    <div class="step"><div class="num">1</div><div>展开 <code>POST /chat/invoke</code>，点右上角 <strong>Try it out</strong>。</div></div>
+    <div class="step"><div class="num">2</div><div>把 Request body 换成这段（把 message 改成你要问的常识问题）：</div></div>
+    <pre>{
+  "thread_id": "lesson4-invoke",
+  "message": "用一句话解释什么是向量数据库",
+  "agent_id": "oa-assistant"
+}</pre>
+    <div class="step"><div class="num">3</div><div>点 <strong>Execute</strong>，然后往下看 <strong>Response body</strong>。等它整块出现。</div></div>
+    <div class="see"><strong>你会看到（实测）：</strong>一个完整的 JSON，形如：
+    <pre>{
+  "type": "ai",
+  "content": "向量数据库是一种专门用于存储、索引和检索高维向量数据的数据库…",
+  "tool_calls": [],
+  "tool_call_id": null,
+  "run_id": "4bf6137b-7610-4ef1-9dc1-ba0462b696eb",
+  "response_metadata": {
+    "finish_reason": "stop",
+    "model_name": "deepseek-flash"
+  },
+  "custom_data": {}
+}</pre>
+    这个接口<strong>一次性</strong>返回。<strong>在它算完之前，你屏幕上什么都没有。</strong></div>
+    <p><strong>认识这几个字段</strong>：<code>content</code> 就是答案正文；<code>run_id</code> 是这次请求的唯一编号（用来排查问题、记录反馈）；<code>tool_calls</code> 如果非空，说明模型这次调用了工具；<code>finish_reason: "stop"</code> 表示模型正常说完，不是被截断。</p>
+  </div>
+
+  <div class="exp">
+    <h3>实验三（核心）：同一个问题，换成"流式"</h3>
+    <div class="step"><div class="num">1</div><div>展开 <code>POST /chat/stream</code>，点 <strong>Try it out</strong>，填入<strong>同一段</strong>请求体（把 thread_id 换成 <code>lesson4-stream</code>）。</div></div>
+    <div class="step"><div class="num">2</div><div>点 Execute，观察 Response body 是<strong>怎么出现的</strong>——和上一次有什么不同？</div></div>
+    <div class="step"><div class="num">3</div><div>再回到 experiment 二的 <code>/chat/invoke</code> 发一次同样的问题，对比"答案出现的节奏"。</div></div>
+    <div class="see"><strong>你会看到（实测）：</strong>响应是<strong>一行行冒出来</strong>的，长这样（逐字，注意每行结尾有两个换行）：
+<pre>data: {"type": "token", "content": "\u5411\u91cf"}
+                                  ← 这里是一个空行
+data: {"type": "token", "content": "\u6570\u636e\u5e93"}
+                                  ← 空行
+data: {"type": "token", "content": "\u662f\u4e00\u79cd"}
+                                  ← 空行
+……
+data: {"type": "end"}</pre>
+    实测那次一共 <strong>121 行</strong>，其中 <strong>58 个 token 事件</strong> + 1 个 message 事件 + 1 个 end 事件。把它们拼起来就是完整答案。</div>
+    <div class="warnbox"><strong>核心认识：SSE 到底是什么？</strong><br><br>
+    <strong>SSE = Server-Sent Events = 一个"不结束"的 HTTP 响应。</strong><br><br>
+    它<strong>没有</strong>新协议、没有握手、没有长连接魔法。就是：后端把 HTTP 响应的头先发出来，然后<strong>不关闭这个连接</strong>，持续往里面写文本。文本格式只有两条规则：<br>
+    ① 每一条消息以 <code>data: </code> 开头；<br>
+    ② 消息之间用<strong>空行</strong>分隔。<br><br>
+    就这么简单。你看到的那个 <code>content-type: text/event-stream</code>，就是在告诉浏览器："这个响应不会一次性结束，你别等它结束，边收边处理。"<br><br>
+    所以本质上是：<strong>普通 HTTP + 约定好的文本格式 + 不关连接。</strong></div>
+    <p><strong>为什么需要它？</strong>因为如果等答案全写完再返回（像 <code>/chat/invoke</code>），用户要盯着空白屏幕十几秒。流式让第一个字在几百毫秒内就出现——<strong>这不是花哨，这是体验的生死线。</strong></p>
+    <p><strong>仔细观察那一串 <code>\u5411\u91cf</code></strong>：这是 JSON 在转义中文（<code>向量</code>）。意思是：<strong>中文在网上不是"字"，是一串编码。</strong> 前端 <code>JSON.parse</code> 之后才能看到"向量"两个字。这一点在实验五会变成一个大坑。</p>
+  </div>
+
+  <div class="exp">
+    <h3>实验四：故意发一个错的请求，看后端怎么拦你</h3>
+    <div class="step"><div class="num">1</div><div>回到 <code>POST /chat/stream</code>，Try it out，把请求体里的 <code>"message"</code> 那一行<strong>整行删掉</strong>：</div></div>
+    <pre>{
+  "thread_id": "lesson4-bad",
+  "agent_id": "oa-assistant"
+}</pre>
+    <div class="step"><div class="num">2</div><div>Execute，看响应码和响应体。</div></div>
+    <div class="see"><strong>你会看到（实测）：</strong>
+<pre>HTTP/1.1 422 Unprocessable Entity
+server: uvicorn
+content-type: application/json
+
+{"detail":[{
+  "type":"missing",
+  "loc":["body","message"],
+  "msg":"Field required",
+  "input":{"thread_id":"lesson4-bad","agent_id":"oa-assistant"}
+}]}</pre>
+    <strong>注意这个报错有多具体：</strong>它告诉你缺的是 <code>body</code>（不是 query、不是 path）里的 <code>message</code> 字段，类型是 <code>missing</code>，原因 <code>Field required</code>，还把收到的原始内容回给你看。<br><br>这不是人类写的报错，是 <strong>FastAPI 用 Pydantic 模型自动校验</strong>出来的——你只声明了"请求体长什么样"，校验、报错、文档全都自动生成。</div>
+    <p><strong>422 是"能看懂但内容不对"</strong>（Unprocessable Entity）。对比几个常见的：</p>
+    <table>
+      <thead><tr><th>状态码</th><th>含义</th><th>在本项目里什么时候出现</th></tr></thead>
+      <tbody>
+        <tr><td><strong>200</strong></td><td>成功</td><td>正常聊天</td></tr>
+        <tr><td><strong>404</strong></td><td>找不到</td><td><code>GET /employee/get/999</code>（员工不存在）</td></tr>
+        <tr><td><strong>422</strong></td><td>看懂了，但内容不合法</td><td>缺 <code>message</code> 字段</td></tr>
+        <tr><td><strong>500</strong></td><td>后端自己崩了</td><td>代码里的 bug（比如之前发现的部门写接口）</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="exp">
+    <h3>实验五：一个真实的中文乱码坑</h3>
+    <div class="step"><div class="num">1</div><div>对比刚才两个接口的<strong>响应头</strong>里的 <code>content-type</code>。在 Swagger 里往下翻，找 <strong>Response headers</strong>。</div></div>
+    <div class="see"><strong>你会看到（实测）：</strong>两个接口不一样！
+    <table>
+      <thead><tr><th>接口</th><th>content-type</th></tr></thead>
+      <tbody>
+        <tr><td><code>/chat/invoke</code></td><td><code>application/json</code> ← <strong>没有声明编码</strong></td></tr>
+        <tr><td><code>/chat/stream</code></td><td><code>text/event-stream; charset=utf-8</code> ← 声明了</td></tr>
+      </tbody>
+    </table>
+    <strong>差别是会咬人的。</strong> 我在给你准备这一课时就踩到了：用 PowerShell 请求 <code>/chat/invoke</code>，拿回来的中文全是 <code>åéæ°æ®åº</code> 这种乱码；而请求 <code>/chat/stream</code> 就完全正常。<br><br>
+    原因：<code>application/json</code> 没写 <code>charset</code>，某些客户端（比如 Windows PowerShell 5.1）就会去"猜"编码，猜错就乱码。<strong>严格说 JSON 默认就该是 UTF-8，是客户端不守规矩；但显式写上 charset 能省掉一整类诡异问题。</strong></div>
+    <p>记住这条经验：<strong>只要你的系统要处理中文，编码就是一个会出现诡异故障的地方</strong>——而且故障长得不像编码问题，而像"数据错了"。ResearchPilot 要处理论文，中文/英文/希腊字母/公式符号全都有，这一条你会再遇到。</p>
+  </div>
+
+  <h2>把两条路径并排看</h2>
+  <pre>【/chat/invoke 非流式】
+前端 ──请求──→ 后端
+                  │（用户盯着空白屏幕等…）
+                  │  跑 Graph、调 LLM、等它说完
+                  ↓
+前端 ←── 一整块 JSON ──┘        用户：突然出现一整段答案
+
+【/chat/stream 流式】
+前端 ──请求──→ 后端
+                  │  HTTP 头发出去，连接<strong>不关</strong>
+                  │  data: {"type":"token","content":"向"}   ← 第一个字先到
+前端 ←────────────┤  data: {"type":"token","content":"量"}
+   （逐字渲染）   │  data: {"type":"token","content":"数"}
+                  │  ...
+                  └─ data: {"type":"end"}   ← 后端主动收尾</pre>
+  <p><strong>两个接口跑的是同一个 Graph、同一个模型。</strong> 唯一的区别是"结果怎么往外送"：一个等齐了再送，一个边算边送。</p>
+  <p>而前端那个 <code>useStreamChat.ts</code> 做的事，你现在可以完整理解了：它用 <code>response.body.getReader()</code> 逐块读取字节，然后<strong>按行切开</strong>、只处理 <code>data: </code> 开头的那几行、<code>JSON.parse</code> 之后看 <code>type</code>：是 <code>token</code> 就追加到当前消息后面（于是逐字显示），是 <code>message</code> 就更新工具面板，是 <code>end</code> 就停止转圈。</p>
+
+  <h2>这一课和你的 ResearchPilot 有什么关系</h2>
+  <table>
+    <thead><tr><th>你以后要做的事</th><th>用得上这一课的哪一点</th></tr></thead>
+    <tbody>
+      <tr><td>改造 #5：加知识库、文档上传、Agent Task、Health 接口</td><td>你要自己定义"方法 + 路径 + 请求体模型"，还要想清楚每个接口该返回 200 / 404 / 422 / 500 中的哪一个</td></tr>
+      <tr><td>改造 #3：让用户看见 workflow 的中间步骤</td><td>你要用 SSE 往外送<strong>新的</strong>事件类型，比如 <code>{"type":"stage","content":"正在补充检索"}</code>——然后前端加一个分支去显示它</td></tr>
+      <tr><td>改造 #7：完善流式输出</td><td>你会发现现在所有中文都被转义成 <code>\uXXXX</code>，同样的内容在网线上多占约一倍字节。这是一个可量化的小优化</td></tr>
+      <tr><td>改造 #6/#4：换数据库、接 MCP</td><td>它们都藏在接口或工具后面——<strong>接口形状不变，内部可以整体替换</strong>，这正是分层的价值</td></tr>
+    </tbody>
+  </table>
+
+  <h2>30 秒自测</h2>
+  <p><strong>第 1 题：</strong>SSE 到底是什么？</p>
+  <button onclick="answer('q1',false)">A. 一种新的网络协议，比 HTTP 更快</button>
+  <button onclick="answer('q1',true)">B. 就是一个<strong>不结束的普通 HTTP 响应</strong>：头先发出去、连接不关，持续写入以 <code>data: </code> 开头、空行分隔的文本</button>
+  <button onclick="answer('q1',false)">C. WebSocket 的另一种叫法</button>
+  <div id="q1" class="feedback"></div>
+
+  <p><strong>第 2 题：</strong>你发了一个缺 <code>message</code> 字段的请求，收到 422 和一段很具体的报错。这段报错是谁产生的？</p>
+  <button onclick="answer('q2',false)">A. 大模型看懂了请求不对，返回的提示</button>
+  <button onclick="answer('q2',false)">B. 前端的表单校验拦下来的</button>
+  <button onclick="answer('q2',true)">C. FastAPI 用 Pydantic 模型在<strong>进业务逻辑之前</strong>自动校验出来的</button>
+  <div id="q2" class="feedback"></div>
+
+  <p><strong>第 3 题：</strong><code>/chat/invoke</code> 和 <code>/chat/stream</code> 的差别是什么？</p>
+  <button onclick="answer('q3',false)">A. invoke 用更小的模型，所以更快</button>
+  <button onclick="answer('q3',true)">B. 跑的是同一个 Graph 和模型，差别只在<strong>结果怎么往外送</strong>：一个等齐了整块返回，一个边算边流</button>
+  <button onclick="answer('q3',false)">C. invoke 不调用工具，stream 才调用工具</button>
+  <div id="q3" class="feedback"></div>
+
+  <div class="box"><strong>你可以这样向我汇报：</strong>「实验三里我看到响应是……；实验四的 422 告诉我……；我原以为 SSE 是……，现在的理解是……。」<br>除了这些选择题，我会在对话里再出几道<strong>需要你自己叙述</strong>的题——那才是真正的验收。</div>
+
+  <h2>简历视角：这一课对应的面试问题</h2>
+  <table>
+    <thead><tr><th>面试官会问</th><th>你今天能答的部分</th></tr></thead>
+    <tbody>
+      <tr><td>你的接口怎么设计的？</td><td>15 个接口里前端只用 1 个；每个接口由"方法 + 路径"确定；请求体用 Pydantic 模型声明，校验与文档自动生成</td></tr>
+      <tr><td>流式输出是怎么实现的？</td><td>SSE：一个不结束的 HTTP 响应，按 <code>data: </code> + 空行的约定写文本；前端逐块读取并按事件类型分发</td></tr>
+      <tr><td>SSE 和 WebSocket 怎么选？</td><td>（还没学，但你现在能说出 SSE 的本质了）单向推送场景下 SSE 更简单，因为它就是 HTTP</td></tr>
+      <tr><td>线上出现"乱码"你怎么查？</td><td>先看 <code>content-type</code> 有没有声明 <code>charset</code>，再确认请求体是不是按 UTF-8 编码发的——两个方向都可能</td></tr>
+    </tbody>
+  </table>
+
+  <h2>下一课预告</h2>
+  <p>阶段 A 到这里就结束了：你已经能从浏览器一路看到 SSE。<strong>下一课开始，你要动手了</strong>——从 `reference/baseline-defects.md` 里最干净的那个缺陷开始（部门写接口的三个 500），亲手修掉它。不用怕：那些缺陷的根因我们都已经查清并记录在案，你要做的是理解"为什么坏"然后改对，而不是从零摸索。</p>
+  <p><strong>任何一句不清楚都可以直接问我。你不需要先会代码。</strong></p>
+
+  <footer>延伸阅读：<a href="https://fastapi.tiangolo.com/tutorial/body/">FastAPI 官方 · 请求体</a>（Pydantic 模型如何变成校验）、<a href="https://fastapi.tiangolo.com/advanced/custom-response/#streamingresponse">FastAPI 官方 · StreamingResponse</a>、<a href="https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events">MDN · 使用 Server-Sent Events</a>。</footer>
+</main>
+<script>
+  function answer(id, correct) {
+    const node = document.getElementById(id);
+    node.className = 'feedback ' + (correct ? 'ok' : 'no');
+    node.textContent = correct
+      ? '正确。你已经把"协议层发生了什么"和"业务层发生了什么"分开了。'
+      : '再想一层：先问"这一段文本是谁写的、发给谁的"，再问"它属于协议层还是业务层"。';
+  }
+</script>
+</body></html>

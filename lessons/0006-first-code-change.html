@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>第六课 · 第一次改代码：修三个 500</title>
+  <style>
+    :root { --ink:#15242d; --muted:#5d6b73; --paper:#fffefa; --ground:#edf2f0; --accent:#0e6b5c; --accent2:#e6f3ee; --warn:#8a5a00; --warnbg:#fdf6e3; --bad:#a13737; --line:#d9dfdb; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--ground); color:var(--ink); font:17px/1.68 ui-sans-serif,system-ui,"Microsoft YaHei",sans-serif; }
+    main { max-width:880px; margin:34px auto; padding:44px 46px; background:var(--paper); box-shadow:0 10px 36px #1b2d2215; }
+    h1 { margin:0 0 8px; font-size:32px; letter-spacing:-.4px; }
+    h2 { margin:36px 0 11px; font-size:22px; }
+    h3 { margin:22px 0 6px; font-size:18px; }
+    p { margin:10px 0; }
+    .kicker { color:var(--accent); font-weight:700; letter-spacing:.08em; font-size:13px; text-transform:uppercase; }
+    .lead { color:var(--muted); font-size:19px; }
+    .box { margin:18px 0; padding:17px 19px; background:var(--accent2); border-left:4px solid var(--accent); }
+    .warnbox { margin:18px 0; padding:17px 19px; background:var(--warnbg); border-left:4px solid var(--warn); }
+    .stopbox { margin:18px 0; padding:17px 19px; background:#fdecec; border-left:4px solid var(--bad); }
+    .step { display:grid; grid-template-columns:34px 1fr; gap:12px; margin:16px 0; }
+    .num { width:32px; height:32px; text-align:center; border-radius:50%; background:var(--ink); color:white; font-weight:700; line-height:32px; font-size:15px; }
+    .say { display:inline-block; padding:2px 8px; background:#eef3f1; border:1px dashed #b9c7c1; border-radius:5px; font-weight:650; }
+    code { padding:2px 6px; background:#edf0ee; border-radius:4px; font-size:15px; }
+    pre { padding:14px 16px; background:#0f172a; color:#e2e8f0; border-radius:9px; overflow-x:auto; font-size:14px; line-height:1.55; }
+    table { border-collapse:collapse; width:100%; margin:14px 0; font-size:16px; }
+    th,td { padding:10px 11px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+    th { background:#f2f6f4; }
+    a { color:var(--accent); }
+    footer { margin-top:40px; padding-top:16px; border-top:1px solid var(--line); color:var(--muted); font-size:14px; }
+    .chk { list-style:none; padding-left:0; }
+    .chk li { margin:8px 0; }
+    .chk li::before { content:"☐ "; font-weight:700; color:var(--accent); }
+    @media (max-width:680px) { main { margin:0; padding:30px 20px; } h1 { font-size:25px; } }
+  </style>
+</head>
+<body><main>
+  <div class="kicker">阶段 B · 动手 01 · 第一次修改业务代码</div>
+  <h1>让三个坏接口工作起来</h1>
+  <p class="lead">这是你第一次改这个项目的代码。所以先立两条规矩，再开工。</p>
+
+  <div class="box"><strong>规矩一：先讲清为什么，再动手。</strong><br>
+  你要先把"这个接口为什么坏"讲给我听，我确认之后再改。<strong>理由很实际</strong>：改对了但你不知道为什么，那块能力就还是我的，不是你的。<br><br>
+  <strong>规矩二：我评审，不代改。</strong> 代码由你写。你卡住了可以问，我不会直接给你答案——但我会给你足够的线索。</div>
+
+  <div class="warnbox"><strong>本课的单一收获：</strong>掌握一条真实工作流的完整节奏——<strong>观察现象 → 读日志定位 → 说清根因 → 改动 → 验证</strong>。<br>
+  其中"读日志定位"是最值钱的一步，因为现实中<strong>没有缺陷清单给你看</strong>。</div>
+
+  <h2>第 0 步：先给改动装一个"撤销键"</h2>
+  <p>这个项目<strong>不是 git 仓库</strong>。也就是说：<strong>你现在改代码，改坏了没有任何回滚办法。</strong></p>
+  <p>而且还有两个理由让你必须现在做这件事：</p>
+  <ul>
+    <li><strong>简历项目最终必须上 git。</strong> 没有版本历史，面试时你没法展示"我改了哪些、为什么改"。</li>
+    <li>后面还有 10 项改造要做。<strong>没有撤销键就动手，等于不系安全带上高速。</strong></li>
+  </ul>
+  <div class="warnbox"><strong>但不能直接 <code>git init</code>。</strong> 我先量过了，现在直接初始化会把 <strong>1.9 GB 的垃圾</strong>加进仓库：
+  <table>
+    <thead><tr><th>目录</th><th>大小</th><th>该不该进仓库</th></tr></thead>
+    <tbody>
+      <tr><td><code>.uv-cache</code></td><td>660 MB</td><td>❌ 依赖缓存</td></tr>
+      <tr><td><code>.pnpm-store</code></td><td>334 MB</td><td>❌ 依赖缓存</td></tr>
+      <tr><td><code>frontend/node_modules</code></td><td>331 MB</td><td>❌（已在 .gitignore）</td></tr>
+      <tr><td><code>frontend/.next</code></td><td>311 MB</td><td>❌（已在 .gitignore）</td></tr>
+      <tr><td><code>backend/.venv-py311</code></td><td>304 MB</td><td>❌ <strong>没在 .gitignore 里！</strong></td></tr>
+      <tr><td><code>__pycache__</code> × 341 个</td><td>—</td><td>❌ 编译产物</td></tr>
+    </tbody>
+  </table>
+  现有 <code>.gitignore</code> 只覆盖了 5 条，漏掉了 <code>.venv-py311</code>、<code>.uv-cache</code>、<code>.pnpm-store</code>、<code>__pycache__</code>。<br><br>
+  <strong>所以顺序是：先补 .gitignore → 再 git init → 再第一个 commit。</strong></div>
+
+  <h2>第 1 步：手动启动后端（为了能看见日志）</h2>
+  <div class="step"><div class="num">1</div><div>如果后端正在跑，先停掉它。然后用<strong>这条命令手动启动</strong>——关键是<strong>日志会打在你眼前</strong>：</div></div>
+  <pre>cd D:\Code\agent\ai-chatkit-master\backend
+$env:NO_PROXY = '127.0.0.1,localhost,::1'
+.\.venv-py311\Scripts\python.exe -m uvicorn main:app --app-dir app --host 127.0.0.1 --port 8001</pre>
+  <p><strong>为什么必须手动启动？</strong>因为你平时用的一键脚本是用<em>隐藏窗口</em>启动后端的——<strong>日志你看不见</strong>。而这一课的全部线索都在日志里。</p>
+  <p>（顺带说：这就是改造 #7「日志」要解决的短板。你刚体感到的那个痛点，就是那个改造项的动机。）</p>
+
+  <h2>第 2 步：观察故障（什么都不要改）</h2>
+  <p>打开 <a href="http://localhost:8001/docs">http://localhost:8001/docs</a>，或者用 curl。把三个写接口都打一遍，<strong>记录状态码</strong>。</p>
+  <div class="box"><strong>动手前先记下数据基线</strong>（改完要核对没被破坏）：
+  <pre>department： 1 行 —— id=1, name='human resource'
+employee：   1 行 —— jack, HR, department_id=1</pre></div>
+  <table>
+    <thead><tr><th>调用</th><th>请求体 / 参数</th><th>实测结果</th></tr></thead>
+    <tbody>
+      <tr><td><code>POST /department/add</code></td><td><code>{"name":"试一下"}</code></td><td><strong>500</strong></td></tr>
+      <tr><td><code>PUT /department/update/1</code></td><td><code>{"name":"试一下"}</code></td><td><strong>500</strong></td></tr>
+      <tr><td><code>DELETE /department/del/9999</code></td><td>用不存在的 id 更安全</td><td><strong>500</strong></td></tr>
+      <tr><td><code>GET /department/1</code>（对照组）</td><td>—</td><td><strong>200</strong> ✅</td></tr>
+    </tbody>
+  </table>
+  <div class="warnbox"><strong>注意一个关键细节：</strong>500 的响应体只有一行字——
+  <pre>HTTP/1.1 500 Internal Server Error
+content-length: 21
+content-type: text/plain; charset=utf-8
+
+Internal Server Error</pre>
+  <strong>没有文件、没有行号、没有异常类型。</strong> 这是有意为之：把内部错误暴露给客户端是安全风险。<br><br>
+  <strong>所以真正的线索只在两个地方：后端终端的日志，和你的代码。</strong></div>
+  <p><strong>顺便观察：读接口是好的（200），只有写接口坏。这个不对称本身就是线索</strong>——说明问题不在数据库连接、不在模型定义、不在路由注册，而在<strong>写操作那几行代码</strong>里。</p>
+
+  <h2>第 3 步：读日志，定位根因</h2>
+  <p>回到跑后端的那个终端，往上翻。你会看到 traceback——它会告诉你：<strong>异常类型 + 出错文件 + 出错行号</strong>。</p>
+  <div class="warnbox"><strong>提示：三个接口不一定是同一个原因。</strong> 仔细看那三段 traceback，它们可能给出<strong>不止一种</strong>异常类型。别看到一个就以为全找到了。</div>
+  <div class="stopbox"><strong>到这一步就停下，不要改代码。</strong><br><br>
+  把你找到的东西发我，格式：
+  <ul class="chk">
+    <li>三个接口各自的<strong>异常类型</strong>（比如 <code>XXXError</code>）</li>
+    <li>各自<strong>出错的文件和行号</strong></li>
+    <li>你的<strong>解释</strong>：这一行为什么会报这个错？</li>
+    <li>你的<strong>修法</strong>：打算怎么改，为什么这么改</li>
+  </ul>
+  我确认之后再动手。<strong>这一步是这一课的核心</strong>——因为以后工作中没有 <code>baseline-defects.md</code> 给你看。</div>
+
+  <h2>第 4 步：修改</h2>
+  <p>我确认你的判断之后，你改代码。<strong>一个非常有用的小技巧</strong>：这个项目里有一个<strong>已经写对了的对照组</strong>——同样是"仓库类"，同样是增删改查，它的写法是正确的。找到它、对比它，你会发现这三处错的修法几乎是照抄。</p>
+  <p>（提示：去看<strong>另一个</strong> repository 文件。它的 <code>create</code> / <code>update</code> / <code>delete</code> 三个方法是怎么写的？）</p>
+  <div class="warnbox"><strong>如果你已经看过 <code>reference/baseline-defects.md</code>：</strong>那份清单里确实写了这三处的行号。但<strong>建议你先自己从日志里走一遍</strong>——因为那份清单是我给你的，而"从日志定位"是你自己的能力。两者价值差很远。</div>
+
+  <h2>第 5 步：验证（这才是"改完了"）</h2>
+  <p>改完之后，<strong>重启后端</strong>（uvicorn 默认不带热重载，改了代码必须重启），然后重新打这三个接口：</p>
+  <table>
+    <thead><tr><th>调用</th><th>期望的状态码</th><th>为什么是这个码</th></tr></thead>
+    <tbody>
+      <tr><td><code>POST /department/add</code></td><td><strong>201</strong></td><td>创建成功。路由里声明了 <code>status_code=201</code></td></tr>
+      <tr><td><code>PUT /department/update/1</code></td><td><strong>200</strong></td><td>更新成功，并返回更新后的对象</td></tr>
+      <tr><td><code>DELETE /department/del/{id}</code></td><td><strong>204</strong></td><td>删除成功且无响应体</td></tr>
+      <tr><td><code>GET /department/</code></td><td><strong>200</strong></td><td>并且你新建的部门应该出现在列表里</td></tr>
+    </tbody>
+  </table>
+  <p>改完也别忘了<strong>核对 employee 数据没被牵连</strong>（<code>GET /employee/get_all</code>）。</p>
+
+  <h2>第 6 步（进阶）：你一定会撞到的第二个 500</h2>
+  <p>修完上面三处之后，试着<strong>再添加一个名字已经存在的部门</strong>：</p>
+  <pre>POST /department/add
+{"name": "human resource"}     ← 这个名字已经存在</pre>
+  <p>数据库的 <code>department</code> 表上有一个 <strong>唯一索引</strong>（<code>uniq_department_name</code>）。所以这一次，数据库会拒绝。</p>
+  <div class="box"><strong>请回答三个问题：</strong>
+  <ol>
+    <li>这一次会发生什么？（还是 500 吗？）</li>
+    <li><strong>这一次的 500 和前面那三个 500，性质一样吗？</strong> 提示：前面三个是"我的代码写错了"，这一次是什么？</li>
+    <li>你觉得它<strong>应该</strong>返回什么状态码？为什么用 500 是错的？</li>
+  </ol>
+  这一问正好用上你刚学的状态码——<strong>4xx 是"我拒绝（但我没坏）"，5xx 才是"我坏了"。</strong> 想一想：用户重复提交，是我坏了吗？</div>
+  <p>这一问没有标准代码答案。你要做的是一个<strong>设计判断</strong>：在哪里拦（路由层还是仓库层）、拦到什么程度、返回什么。这属于改造 #5 的范围，提前想一想没坏处。</p>
+
+  <h2>交给我什么</h2>
+  <div class="box">
+    <strong>第一阶段（改之前）</strong>
+    <ul class="chk">
+      <li>三个接口的异常类型 + 出错文件行号</li>
+      <li>你的根因解释</li>
+      <li>你打算怎么改</li>
+    </ul>
+    <strong>第二阶段（改之后）</strong>
+    <ul class="chk">
+      <li>你改动的代码（贴出来）</li>
+      <li>三个接口 + 读接口的验证结果（状态码）</li>
+      <li>数据基线有没有被破坏</li>
+      <li>进阶题的三问答案</li>
+    </ul>
+  </div>
+
+  <footer>相关材料：<code>reference/baseline-defects.md</code>（缺陷清单，A2 组）、<code>reference/http-status-codes.md</code>（状态码，第 6 步会用到）、<code>NOTES.md</code>（数据基线）。<br>
+  参考阅读：<a href="https://fastapi.tiangolo.com/tutorial/handling-errors/">FastAPI 官方 · 错误处理</a>（如何主动抛出 HTTP 异常）。</footer>
+</main>
+</body></html>

@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>第五课 · 多轮对话是靠什么记住的？</title>
+  <style>
+    :root { --ink:#15242d; --muted:#5d6b73; --paper:#fffefa; --ground:#edf2f0; --accent:#0e6b5c; --accent2:#e6f3ee; --warn:#8a5a00; --warnbg:#fdf6e3; --line:#d9dfdb; --bad:#a13737; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--ground); color:var(--ink); font:17px/1.68 ui-sans-serif,system-ui,"Microsoft YaHei",sans-serif; }
+    main { max-width:860px; margin:34px auto; padding:44px 46px; background:var(--paper); box-shadow:0 10px 36px #1b2d2215; }
+    h1 { margin:0 0 8px; font-size:33px; letter-spacing:-.4px; }
+    h2 { margin:36px 0 11px; font-size:22px; }
+    h3 { margin:24px 0 6px; font-size:18px; }
+    p { margin:10px 0; }
+    .kicker { color:var(--accent); font-weight:700; letter-spacing:.08em; font-size:13px; text-transform:uppercase; }
+    .lead { color:var(--muted); font-size:19px; }
+    .box { margin:18px 0; padding:17px 19px; background:var(--accent2); border-left:4px solid var(--accent); }
+    .warnbox { margin:18px 0; padding:17px 19px; background:var(--warnbg); border-left:4px solid var(--warn); }
+    .exp { margin:22px 0; padding:0 0 4px; border-top:1px solid var(--line); }
+    .exp h3 { color:var(--accent); }
+    .step { display:grid; grid-template-columns:32px 1fr; gap:12px; margin:14px 0; }
+    .num { width:30px; height:30px; text-align:center; border-radius:50%; background:var(--ink); color:white; font-weight:700; line-height:30px; font-size:15px; }
+    .say { display:inline-block; padding:2px 8px; background:#eef3f1; border:1px dashed #b9c7c1; border-radius:5px; font-weight:650; }
+    .see { margin:10px 0 10px 44px; padding:12px 15px; background:#f7faf9; border-left:3px solid var(--accent); font-size:16px; }
+    button { display:block; width:100%; margin:8px 0; padding:12px 14px; background:white; border:1px solid var(--line); border-radius:7px; color:var(--ink); cursor:pointer; text-align:left; font:inherit; }
+    button:hover { border-color:var(--accent); }
+    .feedback { min-height:26px; margin:9px 0 20px; font-weight:650; }
+    .ok { color:var(--accent); } .no { color:var(--bad); }
+    code { padding:2px 6px; background:#edf0ee; border-radius:4px; font-size:15px; }
+    pre { padding:14px 16px; background:#0f172a; color:#e2e8f0; border-radius:9px; overflow-x:auto; font-size:14px; line-height:1.55; }
+    a { color:var(--accent); }
+    table { border-collapse:collapse; width:100%; margin:14px 0; font-size:16px; }
+    th,td { padding:10px 11px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+    th { background:#f2f6f4; }
+    footer { margin-top:40px; padding-top:16px; border-top:1px solid var(--line); color:var(--muted); font-size:14px; }
+    @media (max-width:680px) { main { margin:0; padding:30px 20px; } h1 { font-size:26px; } .see { margin-left:0; } }
+  </style>
+</head>
+<body><main>
+  <div class="kicker">AI ChatKit · 黑盒课程 05 · 约 18 分钟 · 不读源码</div>
+  <h1>多轮对话是靠什么记住的？</h1>
+  <p class="lead">你可能会以为"AI 记得我刚才说的话"。<strong>它不记得。它每次都被重新告知了一遍。</strong> 这一课要把这个幻觉拆掉——因为拆掉之后，你才知道改造 #6 要改的到底是什么。</p>
+  <div class="box"><strong>本课的单一收获：</strong>能说清「记忆」是<strong>后端按 <code>thread_id</code> 保存并回放消息历史</strong>的结果，并且知道这份记忆存在哪里、什么时候会丢、以及它的代价是什么。</div>
+
+  <div class="warnbox"><strong>前置检查。</strong>这一课需要：后端 8001、前端 3000 在跑。<strong>不需要 Ollama</strong>（我们只聊常识，不触发检索）。
+  但<strong>实验三里你要重启后端</strong>，所以建议用<strong>手动方式</strong>启动后端，这样你能看到日志：
+  <pre>cd D:\Code\agent\ai-chatkit-master\backend
+$env:NO_PROXY = '127.0.0.1,localhost,::1'
+.\.venv-py311\Scripts\python.exe -m uvicorn main:app --app-dir app --host 127.0.0.1 --port 8001</pre></div>
+
+  <h2>先做一个决定性实验</h2>
+
+  <div class="exp">
+    <h3>实验一：同一个会话 vs 换一个会话</h3>
+    <p>打开 <a href="http://localhost:8001/docs">http://localhost:8001/docs</a>，用 <code>POST /chat/invoke</code>（它返回一整块 JSON，好读）。</p>
+    <div class="step"><div class="num">1</div><div>第一次请求，<strong>记住这个 thread_id：<code>mytest-a</code></strong>
+    <pre>{
+  "thread_id": "mytest-a",
+  "message": "记住一个数字：47。请只回复「已记住」两个字。"
+}</pre></div></div>
+    <div class="step"><div class="num">2</div><div>第二次请求，<strong>thread_id 还是 <code>mytest-a</code></strong>：
+    <pre>{
+  "thread_id": "mytest-a",
+  "message": "我刚才让你记住的数字是多少？只回复数字。"
+}</pre></div></div>
+    <div class="step"><div class="num">3</div><div>第三次请求，<strong>把 thread_id 换成 <code>mytest-b</code></strong>，问同样的问题。</div></div>
+    <div class="see"><strong>你会看到（实测）：</strong>
+    <table>
+      <thead><tr><th>轮次</th><th>thread_id</th><th>回答</th></tr></thead>
+      <tbody>
+        <tr><td>1（让它记住）</td><td><code>mytest-a</code></td><td>"已记住"</td></tr>
+        <tr><td>2（问它）</td><td><code>mytest-a</code></td><td><strong>"47"</strong> ✅</td></tr>
+        <tr><td>3（换会话再问）</td><td><code>mytest-b</code></td><td>"我无法保留之前交流的内容…" ❌</td></tr>
+      </tbody>
+    </table>
+    <strong>同一个模型、同一个后端、同一个问题——只有 thread_id 不同，结果就完全不一样。</strong></div>
+  </div>
+
+  <h2>所以"记住"到底是什么？</h2>
+  <p>看第三轮那句话：<em>"我无法保留之前交流的内容"</em>——**模型说的是实话。** 它本来就没有记忆。</p>
+  <p>真相是：<strong>后端每次都把这段会话的历史消息，连同你的新问题，一起发给模型。</strong></p>
+  <pre>第 1 轮发给模型的内容：
+   [系统提示词] + [用户：记住一个数字47…]
+
+第 2 轮发给模型的内容：
+   [系统提示词] + [用户：记住一个数字47…] + [AI：已记住] + [用户：是多少？]
+                                                    ↑
+                                        这一整段是后端"回放"给它的
+
+第 3 轮（thread_id = mytest-b）发给模型的内容：
+   [系统提示词] + [用户：是多少？]
+                    ↑
+        干净的一张白纸——所以它当然不知道</pre>
+  <div class="warnbox"><strong>核心认识：模型没有记忆。"记住"是后端替它记住，然后每次重新讲给它听。</strong><br><br>
+  这解释了一个你以后一定会遇到的问题：<strong>对话越长，每次发给模型的内容就越多</strong>——输入 token 持续增长，所以长对话会越来越慢、越来越贵。<br>
+  这也解释了为什么"新对话"能省钱：它换了一张白纸。</div>
+
+  <h2>那后端把历史存在哪里？</h2>
+  <table>
+    <thead><tr><th>角色</th><th>在这个项目里</th><th>特点</th></tr></thead>
+    <tbody>
+      <tr><td><strong>钥匙</strong></td><td><code>thread_id</code></td><td>同一个 id = 同一份记忆；换 id = 换一份记忆</td></tr>
+      <tr><td><strong>仓库</strong></td><td>后端的一个内存对象（checkpointer）</td><td><strong>存在进程内存里，后端一重启就全没了</strong></td></tr>
+      <tr><td><strong>前台展示</strong></td><td>浏览器的 <code>localStorage</code></td><td>存在<strong>你的浏览器</strong>里，关页面、重启电脑都还在</td></tr>
+    </tbody>
+  </table>
+  <p><strong>注意最后两行是两个完全不同的地方。</strong> 这就是下一实验的关键。</p>
+
+  <div class="exp">
+    <h3>实验二（核心）：让后端"失忆"，看会发生什么</h3>
+    <div class="step"><div class="num">1</div><div>打开 <a href="http://localhost:3000">http://localhost:3000</a>，随便聊几轮，<strong>说点具体的事</strong>（比如"我最喜欢的颜色是蓝色，请记住"），确认它回答正确。</div></div>
+    <div class="step"><div class="num">2</div><div>记下这个会话的 URL（形如 <code>/chat/xxxx-xxxx</code>），刷新页面，确认<strong>历史消息还在</strong>。</div></div>
+    <div class="step"><div class="num">3</div><div><strong>现在重启后端。</strong>在跑后端的那个终端按 <code>Ctrl + C</code>，然后重新启动它（用上面那条命令），等它就绪。</div></div>
+    <div class="step"><div class="num">4</div><div><strong>回到浏览器那个旧会话</strong>（前端不用刷新也行），问：<span class="say">我最喜欢的颜色是什么？</span></div></div>
+    <div class="see"><strong>你会看到：</strong>界面上<strong>还显示着</strong>你刚才说的"蓝色"——但模型会告诉你它<strong>不知道</strong>。<br><br>
+    因为：<strong>前端的历史在浏览器里，没丢；后端的记忆在进程里，重启就没了。</strong> 两边看起来一致，实际是两份互不相干的数据。</div>
+    <div class="warnbox"><strong>这不是一个 bug，是一个架构选择暴露出来的边界。</strong> 用户看到的现象是"AI 突然失忆了"——但真实原因是"存储介质不同"。<br><br>
+    这类问题的专业说法叫<strong>"状态不一致"</strong>：同一份逻辑状态被存在两个地方，各自演化，迟早对不上。<br><br>
+    <strong>这正是改造 #6（数据层）要解决的核心问题</strong>：把记忆从进程内存搬到真正的数据库（PostgreSQL），它才能重启不丢、才能支持多个后端实例、才能被查询和分析。</div>
+  </div>
+
+  <div class="exp">
+    <h3>实验三：在界面上确认"新对话 = 换记忆"</h3>
+    <div class="step"><div class="num">1</div><div>在同一个对话里说：<span class="say">我的工号是 8888，请记住。</span></div></div>
+    <div class="step"><div class="num">2</div><div>问：<span class="say">我的工号是多少？</span> —— 应该答对。</div></div>
+    <div class="step"><div class="num">3</div><div>点左侧的 <strong>NEW CHAT</strong>，然后问同样的问题。</div></div>
+    <div class="see"><strong>你会看到：</strong>新对话里它不知道工号。<br><br>
+    <strong>因为"NEW CHAT"这个按钮做的事，本质上就是"换一个 thread_id"。</strong> 左侧那个会话列表里，每一项对应一个 thread_id；点进去就是把那个 id 重新设为当前会话——于是后端又把对应的那份历史回放给模型。</div>
+    <p>你现在可以完整理解那个界面了：<strong>会话列表 = 记忆的索引。点一下 = 取出那份记忆。</strong> 而"删除会话"删掉的是浏览器里的记录——<strong>后端的记忆并不会因此释放</strong>（它还在内存里，直到进程重启）。</p>
+  </div>
+
+  <h2>把它接回你已经学过的链路</h2>
+  <pre>前端带着 thread_id 发请求
+      ↓
+后端用 thread_id 去 checkpointer 取出这一整段会话的历史
+      ↓
+把 [系统提示词] + [历史消息] + [你的新消息] 一起交给 Graph
+      ↓
+Graph 的 model 节点把这一整包交给 LLM        ← 模型第一次看到"历史"
+      ↓
+模型写回答（这一轮它"知道"上文了）
+      ↓
+回答被追加进 checkpointer 里那份历史
+      ↓
+下一轮重复上述过程</pre>
+  <p><strong>记忆 = 钥匙（thread_id）+ 仓库（checkpointer）+ 每轮回放。</strong></p>
+
+  <h2>这一课和你的 ResearchPilot 有什么关系</h2>
+  <table>
+    <thead><tr><th>你以后要做的事</th><th>用得上这一课的哪一点</th></tr></thead>
+    <tbody>
+      <tr><td>改造 #6：SQLite → PostgreSQL</td><td>记忆必须从内存搬到数据库。否则：重启丢、不能多实例、不能查询"用户在哪些会话里问过什么"</td></tr>
+      <tr><td>改造 #3：research workflow</td><td>多轮研究会话里，用户会说"再查一遍第三篇的结论"——这要求系统记得"第三篇"是哪篇。记忆是研究工作流的前提</td></tr>
+      <tr><td>改造 #8：Evaluation</td><td>评估要能复现。如果记忆在内存里、一重启就没了，你的评估结果就不可复现</td></tr>
+      <tr><td>成本控制</td><td>长对话的输入 token 持续增长。你需要知道"什么时候该压缩历史、什么时候该开新会话"——这是一个真实的产品决策</td></tr>
+    </tbody>
+  </table>
+
+  <h2>30 秒自测</h2>
+  <p><strong>第 1 题：</strong>为什么同一个 <code>thread_id</code> 的第二次提问，模型能答出第一轮的"47"？</p>
+  <button onclick="answer('q1',false)">A. 模型在这一轮里把上一轮记进了自己的参数</button>
+  <button onclick="answer('q1',true)">B. 后端按 thread_id 存下了第一轮的消息，第二轮<strong>把这段历史一起发给模型</strong></button>
+  <button onclick="answer('q1',false)">C. 浏览器把历史存在 localStorage，然后直接塞进了模型的输入</button>
+  <div id="q1" class="feedback"></div>
+
+  <p><strong>第 2 题：</strong>重启后端之后，前端界面上还显示着历史消息，但模型不知道你刚才说了什么。为什么？</p>
+  <button onclick="answer('q2',false)">A. 前端缓存坏了，刷新一下就好</button>
+  <button onclick="answer('q2',false)">B. 模型的 API 出错了</button>
+  <button onclick="answer('q2',true)">C. 这是<strong>两份不同的状态</strong>：前端历史在浏览器里（没丢），后端记忆在进程内存里（丢了）</button>
+  <div id="q2" class="feedback"></div>
+
+  <p><strong>第 3 题：</strong>对话轮数越来越多时，下面哪件事会真的发生？</p>
+  <button onclick="answer('q3',false)">A. 模型的上下文会自己压缩，所以成本不变</button>
+  <button onclick="answer('q3',true)">B. 每次请求发给模型的输入越来越大，延迟和成本都持续上升</button>
+  <button onclick="answer('q3',false)">C. 没有影响，只有输出 token 影响成本</button>
+  <div id="q3" class="feedback"></div>
+
+  <div class="box"><strong>你可以这样向我汇报：</strong>「实验一里我看到……；实验二重启后端之后……；我原以为"记住"是……，现在的理解是……。」</div>
+
+  <h2>简历视角：这一课对应的面试问题</h2>
+  <table>
+    <thead><tr><th>面试官会问</th><th>你今天能答的部分</th></tr></thead>
+    <tbody>
+      <tr><td>多轮对话的上下文是怎么管的？</td><td>thread_id 作键、checkpointer 作存储、每轮把历史回放给模型。记忆不在模型里</td></tr>
+      <tr><td>你的会话状态存哪儿？</td><td>（现在是进程内存——这正是一个可以主动讲出来的改进点）</td></tr>
+      <tr><td>长对话怎么办？</td><td>输入 token 单调增长。可选策略：滑窗、摘要压缩、或按主题切分会话——各有取舍</td></tr>
+      <tr><td>你遇到过最难查的 bug 是什么？</td><td>"重启后端后模型失忆"这一类状态不一致问题：现象像模型问题，根因在存储</td></tr>
+    </tbody>
+  </table>
+
+  <h2>下一课预告</h2>
+  <p>到这里，"看懂阶段"就真的结束了：你已经能从浏览器一路看到 SSE，也知道状态存在哪里。<strong>下一课开始动手改代码</strong>——从最干净的那组缺陷起步（部门写接口的三个 500），根因已经查清并记录在 <code>reference/baseline-defects.md</code>。</p>
+  <p><strong>任何一句不清楚都可以直接问我。你不需要先会代码。</strong></p>
+
+  <footer>延伸阅读：<a href="https://docs.langchain.com/oss/python/langgraph/persistence">LangGraph 官方 · Persistence（checkpointer 与 thread）</a>、<a href="https://docs.langchain.com/oss/python/langgraph/add-memory">LangGraph 官方 · Add memory</a>。</footer>
+</main>
+<script>
+  function answer(id, correct) {
+    const node = document.getElementById(id);
+    node.className = 'feedback ' + (correct ? 'ok' : 'no');
+    node.textContent = correct
+      ? '正确。你已经把"模型的能力"和"系统的记忆"分开了——这是设计有状态 Agent 的起点。'
+      : '再想一层：先问"这份信息此刻存在哪个物理位置"，再问"它是怎么到达模型眼前的"。';
+  }
+</script>
+</body></html>

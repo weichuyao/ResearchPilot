@@ -1,0 +1,44 @@
+# ============================================================
+# AI ChatKit / ResearchPilot
+# ============================================================
+
+# --- 环境变量 ---
+# backend/.env 里有真实的 API 密钥，绝不能提交
+/backend/.env
+# backend/.env.example 是有意提交的（给别人看的配置模板）
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# 虚拟环境
+# 仓库声明 Python >=3.13，但本机实际运行在 .venv-py311（见 NOTES.md）
+/backend/.venv
+/backend/.venv-py311/
+
+# 依赖缓存
+/.uv-cache/
+
+# --- 前端 ---
+/frontend/node_modules/
+/frontend/.next/
+/frontend/out/
+/.pnpm-store/
+
+# --- 运行时生成的数据 ---
+# Chroma 向量库可由 backend/tests/rag/importRag.py 从 EmployeeHandbook.pdf 重新生成
+**/chroma_db/
+
+# 早期因工作目录不对而产生的残留产物
+/backend/app/resource/
+
+# --- 编辑器 / 操作系统 ---
+/.vscode/
+/.idea/
+.DS_Store
+Thumbs.db

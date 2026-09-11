@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>第二课 · 谁负责什么？</title>
+  <style>
+    :root { --ink:#15242d; --muted:#5d6b73; --paper:#fffefa; --ground:#edf2f0; --accent:#0e6b5c; --accent2:#e6f3ee; --line:#d9dfdb; --bad:#a13737; }
+    * { box-sizing:border-box; } body { margin:0; background:var(--ground); color:var(--ink); font:17px/1.68 ui-sans-serif,system-ui,"Microsoft YaHei",sans-serif; }
+    main { max-width:820px; margin:34px auto; padding:44px 46px; background:var(--paper); box-shadow:0 10px 36px #1b2d2215; }
+    h1 { margin:0 0 8px; font-size:33px; letter-spacing:-.4px; } h2 { margin:34px 0 11px; font-size:22px; } p { margin:10px 0; } .kicker { color:var(--accent); font-weight:700; letter-spacing:.08em; font-size:13px; text-transform:uppercase; } .lead { color:var(--muted); font-size:19px; }
+    .box { margin:18px 0; padding:17px 19px; background:var(--accent2); border-left:4px solid var(--accent); } .step { display:grid; grid-template-columns:32px 1fr; gap:12px; margin:18px 0; } .num { width:30px; height:30px; text-align:center; border-radius:50%; background:var(--ink); color:white; font-weight:700; line-height:30px; }
+    button { display:block; width:100%; margin:8px 0; padding:12px 14px; background:white; border:1px solid var(--line); border-radius:7px; color:var(--ink); cursor:pointer; text-align:left; font:inherit; } button:hover { border-color:var(--accent); } .feedback { min-height:26px; margin:9px 0 20px; font-weight:650; } .ok { color:var(--accent); } .no { color:var(--bad); }
+    code { padding:2px 6px; background:#edf0ee; border-radius:4px; } a { color:var(--accent); } footer { margin-top:38px; padding-top:16px; border-top:1px solid var(--line); color:var(--muted); font-size:14px; }
+    @media (max-width:650px) { main { margin:0; padding:30px 22px; } h1 { font-size:28px; } }
+  </style>
+</head>
+<body><main>
+  <div class="kicker">AI ChatKit · 黑盒课程 02 · 约 12 分钟</div>
+  <h1>谁负责什么？</h1>
+  <p class="lead">你的目标不是记术语，而是能在 ResearchPilot 出问题时，迅速知道该查“哪一层”。</p>
+  <div class="box"><strong>本课的单一收获：</strong>能区分 DeepSeek、Ollama/bge-m3、Chroma 与 SQLite 的职责，并用现象判断检索链是否参与了回答。</div>
+
+  <h2>先做一个真实对比</h2>
+  <div class="step"><div class="num">1</div><div>确认项目已启动，打开 <code>http://localhost:3000</code>。</div></div>
+  <div class="step"><div class="num">2</div><div>新开对话，问：<strong>“用一句话解释什么是向量数据库？”</strong><br>观察：它可能直接回答；这类问题不需要你本地《员工手册》里的证据。</div></div>
+  <div class="step"><div class="num">3</div><div>再问：<strong>“请查询员工年假规定，并告诉我依据。”</strong><br>观察：界面应出现工具调用；它表示 Agent 正尝试从本地知识库找材料。</div></div>
+  <div class="step"><div class="num">4</div><div>把两次观察各记成一句话：<em>哪次看到了工具？哪次更依赖本地资料？</em></div></div>
+
+  <h2>把观察翻译成系统职责</h2>
+  <p>第二个问题的理想链路是：<code>DeepSeek 判断需要查资料</code> → <code>Ollama 运行 bge-m3</code> → <code>Chroma 找到相近手册片段</code> → <code>DeepSeek 组织答案</code>。</p>
+  <p>SQLite 不在这条“查手册”的主链上；它更像系统的登记簿，适合保存用户、会话或任务等结构化记录。详见 <a href="../reference/data-and-retrieval-roles.html">数据与检索职责速查表</a>。</p>
+
+  <h2>30 秒自测</h2>
+  <p><strong>情景 A：</strong>Ollama 没启动，但 DeepSeek API 正常。问“员工年假规定”时，最可能少了什么能力？</p>
+  <button onclick="answer('a',false)">A. DeepSeek 无法生成任何文字</button>
+  <button onclick="answer('a',true)">B. 问题和手册片段无法被 bge-m3 转成可比较的向量</button>
+  <button onclick="answer('a',false)">C. SQLite 中的用户表会自动被删除</button>
+  <div id="a" class="feedback"></div>
+  <p><strong>情景 B：</strong>Chroma 中没有导入员工手册，但其他服务正常。最合理的判断是？</p>
+  <button onclick="answer('b',false)">A. bge-m3 已经把员工手册永久记在模型参数里</button>
+  <button onclick="answer('b',true)">B. 系统能生成向量，但没有可供语义检索的手册片段</button>
+  <button onclick="answer('b',false)">C. SQLite 会自动补全所有手册正文</button>
+  <div id="b" class="feedback"></div>
+  <p><strong>情景 C：</strong>要保存“某份论文由谁上传、什么时候处理完成”，优先放在哪里？</p>
+  <button onclick="answer('c',false)">A. 只放进 bge-m3</button>
+  <button onclick="answer('c',false)">B. 只放进 DeepSeek 对话里</button>
+  <button onclick="answer('c',true)">C. SQLite；未来可迁移到 PostgreSQL</button>
+  <div id="c" class="feedback"></div>
+
+  <h2>你可以这样向我汇报</h2>
+  <div class="box">“我观察到：……。我的判断是：年假问题依赖……；如果 Chroma 为空，……。”</div>
+  <p>不用答得完美。把你的观察发给我，我会只纠正关键概念，然后带你进入第三课：<strong>Agent 为什么会自己决定调用工具？</strong></p>
+  <footer>主资料：<a href="https://docs.trychroma.com/docs/querying-collections/query-and-get">Chroma 官方 Query and Get 文档</a>。它说明查询文本会经 embedding function 转化后进行向量检索。补充：<a href="https://docs.ollama.com/capabilities/embeddings">Ollama 官方 Embeddings 文档</a>。</footer>
+</main>
+<script>
+  function answer(id, correct) {
+    const node = document.getElementById(id);
+    node.className = 'feedback ' + (correct ? 'ok' : 'no');
+    node.textContent = correct ? '正确。你已经把“运行模型”“保存候选证据”“保存结构化记录”区分开了。' : '再想一层：先问“这里保存的到底是什么”，再判断它是否能替代向量检索。';
+  }
+</script>
+</body></html>

@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI ChatKit · 数据与检索职责速查表</title>
+  <style>
+    :root { --ink:#16202a; --muted:#5f6d78; --paper:#fbfaf7; --line:#d9ddd9; --accent:#126b5e; --soft:#e9f5f1; }
+    * { box-sizing:border-box; } body { margin:0; background:#eef1ef; color:var(--ink); font:16px/1.65 ui-sans-serif,system-ui,"Microsoft YaHei",sans-serif; }
+    main { max-width:900px; margin:36px auto; padding:38px; background:var(--paper); box-shadow:0 8px 34px #17261a18; }
+    h1 { margin:0 0 6px; font-size:30px; } h2 { margin:32px 0 10px; font-size:20px; } .lead,.note { color:var(--muted); } .note { background:var(--soft); border-left:4px solid var(--accent); padding:12px 16px; }
+    table { width:100%; border-collapse:collapse; margin:12px 0; } th,td { text-align:left; vertical-align:top; padding:12px; border-bottom:1px solid var(--line); } th { color:var(--muted); font-weight:650; }
+    code { padding:1px 5px; background:#edf0ee; border-radius:4px; } a { color:var(--accent); }
+  </style>
+</head>
+<body><main>
+  <h1>数据与检索职责速查表</h1>
+  <p class="lead">ResearchPilot 以后也会沿用这套分工：普通数据、原始资料、语义索引、最终回答，各自放在合适的位置。</p>
+  <table>
+    <thead><tr><th>组件</th><th>它保存或产生什么</th><th>它不负责什么</th></tr></thead>
+    <tbody>
+      <tr><td><strong>SQLite</strong><br>未来 PostgreSQL</td><td>结构化记录：用户、会话、任务、文档登记信息。</td><td>不理解“意思相近”。</td></tr>
+      <tr><td><strong>原始文档</strong></td><td>PDF、DOCX、Markdown 的完整内容；是可追溯的事实来源。</td><td>不能直接高效按语义找段落。</td></tr>
+      <tr><td><strong>Ollama</strong></td><td>本机模型运行环境；把请求交给已安装的模型。</td><td>它不是某一种模型，也不是数据库。</td></tr>
+      <tr><td><strong>bge-m3</strong></td><td>把一个段落或问题变成向量（数字坐标）。</td><td>不写最终自然语言回答。</td></tr>
+      <tr><td><strong>Chroma</strong></td><td>保存“文本块 + 向量 + metadata”，按相似度取回候选段落。</td><td>不判断回答是否真实、完整或有逻辑。</td></tr>
+      <tr><td><strong>DeepSeek</strong></td><td>理解问题、决定是否调用工具、阅读取回资料并组织回答。</td><td>不天然知道你的本地知识库里有什么。</td></tr>
+    </tbody>
+  </table>
+  <h2>一条检索链</h2>
+  <p><code>问题</code> → Ollama 运行 <code>bge-m3</code> → <code>查询向量</code> → Chroma 找相近文本块 → DeepSeek 基于文本块回答。</p>
+  <p class="note">“向量数据库”不等于“把文档丢进去就会准确回答”。能否检索到正确证据，取决于文档解析、切块、metadata、嵌入模型与检索策略；能否据实回答，还取决于 Agent 的回答约束。</p>
+  <p>权威延伸阅读：<a href="https://docs.ollama.com/capabilities/embeddings">Ollama Embeddings</a> · <a href="https://docs.trychroma.com/docs/querying-collections/query-and-get">Chroma Query and Get</a></p>
+</main></body></html>
