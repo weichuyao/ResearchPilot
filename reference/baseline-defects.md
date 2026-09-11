@@ -79,6 +79,23 @@
 - 正确做法：单独定义**创建请求模型**，只含客户端该填的字段（如 `DepartmentCreate: name / parent_id / manager_id`），`id` 与时间戳由服务端负责。
 - 归属：**改造 #5** 的核心内容之一。不在第一次动手的范围内。
 
+### A7 · `edit_time` 是个摆设：更新记录时从不刷新 [实测]
+
+- 位置：`backend/app/db/repository/department_repo.py:30-37`（`update_department`）
+  ```python
+  for key, value in department_data.items():
+      setattr(department, key, value)      # 只改了客户端传进来的字段
+  await session.commit()
+  ```
+  `edit_time` 从不在更新时被赋值。
+- 实测证据：
+  - 对 `id=900` 执行 `PUT {"name":"YanShouGaiMing"}` 后，返回体里
+    `create_time` 与 `edit_time` **完全相同**（`2026-09-11T15:12:12.208296`）。
+  - `id=1` 被改名为 `试一下` 之后，`edit_time` 仍然是 `2025-06-17 07:30:35`——**没变**。
+- 后果：字段名承诺"更新时间"，实际永远等于创建时间。任何依赖 `edit_time` 做增量同步、审计或缓存失效的逻辑都会失效。
+- 归属：改造 #5（API 与业务逻辑）、改造 #6（数据层，`updated_at` 应该由数据库或 ORM 自动维护）。
+- 同类风险：`Employee` 的更新路径（`employee_repo.update_employee`）有同样的问题。
+
 ### A3 · `GET /employee/get_by_name/{name}` 必 500 [实测]
 
 - 位置：`backend/app/api/employee_routers.py:56`
