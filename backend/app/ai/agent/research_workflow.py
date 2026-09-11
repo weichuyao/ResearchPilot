@@ -34,20 +34,22 @@
 `absent` **绝不能升级成「不存在」** —— 库里没有 ≠ 世上没有。这是从 baseline 的
 「无根据的否定」缺陷一路继承下来的底线行为。
 
-## ⚠️ 已知局限（两条，都是实测出来的）
+## ⚠️ 已知局限
 
-**一、判不干净。** 交叉编码器在 20 题评估集上仍然错 2 题（A06 的 -0.314 与
+**一、相关性判断不干净。** 交叉编码器在 20 题评估集上仍然错 2 题（A06 的 -0.314 与
 B05 的 0.794 交叉）。这不是实现问题，是任务本身的性质：「这段材料能不能回答这个问题」
 是个语义判断，一个 (问题, 段落) 打分函数做不干净。所以阈值被刻意取成保守值，
 只用来触发「明显不相关就再查一轮」，**最终结论仍由 `synthesize` 读材料得出**。
 
-**二、判不出「部分覆盖」。** 它判的是「有没有捞到相关内容」，判不出「捞到的是否完整
-回答了子问题」。实测 A08：问「SAP 模块推断的三类语义属性」，交叉编码器给 5.769
-（判 sufficient），但三属性里只有两个被检索到，第三个
-`(iii) loading and equipment configuration` 排在候选第 18 位。
+**二、要点覆盖依赖 `analyze` 猜对措辞。** 覆盖判定是拿 `facets` 去**逐字比对**检索到的
+文本，所以 `analyze` 如果猜的措辞和论文原文对不上（比如写 "labeling process" 而论文写
+"annotation pipeline"），就会一直判缺失、白烧预算。预算上限挡住了无限循环，
+但代价还是会付。缓解手段是 prompt 里明确要求「用论文自己的词汇、短名词短语」，
+以及把要点数限制在 2~3 个。
 
-要修这条，得让 `analyze` 顺带产出「答案需要包含哪几个要点」，`assess` 再逐条比对
-检索文本 —— 那才是 LLM 评委真正该上场的地方。
+**三、要点缺失不会导致拒答。** 这是刻意的：预算耗尽时只要材料**相关**就一定判
+`sufficient`，让 synthesize 尽量答，答不全也比拒答强。反过来如果让缺失也判 `absent`，
+系统就会变成「明明库里有却拒答」—— 比原来的 ReAct 版更糟。
 """
 
 from __future__ import annotations
@@ -66,11 +68,11 @@ from ai.llm import get_model, settings
 from ai.rag.pipeline import (
     EVIDENCE_RETRY_THRESHOLD,
     NO_HITS_MESSAGE,
-    RELEVANCE_THRESHOLD,
     evidence_score,
     format_hits,
     retrieve,
 )
+from ai.rag.textnorm import norm_for_match
 from ai.tools.research_tools import all_titles, list_papers, resolve_paper_sources
 
 logger = logging.getLogger(__name__)
@@ -94,6 +96,18 @@ class SubQuestion(BaseModel):
             "（论文是英文写的，中英跨语检索实测不如直接给英文术语稳）。"
             "包含关键实体和同义词。"
         )
+    )
+    facets: list[str] = Field(
+        default_factory=list,
+        description=(
+            "答案必须包含的要点，2~3 个，每个用**论文里的字面术语**（英文、短名词短语）。"
+            "例：问「DPSM 怎么决定保留多少 token」→ ['first-order difference', 'kmin']；"
+            "问「TAR 怎么组织历史特征」→ ['instance bank', 'identity-view pair']。"
+            "这些词会拿去**逐字比对**检索到的材料，用来判断答案的几块齐不齐，"
+            "所以必须是能在论文原文里原样出现的写法：不要写整句、不要写中文、"
+            "不要同义改写（写 'labeling process' 就查不到 'annotation pipeline'）。"
+            "不确定确切措辞时，给最有把握逐字出现的那几个词。"
+        ),
     )
     paper: str | None = Field(
         default=None,
@@ -122,6 +136,13 @@ Rules:
   (e.g. "how is the annotation pipeline built, and how many images does it yield?").
 - Write each retrieval query in ENGLISH, close to how a paper would phrase it.
   A Chinese question is fine, but the query should use the paper's own vocabulary.
+- For each sub-question also list 2-3 `facets`: the literal terms a complete answer must
+  contain. These are matched as **substrings** against retrieved text, so they must be
+  spelled the way the paper spells them — short English noun phrases, no sentences, no
+  Chinese, no paraphrases. Prefer terms you are confident appear verbatim
+  (module names, metric names, model names, dataset names).
+  A good facet set for "how does DPSM decide how many tokens to keep" is
+  ["first-order difference", "kmin"] — not ["the algorithm decides k dynamically"].
 - If the user names a specific paper, set `paper` for the relevant sub-questions.
 - Set `needs_paper_list` only when the question is about which papers exist / their
   authors / years — that is an exact lookup, not a similarity search."""
@@ -208,6 +229,9 @@ async def analyze(state: ResearchState, config: RunnableConfig) -> dict:
                 "question": sub.question,
                 "query": sub.query.strip(),
                 "paper": (sub.paper or "").strip() or None,
+                "facets": [f.strip() for f in (sub.facets or []) if f.strip()][:4],
+                "facets_found": [],
+                "facets_missing": [],
                 "status": "pending",
                 "top1": 0.0,
                 "evidence": None,
@@ -221,6 +245,7 @@ async def analyze(state: ResearchState, config: RunnableConfig) -> dict:
         sub_questions.append(
             {
                 "question": question, "query": question, "paper": None,
+                "facets": [], "facets_found": [], "facets_missing": [],
                 "status": "pending", "top1": 0.0, "evidence": None, "attempts": 0,
                 "queries": [], "formatted": "", "hits": [],
             }
@@ -262,6 +287,16 @@ async def retrieve_node(state: ResearchState, config: RunnableConfig) -> dict:
         score = evidence_score(sub["question"], outcome.hits)
         sub["evidence"] = None if score is None else round(score, 3)
         sub["formatted"] = NO_HITS_MESSAGE if outcome.rejected else format_hits(outcome.hits)
+
+        # 要点覆盖：查答案要的几块齐不齐。**跨轮累加** —— 第 1 轮捞到的要点，
+        # 第 2 轮不该因为这次没命中就重新算作缺失。
+        text = norm_for_match("\n".join(doc.page_content for doc, _o, _s in outcome.hits))
+        found = set(sub.get("facets_found") or [])
+        for facet in sub.get("facets") or []:
+            if norm_for_match(facet) in text:
+                found.add(facet)
+        sub["facets_found"] = sorted(found)
+        sub["facets_missing"] = [f for f in (sub.get("facets") or []) if f not in found]
         sub["hits"] = [
             {
                 "title": doc.metadata.get("paper_title"),
@@ -304,12 +339,33 @@ def assess_node(state: ResearchState, config: RunnableConfig) -> dict:
     哪怕根本没有 Mamba。**改写的目标（召回）和判定的目标（忠实）是冲突的**，
     所以打分一律用未经改写的子问题原文。
 
+    ## 两个信号，缺一不可
+
+    这里曾经只用「相关性」。实测**不够** —— A05 / A09 就是反例：
+
+        ReAct 版 A05 用了 4 条查询，第 3 条是
+            "similarity scores proxy token sorted Diff first-order derivative splitting point k"
+        才捞到锚点 `first-order difference`；
+        workflow 只用 1 条泛化查询，判了 sufficient 就停 —— 答案 GROUNDED、引用正确，
+        但没捞到含精确术语的那一块。
+
+    > **「材料相关」≠「我要的东西齐了」。**
+
+    ReAct agent 隐含的停止规则是后者（模型觉得自己能答全了才停），
+    而只判相关性的 assess 实现的是前者。所以现在两个信号分工：
+
+    | 信号 | 问的问题 | 驱动什么 |
+    |---|---|---|
+    | 相关性（交叉编码器） | 材料**相不相关** | 要不要继续找；预算耗尽→决定 sufficient 还是 absent |
+    | 覆盖（要点逐字比对） | 答案的几块**齐不齐** | 只决定要不要**再查一轮**，绝不导出 absent |
+
+    要点缺失不导出 absent 是关键：否则会变成「明明库里有却拒答」，比 ReAct 版更糟。
+
     ## 为什么这里不叫 LLM
 
-    阈值是评估集校准过的，而「材料到底说没说这件事」的最终判断由 `synthesize` 做
-    （它本来就要读一遍材料）。再插一个 LLM 节点等于为同一个判断付两次钱。
-
-    代价见模块文档的「已知局限」。
+    两个信号都是确定性的：相关性来自交叉编码器，覆盖是**逐字比对**。
+    「材料到底说没说这件事」的最终判断由 `synthesize` 做（它本来就要读一遍材料），
+    再插一个 LLM 节点等于为同一个判断付两次钱。
     """
     plan = state.get("plan") or []
     rounds = state.get("rounds") or 0
@@ -318,13 +374,21 @@ def assess_node(state: ResearchState, config: RunnableConfig) -> dict:
         if sub["status"] in ("sufficient", "absent"):
             continue
         score = sub.get("evidence")
-        if score is not None and score >= EVIDENCE_RETRY_THRESHOLD:
+        relevant = score is not None and score >= EVIDENCE_RETRY_THRESHOLD
+        complete = not sub.get("facets_missing")
+
+        if relevant and complete:
             sub["status"] = "sufficient"
         elif rounds >= MAX_RETRIEVE_ROUNDS:
-            # 预算耗尽：宁可说少，不能说错。
-            # 此时系统只能说「语料里没有」，而这正是 absent 的定义 ——
-            # 它**不是**「查了一次没查到」，是「换着法子查够了，确实没有」。
-            sub["status"] = "absent"
+            # 预算耗尽时，**要点缺失绝不能导致 absent**。
+            #
+            #   relevant（材料相关）→ sufficient：手里有相关材料，只是没凑齐，
+            #       让 synthesize 用它答，答不全也比拒答强。
+            #   不相关            → absent：换着法子查够了，确实没有。
+            #
+            # 这条区分是必须的：如果把「要点没凑齐」也判成 absent，系统就会变成
+            # 「明明库里有却拒答」—— 比原来的 ReAct 版更糟。
+            sub["status"] = "sufficient" if relevant else "absent"
         else:
             sub["status"] = "insufficient"
 
@@ -351,8 +415,16 @@ class RefinedQueries(BaseModel):
     queries: list[str] = Field(description="为每个待查子问题给出一条新查询，顺序一一对应")
 
 
-REFINE_PROMPT = """The retrieval below did not find relevant material. Write a BETTER query
-for each pending sub-question.
+REFINE_PROMPT = """The retrieval below was not good enough. Write a BETTER query for each
+pending sub-question.
+
+There are two different reasons a sub-question can be pending, and they call for different
+fixes — read the "reason" line for each one:
+
+  · LOW RELEVANCE   — nothing relevant was found at all. Rethink the wording from scratch.
+  · MISSING FACETS  — relevant material WAS found, but a specific piece is still missing.
+    Aim the new query **directly at the missing terms** rather than restating the question.
+    Looking for one exact term is much easier than looking for a whole question.
 
 Strategies that actually help on this corpus (four English re-identification papers):
 - Use the paper's own vocabulary instead of the user's wording. The papers say
@@ -362,7 +434,9 @@ Strategies that actually help on this corpus (four English re-identification pap
   dataset names, module abbreviations (SAP, TAR, SAM, DPSM, ROA).
 - Try shorter and more literal. A long natural-language question is often a worse query
   than three or four technical terms.
-- Try synonyms of the key term if the first attempt used the user's phrasing.
+- To chase a missing facet, put that term in the query together with one or two words of
+  context — e.g. to find "first-order difference", query
+  "similarity scores sorted first-order difference splitting point k".
 
 Give exactly one new query per pending sub-question, in the same order."""
 
@@ -375,10 +449,16 @@ async def refine(state: ResearchState, config: RunnableConfig) -> dict:
 
     lines = []
     for index, sub in enumerate(pending, start=1):
-        tried = " / ".join(sub["queries"]) or "(none)"
+        missing = sub.get("facets_missing") or []
+        reason = "MISSING FACETS: %s" % ", ".join(missing) if missing else "LOW RELEVANCE"
         lines.append(
-            "%d. sub-question: %s\n   tried: %s\n   best vector score: %.4f (threshold %.2f)"
-            % (index, sub["question"], tried, sub["top1"], RELEVANCE_THRESHOLD)
+            "%d. sub-question: %s\n"
+            "   reason: %s\n"
+            "   tried already: %s\n"
+            "   relevance score: %s (retry threshold %.1f)"
+            % (index, sub["question"], reason,
+               " / ".join(sub["queries"]) or "(none)",
+               sub.get("evidence"), EVIDENCE_RETRY_THRESHOLD)
         )
 
     result: RefinedQueries = await _model(config, temperature=0.0).with_structured_output(
