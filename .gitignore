@@ -7,6 +7,12 @@
 /backend/.env
 # backend/.env.example 是有意提交的（给别人看的配置模板）
 
+# 根目录 .env 是 Docker Compose 的变量文件。里面没有密钥，但**是机器相关的**：
+# 它主要是用来覆盖基础镜像来源的（本机 daemon 连不上 Docker Hub 的认证，
+# 需要走国内镜像源）。换一台网络正常的机器就不需要它。
+# 所以不跟踪 —— 让每台机器用 docker-compose.yml 里的默认值，有需要再自己建。
+/.env
+
 # --- Python ---
 __pycache__/
 *.py[cod]

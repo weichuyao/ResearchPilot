@@ -1,0 +1,28 @@
+# 构建上下文里要排除的东西。
+#
+# Docker 会把整个上下文（这里是 backend/ 目录）发给 daemon，上下文越大构建越慢。
+# 更重要的是：**这些东西决不能被 COPY 进镜像**。
+
+# 虚拟环境 —— 容器里有自己的解释器和依赖，把宿主的 venv 带进去
+# 既没用又可能因为是 Windows 的 .exe 而直接报错
+.venv/
+.venv-py311/
+__pycache__/
+*.py[cod]
+
+# 运行时数据：这些在 compose 里用 volume / bind mount 挂进来，
+# 打进镜像会让镜像体积爆炸，而且镜像里的副本会被挂载覆盖、行为很难理解
+resource/chroma_db/
+resource/uploads/
+resource/models/
+resource/database.db
+
+# 配置与密钥 —— backend/.env 里有真实 API key，绝不能进镜像
+.env
+
+# 评估产物
+resource/eval/
+
+# 编辑器
+.vscode/
+.idea/

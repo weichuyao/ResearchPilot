@@ -24,6 +24,16 @@ client = chromadb.PersistentClient(path=CHROMA_PATH, settings=Settings(anonymize
 
 embeddings = OllamaEmbeddings(
     model=settings.EMBEDDING_MODEL,
+    # ⚠️ 这一行是改造 #9 做 Docker 时才补上的 —— 之前这里是
+    # `OllamaEmbeddings(model=settings.EMBEDDING_MODEL)`，**没有传 base_url**。
+    #
+    # 后果：项目里明明定义了 `settings.OLLAMA_BASE_URL`（ai/llm.py 的聊天模型用了它），
+    # 但 embedding 那一路被忽略了，只能走 langchain_ollama 的默认值 127.0.0.1:11434。
+    # 宿主机上跑没问题，**一放进容器就指向容器自己**，连不上 Ollama。
+    #
+    # 这类"设置项存在但一半代码没读它"的缺口很难发现：不报错、不告警，
+    # 只在换环境时以"连接被拒绝"的形式出现，而且很容易被误认为是网络问题。
+    base_url=settings.OLLAMA_BASE_URL or None,
 )
 
 # 原始 baseline 的员工手册 collection。保留不动，让 tests/rag/ 下的旧脚本还能跑。

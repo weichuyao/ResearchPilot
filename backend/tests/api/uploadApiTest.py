@@ -177,24 +177,57 @@ CASES = [
 
 
 # ---------------------------------------------------------------------------
+def _run_isolated(coro_factory) -> None:
+    """在**自己的事件循环 + 自己的 engine** 上跑一小段数据库操作。
+
+    ## 为什么不能直接用 `db.database.async_session_maker`
+
+    全局 engine 的连接池是绑在**第一个使用它的那个事件循环**上的。
+    这个测试用 TestClient 在进程内跑应用（它有自己的事件循环），
+    而 cleanup / set_status 是在 `with TestClient(...)` 之外调用的 ——
+    那时那个循环已经关了。
+
+    在 SQLite（aiosqlite）上这么做**一直没出问题**，换成 PostgreSQL（asyncpg）之后立刻炸：
+
+        RuntimeError: Event loop is closed
+        AttributeError: 'NoneType' object has no attribute 'send'     ← asyncpg 去写一个已死的 transport
+
+    所以带外操作必须**自建 engine**，用完 dispose。
+    这不只是测试的问题 —— 任何"应用之外再去访问数据库"的脚本
+    （恢复脚本、维护脚本）都该守这条规矩。
+    """
+    import asyncio
+
+    from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+    from core.config import settings
+
+    async def run() -> None:
+        engine = create_async_engine(settings.DATABASE_URL)
+        try:
+            maker = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+            async with maker() as session:
+                await coro_factory(session)
+        finally:
+            await engine.dispose()
+
+    asyncio.run(run())
+
+
 def set_status(paper_id: int, status: int) -> None:
     """直接改库里的状态，用来确定性地构造「处理中」这种中间态。
 
     靠真实上传去抢那个时间窗是不稳定的（索引可能几十毫秒就跑完了），
     测试会随机地通过或失败 —— 那比没有测试更糟。
     """
-    import asyncio
-
-    from db.database import async_session_maker
     from db.repository.paper_repo import PaperRepository
 
-    async def run() -> None:
-        async with async_session_maker() as session:
-            await PaperRepository.update_progress(
-                session=session, paper_id=paper_id, status=status
-            )
+    async def work(session) -> None:
+        await PaperRepository.update_progress(
+            session=session, paper_id=paper_id, status=status
+        )
 
-    asyncio.run(run())
+    _run_isolated(work)
 
 
 def wait_for(client, paper_id: int, timeout: float = 180.0) -> dict | None:
@@ -210,16 +243,46 @@ def wait_for(client, paper_id: int, timeout: float = 180.0) -> dict | None:
 TRACKED: list[tuple[int, str]] = []
 
 
-def cleanup() -> None:
-    """把测试产生的一切都清掉：向量块、paper 行、磁盘文件。
+def cleanup(client=None) -> None:
+    """把测试产生的一切都清掉：paper 行、向量块、磁盘文件。
 
-    倒着删除，这样即使中途失败也不会留下"记录没了但向量还在"的孤儿。
+    ## 两条规矩
+
+    **① 记录走 API 删，不直接改库。**
+    那正是用户会用的接口（`DELETE /documents/{id}`），而且它自己负责连带删掉向量块
+    和磁盘文件 —— 测试和真实路径用同一套逻辑，清理就不可能"看起来清干净了其实没有"。
+
+    **② 不带 client 时才退回直接改库，而且必须用独立 engine。**
+    见 `_run_isolated` 的说明：TestClient 的事件循环和应用全局 engine 的连接池不是同一个，
+    跨循环在 asyncpg 上会炸。
     """
-    import asyncio
+    from core.config import settings
 
+    if client is not None:
+        deleted = 0
+        for paper_id, source_file in TRACKED:
+            try:
+                r = client.delete("/documents/%s" % paper_id)
+                if r.status_code in (204, 404):
+                    deleted += 1
+            except Exception as exc:
+                print("   清理失败 id=%s: %s" % (paper_id, exc))
+        files = 0
+        for _, source_file in TRACKED:
+            path = os.path.join(settings.UPLOAD_DIR, source_file)
+            if os.path.isfile(path):
+                # DELETE 只删上传目录里的文件；测试用的文件都在那儿，所以正常情况
+                # 这一步不该有残留。有残留说明删除接口没清磁盘，值得看见。
+                os.remove(path)
+                files += 1
+        if TRACKED:
+            print("   清理：%d 条记录（走 DELETE 接口）/ %d 个残留文件" % (deleted, files))
+        TRACKED.clear()
+        return
+
+    # ---- 兜底路径：没有 client，直接改库 + 直接删向量 ----
     from ai.rag.chromaClient import document_vector_store
     from ai.rag.hybrid import invalidate_index
-    from db.database import async_session_maker
     from db.repository.paper_repo import PaperRepository
 
     chunks = 0
@@ -236,17 +299,14 @@ def cleanup() -> None:
     if chunks:
         invalidate_index()
 
-    async def run() -> None:
-        async with async_session_maker() as session:
-            for paper_id, _ in TRACKED:
-                paper = await PaperRepository.get_by_id(session=session, paper_id=paper_id)
-                if paper is not None:
-                    await session.delete(paper)
-                    await session.commit()
+    async def work(session) -> None:
+        for paper_id, _ in TRACKED:
+            paper = await PaperRepository.get_by_id(session=session, paper_id=paper_id)
+            if paper is not None:
+                await session.delete(paper)
+                await session.commit()
 
-    asyncio.run(run())
-
-    from core.config import settings
+    _run_isolated(work)
 
     files = 0
     for _, source_file in TRACKED:
@@ -256,7 +316,7 @@ def cleanup() -> None:
             files += 1
 
     if TRACKED:
-        print("   清理：%d 条记录 / %d 个向量块 / %d 个文件"
+        print("   清理（兜底）：%d 条记录 / %d 个向量块 / %d 个文件"
               % (len(TRACKED), chunks, files))
     TRACKED.clear()
 
@@ -476,24 +536,32 @@ def main() -> int:
                 failures.append("已删除的文档应返回 404，实际 %s" % r.status_code)
             TRACKED[:] = [t for t in TRACKED if t[0] != pdf_paper_id]
 
-        # ---------- 收尾：列表 + 基线 ----------
+        # ---------- 收尾：列表 + 清理 + 基线 ----------
+        #
+        # ⚠️ 清理和基线核对都放在**同一个 TestClient 块里**。
+        #
+        # 原因：每次 `with TestClient(...)` 都会起一个新的事件循环，而应用那个全局
+        # engine 的连接池绑在**第一个**循环上。跨块再去用它，asyncpg 会炸：
+        #
+        #     RuntimeError: Event loop is closed
+        #     AttributeError: 'NoneType' object has no attribute 'send'
+        #
+        # SQLite（aiosqlite）对这种用法很宽容，换 Postgres 才暴露 —— 见 _run_isolated。
+        # 而且清理走 API 本身就更合理：**用用户会用的那个接口去清理**。
         listing = client.get("/documents").json()
         print("[列表] total=%s" % listing["total"])
         if listing["total"] < baseline_papers:
             failures.append("文档列表丢东西了")
 
-    cleanup()
+        cleanup(client)
 
-    # 清理之后再确认一次基线 —— 只删记录不删向量的"删除成功"是最糟的一种
-    from fastapi.testclient import TestClient as _TC
-
-    with _TC(main.app) as client:
+        # 清理之后再确认一次基线 —— 只删记录不删向量的"删除成功"是最糟的一种
         index = client.get("/health").json()["index"]
-    print("[清理后] papers=%s chunks=%s（基线 %s / %s）"
-          % (index["papers"], index["chunks"], baseline_papers, baseline_chunks))
-    if index["papers"] != baseline_papers or index["chunks"] != baseline_chunks:
-        failures.append("清理后没回到基线：%s/%s != %s/%s"
-                        % (index["papers"], index["chunks"], baseline_papers, baseline_chunks))
+        print("[清理后] papers=%s chunks=%s（基线 %s / %s）"
+              % (index["papers"], index["chunks"], baseline_papers, baseline_chunks))
+        if index["papers"] != baseline_papers or index["chunks"] != baseline_chunks:
+            failures.append("清理后没回到基线：%s/%s != %s/%s"
+                            % (index["papers"], index["chunks"], baseline_papers, baseline_chunks))
 
     return report(failures)
 

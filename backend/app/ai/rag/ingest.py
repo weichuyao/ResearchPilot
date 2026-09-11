@@ -314,12 +314,33 @@ def index_pdf(pdf_path: str, source_file: str, title: str) -> dict:
     if not chunks:
         raise ValueError("没有解析出任何内容，检查一下是不是扫描件（没有文本层）")
 
+    # ---- 先清掉同 source 的旧块，让这个操作**幂等** ----
+    #
+    # 不清的话，下面 add_documents 是**追加**：同一段内容在向量库里存两份，
+    # 检索时互相竞争，而引用看起来完全正常（同一页、两个不同分数）——
+    # 一次不会报错的静默退化。
+    #
+    # 什么时候会出现「记录没了但块还在」？实测踩过一次：整库重建的剪枝逻辑
+    # 没有限定目录，把上传的文档记录删了、块留下了。那种情况下重新索引
+    # 就会产生重复块。直接改数据库而没走 DELETE /documents 也是同一类。
+    deleted = 0
+    try:
+        got = document_vector_store.get(where={"source": source_file})
+        ids = got.get("ids") or []
+        if ids:
+            document_vector_store.delete(ids=ids)
+            deleted = len(ids)
+    except Exception as exc:
+        logger.warning("清理旧块失败（%s），继续索引：%s", type(exc).__name__, source_file)
+
     batch = 64
     for start in range(0, len(chunks), batch):
         document_vector_store.add_documents(chunks[start:start + batch])
         time.sleep(0.2)
 
     invalidate_index()
+    if deleted:
+        row["replaced_chunks"] = deleted
     return row
 
 
@@ -442,10 +463,14 @@ def _sync_paper_table(report: list[dict], folder: str, collection_name: str,
                 session=session, name=collection_name, description="ResearchPilot 论文知识库"
             )
             if prune:
+                # path_prefix 是**必须的护栏**：不加的话会把上传目录里的文档
+                # 也当成"已删除的论文"清掉（实测踩过，用户上传的 3 篇消失了）。
+                # 详见 PaperRepository.delete_not_in 的说明。
                 removed = await PaperRepository.delete_not_in(
                     session=session,
                     collection_id=collection.id or 0,
                     keep_source_files=[row["file"] for row in report],
+                    path_prefix=folder,
                 )
                 for name in removed:
                     print("  已清理 paper 表中不再存在的记录: %s" % name)

@@ -1,0 +1,144 @@
+# ResearchPilot 一键启动（改造 #9）
+#
+# ── 用法 ────────────────────────────────────────────────────────────────────
+#
+#   docker compose up -d                     启动全部
+#   docker compose up -d postgres            只起数据库（本地开发时用）
+#   docker compose logs -f backend           看后端日志
+#   docker compose down                      停掉（数据卷保留）
+#   docker compose down -v                   停掉并删掉 postgres 数据（慎用）
+#
+# ── 三个必须先知道的前提 ────────────────────────────────────────────────────
+#
+# ① **Ollama 不在这个 compose 里，必须由宿主机提供。**
+#
+#    embedding 用的是宿主机的 Ollama（127.0.0.1:11434）。容器里的 127.0.0.1
+#    指向容器自己，所以后端通过 `host.docker.internal` 反着找宿主机
+#    （OLLAMA_BASE_URL 环境变量，见下面 backend 服务）。
+#
+#    也就是说：`docker compose up` 之后系统**仍然依赖宿主机跑着 Ollama**。
+#    这是有意的 —— 把 Ollama 塞进容器要 GPU 直通，Windows 上很折腾，
+#    而且它本来就是该被多个项目共享的服务。**这个依赖写在明处，不假装一键就绪。**
+#
+# ② **前端 API 地址是构建期烘进 bundle 的。**
+#
+#    Next.js 把 NEXT_PUBLIC_* 在 `next build` 时替换成字面量，运行时改环境变量没用。
+#    而且这个地址必须是**浏览器能访问的**，不是容器内部的 ——
+#    写 http://backend:8001 的话页面能打开、所有请求都会失败（容器名只在容器网络里能解析）。
+#    所以下面用 build args 传，默认 http://localhost:8001。
+#
+# ③ **不要同时跑宿主机的后端和容器里的后端。**
+#
+#    Chroma 是**嵌入式**的（一个目录，不是服务），两边都挂同一个目录会互相破坏索引。
+#    而且 8001 端口会冲突。切换时先停掉另一边：
+#       scripts\stop-ai-chatkit.ps1         然后 docker compose up -d
+#
+# ── 关于为什么用 bind mount 而不是 named volume ─────────────────────────────
+#
+# resource/chroma_db、resource/uploads、resource/models 都是**挂宿主机的目录**。
+# 这样容器一启动就能看到本地已经索引好的 7 篇论文、已上传的 PDF、以及 266MB 的
+# 重排模型 —— 不用在容器里重跑一遍导入。
+#
+# 代价是容器和宿主机共享这些文件，所以上面那条"不要同时跑两个后端"是硬要求。
+# 想要完全隔离的话，把这三行改成 named volume，然后在容器里跑一次
+# `python app/ai/rag/ingest.py` 重新建索引。
+
+# ⚠️ 这里**故意不写 `name:`**。
+#
+# Compose 的默认项目名是**所在目录名**（这里是 ai-chatkit-master），而它决定了
+# 数据卷的名字（`<项目名>_pgdata`）。一开始我写了 `name: researchpilot`，看起来更漂亮，
+# 但那会让 compose 认为这是一个**新项目**，于是建了一个空的新卷 —— 而
+# 已经迁移好的 7 篇论文的行都在旧卷 `ai-chatkit-master_pgdata` 里。
+#
+# 教训：**compose 的项目名不只是个显示名，它决定了卷和网络的归属。**
+# 改了它，等于换了一套数据。上线之后再改会造成"数据凭空消失"的事故。
+
+services:
+  postgres:
+    # 同样参数化，理由见 backend 的构建参数。默认是官方名，本机在根目录 .env 里覆盖
+    image: ${POSTGRES_IMAGE:-postgres:16-alpine}
+    container_name: researchpilot-pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-researchpilot}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-researchpilot}
+      POSTGRES_DB: ${POSTGRES_DB:-researchpilot}
+    ports:
+      # 映射到 5433 而不是 5432：宿主机上可能有别的 postgres，
+      # 而且 5432 被占用时的报错很难懂（"connection refused" 而不是"端口冲突"）
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # 后端要等数据库**真的能接受连接**，而不是容器"起来了"。
+      # pg_isready 检查的是能否连通，比 docker 的容器状态准确。
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-researchpilot} -d ${POSTGRES_DB:-researchpilot}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        # 基础镜像做成参数：本机 daemon 连不上 Docker Hub 的认证
+        # （auth.docker.io 超时），但能连国内镜像源。在根目录 .env 里改一行即可，
+        # 不用先 docker pull 再 docker tag 手动打标签。
+        # 有正常 Docker Hub 访问的环境用默认值就行。
+        BASE_IMAGE: ${PYTHON_BASE_IMAGE:-python:3.11-slim}
+        # 容器里读不到 .git（它在仓库根目录，不在 backend/ 这个构建上下文里），
+        # 所以把提交号传进去，让 /health 能回答"线上跑的是哪份代码"。
+        # 用 scripts\启动-docker.cmd 启动时会自动填；手工 docker compose build 的话
+        # 在根目录 .env 里写一行 GIT_REV=xxxxxxx 即可。
+        GIT_REV: ${GIT_REV:-}
+    image: researchpilot-backend:local
+    container_name: researchpilot-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        # 等健康检查通过再启动，而不是"容器已创建"就启动。
+        # 后者会让后端在数据库还没准备好时去连接，报一个看起来像配置错误的错
+        condition: service_healthy
+    # 从 backend/.env 读密钥和其余配置（DEEPSEEK_API_KEY 等）。
+    # 注意 .env 被 .dockerignore 排除在**镜像之外** —— 它在运行时注入，不进镜像层。
+    env_file:
+      - ./backend/.env
+    environment:
+      # ⚠️ 必须覆盖 .env 里的 DATABASE_URL：那份写的是 127.0.0.1:5433（给宿主机用的），
+      # 容器里的 127.0.0.1 是容器自己。容器网络里用**服务名**当主机名、**容器端口** 5432。
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-researchpilot}:${POSTGRES_PASSWORD:-researchpilot}@postgres:5432/${POSTGRES_DB:-researchpilot}
+      # 反着找宿主机的 Ollama。见文件顶部说明 ①
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+    ports:
+      - "${BACKEND_PORT:-8001}:8001"
+    volumes:
+      # 共享宿主机的索引 / 上传文件 / 重排模型 —— 理由见文件顶部
+      - ./backend/resource/chroma_db:/app/resource/chroma_db
+      - ./backend/resource/uploads:/app/resource/uploads
+      # 重排模型 266MB。挂载而不是打进镜像：改代码时不必重下
+      - ./backend/resource/models:/app/resource/models
+    # Linux 上 host.docker.internal 默认不存在。Docker Desktop（Win/Mac）本来就提供，
+    # 加上这一行是为了让同一份 compose 在 Linux 上也能用
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # 同上：基础镜像参数化
+        BASE_IMAGE: ${NODE_BASE_IMAGE:-node:20-alpine}
+        # 构建期参数：会烘进浏览器 bundle。必须是**浏览器能访问的**地址
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8001}
+    image: researchpilot-frontend:local
+    container_name: researchpilot-web
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+
+volumes:
+  pgdata:

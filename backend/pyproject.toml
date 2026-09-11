@@ -3,10 +3,17 @@ name = "backend"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13"
+# ⚠️ 这里原来写的是 >=3.13，但实际运行的是 3.11（.venv-py311）。
+# 这个不一致拖了很久：要么改声明、要么重建环境，二选一。
+# 改造 #9 做 Docker 时被迫定下来 —— 选 3.11，因为它是**已知全部依赖可用的版本**
+# （今天所有实测都跑在它上面）。改动见 reference/transformation-09-docker-design.md。
+requires-python = ">=3.11"
 dependencies = [
     "aiomysql>=0.2.0",
     "aiosqlite>=0.21.0",
+    # PostgreSQL 的异步驱动。SQLAlchemy 的 postgresql+asyncpg:// 用它。
+    # 选 asyncpg 而不是 psycopg：前者是 SQLAlchemy 官方文档里 async 场景的首选。
+    "asyncpg>=0.30.0",
     "chromadb>=0.6.3",
     "cryptography>=45.0.2",
     "dashscope>=1.24.2",

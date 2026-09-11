@@ -45,12 +45,18 @@ _STARTED_AT = datetime.now()
 
 
 def _git_rev() -> str | None:
-    """读当前 git 提交号（短）。
+    """当前代码的提交号（短）。
 
-    直接读 `.git` 目录而不是调 `git rev-parse`：不引入子进程依赖，
+    **优先读配置里的 GIT_REV** —— 容器里读不到 `.git`：
+    `.git` 在仓库根目录，而镜像的构建上下文是 `backend/`，它不在里面。
+    所以构建时用 `--build-arg GIT_REV=...` 传进来（见 backend/Dockerfile 与 compose）。
+
+    本机跑的时候配置里没有这个值，就退回直接读 `.git` —— 不引入子进程依赖，
     也不需要 git 在 PATH 里。只处理 HEAD 指向分支/直接指向提交这两种情况，
-    读不到就返回 None —— 它是个辅助信息，不该因为版本库布局特殊就让 /health 挂掉。
+    读不到就返回 None：它是个辅助信息，不该因为版本库布局特殊就让 /health 挂掉。
     """
+    if settings.GIT_REV:
+        return settings.GIT_REV
     try:
         here = os.path.dirname(os.path.abspath(__file__))
         root = os.path.dirname(os.path.dirname(os.path.dirname(here)))

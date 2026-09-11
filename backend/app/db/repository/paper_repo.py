@@ -118,7 +118,11 @@ class PaperRepository:
 
     @classmethod
     async def delete_not_in(
-        cls, session: AsyncSession, collection_id: int, keep_source_files: list[str]
+        cls,
+        session: AsyncSession,
+        collection_id: int,
+        keep_source_files: list[str],
+        path_prefix: str | None = None,
     ) -> list[str]:
         """删掉这个知识库里、但不在 keep 列表中的论文记录，返回被删的 source_file。
 
@@ -131,16 +135,38 @@ class PaperRepository:
             paper 表：5 篇 434 块     ← 还留着那篇
 
         后果是 `list_papers` 会列出一篇**根本搜不到**的论文，而 `/health` 的
-        `index.papers` 也会虚高。这种不一致不会报错，只会让人对数据失去信任。
+        `index.papers` 也会虚高。
 
-        实测就是这么发现的：把评估集文档从语料目录移走、重跑导入之后，
-        Chroma 是 411 而 paper 表还是 434。
+        ## ⚠️ `path_prefix` 不是可选的装饰，是必须的护栏
+
+        第一版没有这个参数，判据是「不在本次报告里的记录一律删」。**它删掉了用户上传的文档。**
+
+        原因：`ingest()` 只扫描 `resource/papers/`（种子语料），而通过 `POST /documents`
+        上传的文档在 `resource/uploads/`。这些文档**本来就不该出现在本次报告里**，
+        于是被当成"已删除的论文"清理掉了 —— 用户上传的 3 篇论文的记录和向量块一起消失。
+
+        所以剪枝必须**限定在被重建的那个目录内**：只有 `pdf_path` 落在
+        `path_prefix` 底下的记录才参与判断。上传目录的文档不归 `ingest()` 管。
+
+        这个 bug 还顺带说明了一件事：**"整库重建"这个动作的语义边界必须写清楚** ——
+        它是"重建这个目录"，不是"重建这个知识库"。两者在只有种子语料时看不出区别，
+        有了第二种来源之后立刻致命。
         """
         statement = select(Paper).where(Paper.collection_id == collection_id)
         if keep_source_files:
             statement = statement.where(Paper.source_file.notin_(keep_source_files))
         result = await session.execute(statement)
-        stale = list(result.scalars().all())
+
+        stale = []
+        for paper in result.scalars().all():
+            if path_prefix is not None:
+                # 只剪枝落在被重建目录里的记录。os.sep 是为了避免
+                # "resource/papers-old" 被 "resource/papers" 前缀匹配上。
+                pdf_path = (paper.pdf_path or "").replace("\\", "/")
+                if not pdf_path.startswith(path_prefix.replace("\\", "/").rstrip("/") + "/"):
+                    continue
+            stale.append(paper)
+
         for paper in stale:
             await session.delete(paper)
         if stale:

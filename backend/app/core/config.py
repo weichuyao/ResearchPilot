@@ -35,6 +35,16 @@ class Settings(BaseSettings):
     
     CHROMA_PATH: str | None = None
 
+    # 当前代码的 git 提交号，给 /health 用。
+    #
+    # 本机跑的时候 /health 直接读 .git 目录就行（见 api/system_routes.py）。
+    # 但在容器里**读不到** —— `.git` 在仓库根目录，而镜像的构建上下文是 backend/，
+    # 它根本不在里面。于是 /health 会报 null，恰好丢掉它最想要回答的那个问题
+    # （"线上跑的是哪份代码"）。
+    #
+    # 所以构建时用 --build-arg GIT_REV=... 传进来，这里作为首选来源。
+    GIT_REV: str | None = None
+
     # --- 文档上传（改造 #5）---
     # 上传的 PDF 落盘目录，相对 backend/。用内容哈希命名，不用用户给的文件名
     # （用户给的名字不可信，也不该出现在磁盘路径里）。

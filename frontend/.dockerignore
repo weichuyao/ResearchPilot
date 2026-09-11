@@ -1,0 +1,20 @@
+# 构建上下文里要排除的东西。
+#
+# node_modules 和 .next 必须在镜像里**重新生成**，不能从宿主机拷进去：
+#   · node_modules 里可能有平台相关的原生模块（宿主机是 Windows，镜像是 Linux）
+#   · .next 是构建产物，拷进去等于"用宿主机的构建结果"，失去可复现性
+node_modules/
+.next/
+out/
+
+# 本机的前端环境变量。NEXT_PUBLIC_* 是**构建期**烘进 bundle 的，
+# 容器里要用构建参数传，不能靠这个文件，否则会带上开发机的地址
+.env.local
+.env
+
+# 构建缓存
+tsconfig.tsbuildinfo
+
+# 编辑器
+.vscode/
+.idea/
