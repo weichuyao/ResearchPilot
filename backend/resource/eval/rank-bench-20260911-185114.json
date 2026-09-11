@@ -1,0 +1,72 @@
+{
+  "generated_at": "2026-09-11T18:51:14",
+  "eval_set": "reid_paper_eval_set.json",
+  "top_k": 10,
+  "graded_items": 12,
+  "hybrid": {
+    "hit": 12,
+    "recall@1": 0.5,
+    "recall@3": 0.75,
+    "recall@5": 0.75,
+    "mrr": 0.6417658730158731,
+    "mean_rank": 3.1666666666666665
+  },
+  "rerank": {
+    "hit": 12,
+    "recall@1": 0.5,
+    "recall@3": 0.9166666666666666,
+    "recall@5": 1.0,
+    "mrr": 0.6972222222222223,
+    "mean_rank": 1.9166666666666667
+  },
+  "per_item": {
+    "A01": {
+      "hybrid": 1,
+      "rerank": 1
+    },
+    "A02": {
+      "hybrid": 1,
+      "rerank": 1
+    },
+    "A03": {
+      "hybrid": 1,
+      "rerank": 1
+    },
+    "A04": {
+      "hybrid": 3,
+      "rerank": 2
+    },
+    "A05": {
+      "hybrid": 2,
+      "rerank": 3
+    },
+    "A06": {
+      "hybrid": 1,
+      "rerank": 2
+    },
+    "A07": {
+      "hybrid": 1,
+      "rerank": 1
+    },
+    "A08": {
+      "hybrid": 2,
+      "rerank": 1
+    },
+    "A09": {
+      "hybrid": 7,
+      "rerank": 3
+    },
+    "A10": {
+      "hybrid": 1,
+      "rerank": 1
+    },
+    "A11": {
+      "hybrid": 10,
+      "rerank": 5
+    },
+    "A12": {
+      "hybrid": 8,
+      "rerank": 2
+    }
+  }
+}
