@@ -244,14 +244,58 @@ def extract_pages_text(path: str, fallback: PdfReader | None = None) -> list[str
     return []
 
 
-def load_pdf_chunks(folder: str, manifest: dict) -> tuple[list[Document], list[dict]]:
-    """读取目录下所有 PDF，返回 (切好的块, 每篇的处理报告)。"""
-    splitter = RecursiveCharacterTextSplitter(
+def build_splitter() -> RecursiveCharacterTextSplitter:
+    """切块器。抽成函数是为了让「整库导入」和「上传单个文件」用**同一套**参数 ——
+    两处各写一份的话，上传进来的块和批量导入的块粒度会悄悄不一致。"""
+    return RecursiveCharacterTextSplitter(
         chunk_size=CHUNK_SIZE,
         chunk_overlap=CHUNK_OVERLAP,
         separators=["\n\n", "\n", ". ", " ", ""],
         length_function=len,
     )
+
+
+def chunk_pdf(path: str, source_file: str, title: str,
+              splitter: RecursiveCharacterTextSplitter | None = None
+              ) -> tuple[list[Document], dict]:
+    """解析**单个** PDF → (切好的块, 报告行)。
+
+    `source_file` 和 `title` 由调用方决定，不在这里从文件名推 ——
+    上传的文件名是带哈希前缀的存储名，不能拿来当标题用。
+    """
+    splitter = splitter or build_splitter()
+    reader = PdfReader(path)
+    raw_pages = extract_pages_text(path, fallback=reader)
+    noise = find_repeated_edge_lines(raw_pages)
+
+    chunks: list[Document] = []
+    for page_index, raw in enumerate(raw_pages):
+        cleaned = clean_page_text(raw, noise)
+        if len(cleaned.strip()) < 50:
+            continue
+        page_doc = Document(
+            page_content=cleaned,
+            metadata={
+                "source": source_file,
+                "paper_title": title,
+                "page": page_index,
+                "page_label": str(page_index + 1),
+            },
+        )
+        chunks.extend(splitter.split_documents([page_doc]))
+
+    return chunks, {
+        "file": source_file,
+        "title": title,
+        "pages": len(raw_pages),
+        "chunks": len(chunks),
+        "noise_lines": len(noise),
+    }
+
+
+def load_pdf_chunks(folder: str, manifest: dict) -> tuple[list[Document], list[dict]]:
+    """读取目录下所有 PDF，返回 (切好的块, 每篇的处理报告)。"""
+    splitter = build_splitter()
 
     chunks: list[Document] = []
     report: list[dict] = []
@@ -266,48 +310,102 @@ def load_pdf_chunks(folder: str, manifest: dict) -> tuple[list[Document], list[d
         title = manual_title or auto_title
         title_source = "manual" if manual_title else auto_source
 
-        raw_pages = extract_pages_text(path, fallback=reader)
-        noise = find_repeated_edge_lines(raw_pages)
-
-        per_file = 0
-        for page_index, raw in enumerate(raw_pages):
-            cleaned = clean_page_text(raw, noise)
-            if len(cleaned.strip()) < 50:
-                continue
-            page_doc = Document(
-                page_content=cleaned,
-                metadata={
-                    "source": name,
-                    "paper_title": title,
-                    "page": page_index,
-                    "page_label": str(page_index + 1),
-                },
-            )
-            split = splitter.split_documents([page_doc])
-            per_file += len(split)
-            chunks.extend(split)
-
-        report.append(
-            {
-                "file": name,
-                "title": title,
-                "title_source": title_source,
-                "auto_title": auto_title,
-                "auto_source": auto_source,
-                "pages": len(raw_pages),
-                "chunks": per_file,
-                "noise_lines": len(noise),
-                # 人工填写的元数据（可能为空），写入 paper 表时使用
-                "meta": {
-                    "authors": str(entry.get("authors", "") or "").strip(),
-                    "venue": str(entry.get("venue", "") or "").strip(),
-                    "year": _parse_year(entry.get("year")),
-                    "external_id": str(entry.get("external_id", "") or "").strip(),
-                },
-            }
-        )
+        file_chunks, row = chunk_pdf(path, name, title, splitter)
+        chunks.extend(file_chunks)
+        row["title_source"] = title_source
+        row["auto_title"] = auto_title
+        row["auto_source"] = auto_source
+        row["meta"] = {
+            "authors": str(entry.get("authors", "") or "").strip(),
+            "venue": str(entry.get("venue", "") or "").strip(),
+            "year": _parse_year(entry.get("year")),
+            "external_id": str(entry.get("external_id", "") or "").strip(),
+        }
+        report.append(row)
 
     return chunks, report
+
+
+def index_pdf(pdf_path: str, source_file: str, title: str) -> dict:
+    """**阻塞**部分：解析 → 切块 → 写向量库 → 让 BM25 索引失效。
+
+    ## 为什么不能复用 ingest()
+
+    `ingest()` 的语义是**整库重建**：`reset=True` 时先把整个 Chroma collection 清空。
+    上传接口绝不能那么干 —— 用户传第 5 篇，前 4 篇会被抹掉。
+    所以这里走一条独立的增量路径：只解析这一个文件、只追加它的块。
+
+    ## 为什么必须让 BM25 索引失效（这条最容易漏）
+
+    BM25 索引按 Chroma 集合大小做签名缓存（见 ai/rag/hybrid.py 的 get_index()），
+    签名没变就复用旧索引。新导入的文档如果不显式 `invalidate_index()`，
+    **关键词那一路在进程重启前根本看不见它**；而向量那一路是直接查 Chroma 的，
+    所以会命中 —— 于是现象变成「语义搜得到、关键词搜不到」，非常难查。
+
+    ## 为什么刻意不碰关系库
+
+    这个函数会在**线程池**里跑（见 record_paper 的说明），那个线程里没有事件循环，
+    不能 `asyncio.run()` 去写库。关系库的写回由调用方在主循环上做。
+    """
+    from ai.rag.chromaClient import document_vector_store
+    from ai.rag.hybrid import invalidate_index
+
+    chunks, row = chunk_pdf(pdf_path, source_file=source_file, title=title)
+    if not chunks:
+        raise ValueError("没有解析出任何内容，检查一下是不是扫描件（没有文本层）")
+
+    batch = 64
+    for start in range(0, len(chunks), batch):
+        document_vector_store.add_documents(chunks[start:start + batch])
+        time.sleep(0.2)
+
+    invalidate_index()
+    return row
+
+
+async def record_paper(
+    row: dict,
+    pdf_path: str,
+    meta: dict | None = None,
+    collection_name: str = "reid-papers",
+    status: int | None = None,
+    error: str = "",
+) -> None:
+    """把单个文件的元数据写进 paper 表。**必须在主事件循环上调用。**
+
+    为什么不在线程里顺手写完：项目的 `async_engine` 是模块级全局，连接池里的连接
+    是在主事件循环上建立的。在线程里另起一个 loop 去用它会抛
+    「Future attached to a different loop」—— 所以线程只做解析和 embedding 这些
+    重活，数据库写回留在主循环。
+
+    实测教训（今天踩过两次同类问题）：**跨事件循环复用异步资源是静默的**
+    —— 它不一定当场报错，可能只是随机地在某次请求上炸。
+    """
+    import db.database as database
+    from db.models.paper import STATUS_INDEXED, Paper
+    from db.repository.collection_repo import CollectionRepository
+    from db.repository.paper_repo import PaperRepository
+
+    meta = meta or {}
+    async with database.async_session_maker() as session:
+        collection = await CollectionRepository.get_or_create(
+            session=session, name=collection_name, description="ResearchPilot 论文知识库"
+        )
+        paper = Paper(
+            source_file=row["file"],
+            title=row["title"],
+            authors=str(meta.get("authors") or ""),
+            venue=str(meta.get("venue") or ""),
+            year=_parse_year(meta.get("year")),
+            external_id=str(meta.get("external_id") or ""),
+            pdf_path=os.path.relpath(pdf_path, os.getcwd()),
+            collection_id=collection.id or 0,
+            status=STATUS_INDEXED if status is None else status,
+            chunk_count=row.get("chunks") or 0,
+            error=error,
+            indexed_at=datetime.now(),
+        )
+        await PaperRepository.upsert(session=session, paper=paper)
 
 
 def _parse_year(value) -> int | None:

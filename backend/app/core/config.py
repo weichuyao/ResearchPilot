@@ -34,7 +34,14 @@ class Settings(BaseSettings):
     EMBEDDING_MODEL: str | None = None
     
     CHROMA_PATH: str | None = None
-    
+
+    # --- 文档上传（改造 #5）---
+    # 上传的 PDF 落盘目录，相对 backend/。用内容哈希命名，不用用户给的文件名
+    # （用户给的名字不可信，也不该出现在磁盘路径里）。
+    UPLOAD_DIR: str = "resource/uploads"
+    # 单个文件大小上限。超了回 413，而且必须**边读边算**，不能先整个读进内存再判。
+    MAX_UPLOAD_MB: int = 50
+
     def is_dev(self):
         return self.DEV
 

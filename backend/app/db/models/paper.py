@@ -17,9 +17,15 @@ from db.models.base import DBBaseModel
 
 
 # status 取值
+#
+# 为什么「待处理」和「处理中」必须分开（改造 #5 加的 3）：
+# 后台导入任务跑在 API 进程内，**进程重启会让任务丢失**。那时记录会永远停在 3。
+# 如果 0 和 3 合并成一个值，就分不清「排队等着」和「重启前卡死了」——
+# 前者会自己好，后者需要人工重试。分开之后 /health 和启动逻辑就能识别后者。
 STATUS_PENDING = 0
 STATUS_INDEXED = 1
 STATUS_FAILED = 2
+STATUS_INDEXING = 3
 
 
 class Paper(DBBaseModel, table=True):
@@ -47,7 +53,14 @@ class Paper(DBBaseModel, table=True):
     collection_id: int = Field(default=0, index=True, description="所属知识库 id")
 
     status: int = Field(
-        default=STATUS_PENDING, description="0 待处理 / 1 已索引 / 2 失败"
+        default=STATUS_PENDING, description="0 待处理 / 1 已索引 / 2 失败 / 3 处理中"
     )
     chunk_count: int = Field(default=0, description="已写入向量库的块数")
     indexed_at: datetime | None = Field(default=None, description="最近一次索引完成时间")
+
+    # 导入失败的原因（成功时为空串）。
+    #
+    # 为什么失败必须落在记录里、而不是只打一条日志：用户看到的是「上传了但一直没反应」，
+    # 而日志在服务器的另一个地方。没有这一列，失败就是一个**静默失败** ——
+    # 这个项目一路都在跟这类问题较劲（工具报错变成文本、HTTP 200 + 0 error 事件……）。
+    error: str = Field(default="", max_length=500, description="最近一次导入失败的原因")

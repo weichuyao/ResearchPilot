@@ -16,6 +16,11 @@ from db.models.paper import Paper
 class PaperRepository:
 
     @classmethod
+    async def get_by_id(cls, session: AsyncSession, paper_id: int) -> Optional[Paper]:
+        result = await session.execute(select(Paper).where(Paper.id == paper_id))
+        return result.scalars().first()
+
+    @classmethod
     async def get_by_source_file(
         cls, session: AsyncSession, source_file: str
     ) -> Optional[Paper]:
@@ -23,6 +28,51 @@ class PaperRepository:
             select(Paper).where(Paper.source_file == source_file)
         )
         return result.scalars().first()
+
+    @classmethod
+    async def update_progress(
+        cls,
+        session: AsyncSession,
+        paper_id: int,
+        status: int,
+        error: str = "",
+        chunk_count: Optional[int] = None,
+    ) -> Optional[Paper]:
+        """更新导入进度。
+
+        为什么单独一个方法而不是让调用方 setattr 完 commit：上传的后台任务会**并发**
+        改同一批记录，散落在各处的「读-改-写」很容易漏掉 edit_time 或忘记 commit，
+        而漏 commit 的表现是「接口返回成功但状态没变」——又是一次静默失败。
+        """
+        paper = await cls.get_by_id(session=session, paper_id=paper_id)
+        if paper is None:
+            return None
+        paper.status = status
+        if error:
+            paper.error = error[:500]
+        elif status != 2:
+            # 成功或重新开始时清掉上一次的失败原因，避免旧错误一直挂在记录上
+            paper.error = ""
+        if chunk_count is not None:
+            paper.chunk_count = chunk_count
+        if status == 1:
+            paper.indexed_at = datetime.now()
+        paper.edit_time = datetime.now()
+        await session.commit()
+        await session.refresh(paper)
+        return paper
+
+    @classmethod
+    async def count_by_status(cls, session: AsyncSession) -> dict:
+        """按 status 统计篇数。给 /health 用。"""
+        statement = select(Paper.status, func.count()).group_by(Paper.status)
+        result = await session.execute(statement)
+        return {int(row[0]): int(row[1]) for row in result.all()}
+
+    @classmethod
+    async def sum_chunks(cls, session: AsyncSession) -> int:
+        result = await session.execute(select(func.coalesce(func.sum(Paper.chunk_count), 0)))
+        return int(result.scalar() or 0)
 
     @classmethod
     async def get_by_title(cls, session: AsyncSession, title: str) -> Optional[Paper]:
