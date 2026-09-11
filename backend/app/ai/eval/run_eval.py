@@ -175,6 +175,58 @@ def extract_json(text: str) -> dict | None:
 # ---------------------------------------------------------------------------
 # 单题执行
 # ---------------------------------------------------------------------------
+def harvest(result: dict) -> tuple[list[str], list[str], str]:
+    """从图跑完的状态里取出 (检索查询, 检索返回的文本, 最终回答)。
+
+    两种 agent 的形状不同，但指标必须能对齐比较：
+
+      · ReAct（oa-assistant）              —— AIMessage.tool_calls + ToolMessage
+      · Corrective RAG（research-workflow）—— state 里的 plan[*].formatted / queries
+
+    所以统一在这里归一化。research-workflow 把每次检索的结果**按工具同款的格式**
+    存进 state（见 ai/agent/research_workflow.py），正是为了这一点：
+    下面那些解析正则一行都不用改。
+    """
+    queries: list[str] = []
+    outputs: list[str] = []
+    answer = ""
+
+    plan = result.get("plan")
+    if plan is not None:
+        # Corrective RAG：没有 ToolMessage，检索记录在 state 里
+        if result.get("listing"):
+            outputs.append(result["listing"])
+            queries.append("list_papers()")
+        for sub in plan:
+            for query in sub.get("queries") or []:
+                queries.append('search_documents("%s")' % query)
+            if sub.get("formatted"):
+                outputs.append(sub["formatted"])
+        rounds = result.get("rounds")
+        if rounds is not None:
+            queries.append("# retrieves=%d evidence=%s" % (rounds, result.get("evidence")))
+    else:
+        for message in result["messages"]:
+            kind = type(message).__name__
+            if kind == "AIMessage":
+                for call in (getattr(message, "tool_calls", None) or []):
+                    queries.append("%s(%s)" % (
+                        call.get("name"),
+                        json.dumps(call.get("args"), ensure_ascii=False),
+                    ))
+            elif kind == "ToolMessage":
+                outputs.append(message.content if isinstance(message.content, str)
+                               else str(message.content))
+
+    for message in reversed(result["messages"]):
+        if type(message).__name__ == "AIMessage" and not (getattr(message, "tool_calls", None) or []):
+            content = message.content
+            answer = content if isinstance(content, str) else str(content)
+            break
+
+    return queries, outputs, answer
+
+
 async def run_item(item: dict, model, agent, model_name: str) -> dict:
     """跑一题：调用 Agent，收集过程信息，再交给评委。
 
@@ -190,16 +242,7 @@ async def run_item(item: dict, model, agent, model_name: str) -> dict:
         result = await agent.ainvoke({"messages": [HumanMessage(content=item["question"])]}, config)
     record["seconds"] = round(time.time() - started, 1)
 
-    tool_queries, tool_outputs, answer = [], [], ""
-    for message in result["messages"]:
-        kind = type(message).__name__
-        if kind == "AIMessage":
-            for call in (getattr(message, "tool_calls", None) or []):
-                tool_queries.append("%s(%s)" % (call.get("name"), json.dumps(call.get("args"), ensure_ascii=False)))
-            if not (getattr(message, "tool_calls", None) or []):
-                answer = message.content if isinstance(message.content, str) else str(message.content)
-        elif kind == "ToolMessage":
-            tool_outputs.append(message.content if isinstance(message.content, str) else str(message.content))
+    tool_queries, tool_outputs, answer = harvest(result)
 
     sources = []
     parse_warnings = 0
@@ -398,6 +441,8 @@ async def _main() -> None:
     parser.add_argument("--limit", type=int, default=None, help="只跑前 N 题")
     parser.add_argument("--only", type=str, default=None, help="只跑指定题号，逗号分隔，如 A01,B01")
     parser.add_argument("--eval-set", type=str, default=None)
+    parser.add_argument("--agent", type=str, default="oa-assistant",
+                        help="要评估哪个 agent（见 ai/agent/agents.py 的注册表）")
     args = parser.parse_args()
 
     here = os.path.dirname(os.path.abspath(__file__))
@@ -427,7 +472,12 @@ async def _main() -> None:
 
     from core.config import settings
     from ai.llm import get_model
-    from ai.agent.oa_assistant import oa_assistant
+    from ai.agent.agents import agents, get_agent
+
+    if args.agent not in agents:
+        print("未知的 agent %r。可选：%s" % (args.agent, ", ".join(sorted(agents))))
+        return
+    agent = get_agent(args.agent)
 
     # oa_assistant 在导入时执行了 logging.basicConfig(level=DEBUG)，把根日志记录器
     # 设成 DEBUG，于是 httpx / httpcore / openai 的每一次 HTTP 调用（含完整请求体）
@@ -444,7 +494,7 @@ async def _main() -> None:
     for index, item in enumerate(items, start=1):
         print("[%2d/%2d] %s  %s" % (index, len(items), item["id"], item["question"][:44]))
         try:
-            record = await run_item(item, judge_model, oa_assistant, settings.DEFAULT_MODEL)
+            record = await run_item(item, judge_model, agent, settings.DEFAULT_MODEL)
         except Exception as exc:
             record = {"id": item["id"], "type": item["type"], "question": item["question"],
                       "judge": None, "judge_error": "%s: %s" % (type(exc).__name__, str(exc)[:200])}
