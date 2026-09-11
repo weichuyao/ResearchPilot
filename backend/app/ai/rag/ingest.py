@@ -23,6 +23,7 @@ from __future__ import annotations
 import glob
 import html
 import json
+import logging
 import os
 import re
 import sys
@@ -31,7 +32,11 @@ from datetime import datetime
 
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from pdfminer.high_level import extract_pages
+from pdfminer.layout import LTContainer, LTFigure, LTTextLine
 from pypdf import PdfReader
+
+logger = logging.getLogger(__name__)
 
 
 # ---- 切块参数 ----------------------------------------------------------------
@@ -172,6 +177,61 @@ def save_manifest(folder: str, rows: list[dict]) -> str:
 # 导入
 # ============================================================================
 
+def _collect_text_lines(obj, out: list[str]) -> None:
+    """递归收集 LTTextLine 的文本，遇到 LTFigure 整棵子树跳过。"""
+    if isinstance(obj, LTFigure):
+        return
+    if isinstance(obj, LTTextLine):
+        text = obj.get_text().rstrip()
+        if text:
+            out.append(text)
+        return
+    if isinstance(obj, LTContainer):
+        for child in obj:
+            _collect_text_lines(child, out)
+
+
+def extract_pages_text(path: str, fallback: PdfReader | None = None) -> list[str]:
+    """用 pdfminer 抽取每一页的文本，跳过图表子树。
+
+    为什么不用 pypdf 的 `page.extract_text()`：它是**流式抽取，没有版面感知**。
+    A²RNet 第 3 页上，正文那句
+
+        "...(i) ship type, (ii) imaging perspective, and (iii) loading and
+         equipment configuration"
+
+    被 Fig. 3 的图形标签、图注和一张概率表隔开了约 **1600 字符**，而 pypdf
+    忠实地还原了这个错乱的顺序。后果有两层：句子被切断（模型只能答出前两项），
+    而且含答案的那一块被数字稀释、embedding 质量下降、排不进候选。
+
+    pdfminer 会把用 Form XObject 画的图包成 LTFigure 节点，**整棵子树跳过**即可。
+    图内文字（`Instance Bank` / `Conv` / `MP` / `0.9977` 这类）根本不会出现。
+    实测同一页：图内标签和概率表数字全部消失，`(iii) loading and equipment
+    configuration` 回到正文里，与前半句的距离从约 1600 字符降到约 350 字符 ——
+    足够让它们落进同一个 800 字符的块。
+
+    注意 pypdf 仍然保留：`/Title` 元数据的读取比 pdfminer 方便，且抽取失败时要靠它兜底。
+
+    抽取失败时退回 pypdf（结果差，但总比整篇丢掉好）—— 和 rerank 的降级是同一个思路。
+    """
+    try:
+        pages: list[str] = []
+        for layout in extract_pages(path):
+            lines: list[str] = []
+            _collect_text_lines(layout, lines)
+            pages.append("\n".join(lines))
+        if pages:
+            return pages
+        logger.warning("pdfminer 没有抽出任何页面，改用 pypdf：%s", path)
+    except Exception as exc:
+        logger.warning("pdfminer 抽取失败（%s: %s），改用 pypdf：%s",
+                       type(exc).__name__, exc, path)
+
+    if fallback is not None:
+        return [page.extract_text() or "" for page in fallback.pages]
+    return []
+
+
 def load_pdf_chunks(folder: str, manifest: dict) -> tuple[list[Document], list[dict]]:
     """读取目录下所有 PDF，返回 (切好的块, 每篇的处理报告)。"""
     splitter = RecursiveCharacterTextSplitter(
@@ -194,7 +254,7 @@ def load_pdf_chunks(folder: str, manifest: dict) -> tuple[list[Document], list[d
         title = manual_title or auto_title
         title_source = "manual" if manual_title else auto_source
 
-        raw_pages = [page.extract_text() or "" for page in reader.pages]
+        raw_pages = extract_pages_text(path, fallback=reader)
         noise = find_repeated_edge_lines(raw_pages)
 
         per_file = 0
