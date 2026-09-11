@@ -3,21 +3,37 @@
   "papers": {
     "A_RNet__Association_Aware_Feature_Reinforcement_Network_for_Long_Term_Ship_Re_Identification(3).pdf": {
       "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+      "authors": "",
+      "venue": "",
+      "year": "",
+      "external_id": "",
       "_auto": "A RNet Association Aware Feature Reinforcement Network for Long Term Ship Re Identification",
       "_auto_source": "filename"
     },
     "Dynamic Patch-aware Enrichment Transformer for.pdf": {
       "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+      "authors": "",
+      "venue": "",
+      "year": "",
+      "external_id": "",
       "_auto": "Dynamic Patch-aware Enrichment Transformer for",
       "_auto_source": "filename"
     },
     "Unsupervised_Maritime_Vessel_Re-Identification_With_Multi-Level_Contrastive_Learning.pdf": {
       "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+      "authors": "",
+      "venue": "",
+      "year": "",
+      "external_id": "",
       "_auto": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
       "_auto_source": "metadata"
     },
     "ViV-ReID_Bidirectional_Structural-Aware_SpatialTemporal_Graph_Networks_on_Large-Scale_Video-Based_Vessel_Re-Identification_Dataset (1).pdf": {
       "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+      "authors": "",
+      "venue": "",
+      "year": "",
+      "external_id": "",
       "_auto": "ViV-ReID: Bidirectional Structural-Aware Spatial–Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
       "_auto_source": "metadata"
     }

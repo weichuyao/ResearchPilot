@@ -11,7 +11,7 @@ from langgraph.prebuilt import ToolNode, tools_condition
 from pydantic import BaseModel, Field
 
 from ai.llm import get_model, settings
-from ai.tools.oa_tools import search_documents
+from ai.tools.research_tools import list_papers, search_documents
 
 
 import logging
@@ -41,7 +41,7 @@ for noisy in ("httpx", "httpcore", "openai", "urllib3", "chromadb"):
 class AgentState(MessagesState):
     """State of the agent."""
 
-tools = [search_documents]
+tools = [list_papers, search_documents]
 
 def wrap_model(model: BaseChatModel) -> RunnableSerializable[AgentState, AIMessage]:
     model = model.bind_tools(tools)
@@ -62,16 +62,21 @@ instructions = """
        Base every factual statement on material retrieved through your tools. Never invent paper
        titles, authors, findings, figures or regulations.
 
-    2. Whenever you state something that comes from the documents, cite where it came from,
-       using the source file and page number that the tool returned. The tool also returns a
+    2. Pick the right tool. `list_papers` answers questions about WHICH papers exist, their
+       authors, years and size — it is an exact lookup. `search_documents` finds passages by
+       meaning. When the user names a specific paper, pass it to search_documents as the
+       `paper` argument so that passages from the other papers cannot be returned.
+
+    3. Whenever you state something that comes from the documents, cite where it came from,
+       using the paper title and page number that the tool returned. The tool also returns a
        relevance score; use it to decide which passage to trust more when passages disagree.
 
-    3. If a tool reports that no relevant documents were found, you may only say that the
+    4. If a tool reports that no relevant documents were found, you may only say that the
        documents do not contain relevant information. Never turn "not found" into "does not
        exist", because a document that stays silent about something is not evidence that the
        thing is false.
 
-    4. Answer the question the user actually asked, and keep the answer focused.
+    5. Answer the question the user actually asked, and keep the answer focused.
 """
 
 

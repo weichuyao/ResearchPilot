@@ -27,6 +27,7 @@ import os
 import re
 import sys
 import time
+from datetime import datetime
 
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -128,10 +129,15 @@ def _legacy_auto_source(entry: dict) -> str:
     return str(entry.get("_auto_source", entry.get("auto_source", "")) or "").strip()
 
 
-def save_manifest(folder: str, rows: list[dict]) -> str:
-    """写回 titles.json：保留人工填写的 title，并把新出现的论文补进去。
+# 清单里「人工可填」的元数据字段。title 之外的这些会写进 paper 表，
+# 供 list_papers / get_paper 这类结构化查询使用。
+MANUAL_FIELDS = ("title", "authors", "venue", "year", "external_id")
 
-    字段顺序刻意把 title 放在最前面、生成字段加下划线前缀。早先的版本把 auto
+
+def save_manifest(folder: str, rows: list[dict]) -> str:
+    """写回 titles.json：保留人工填写的字段，并把新出现的论文补进去。
+
+    字段顺序刻意把人工字段放在最前面、生成字段加下划线前缀。早先的版本把 auto
     排在 title 前面且没有标注，结果被误改了 auto —— 而 auto 每次运行都会覆写，
     改错等于白改。这里如果检测到这种误改，会明确提示。
     """
@@ -140,17 +146,19 @@ def save_manifest(folder: str, rows: list[dict]) -> str:
     for row in rows:
         name = row["file"]
         entry = existing.get(name, {}) or {}
-        manual = str(entry.get("title", "") or "").strip()
+        manual = {field: entry.get(field, "") for field in MANUAL_FIELDS}
+        manual["title"] = str(manual.get("title") or "").strip()
 
         stored_auto = _legacy_auto(entry)
-        if not manual and stored_auto and stored_auto != row["auto_title"]:
+        if not manual["title"] and stored_auto and stored_auto != row["auto_title"]:
             print(
                 "  [提示] %s 的 _auto 与脚本推导结果不一致 —— 可能是把标题填到了 _auto 字段。"
                 "这个字段每次运行都会被覆写，请改填 title。" % name[:44]
             )
 
         papers[name] = {
-            "title": manual,
+            **manual,
+            "year": manual.get("year") or "",
             "_auto": row["auto_title"],
             "_auto_source": row["auto_source"],
         }
@@ -181,7 +189,8 @@ def load_pdf_chunks(folder: str, manifest: dict) -> tuple[list[Document], list[d
         reader = PdfReader(path)
         auto_title, auto_source = _auto_title(path, reader.metadata or {})
 
-        manual_title = str((manifest.get(name, {}) or {}).get("title", "") or "").strip()
+        entry = manifest.get(name, {}) or {}
+        manual_title = str(entry.get("title", "") or "").strip()
         title = manual_title or auto_title
         title_source = "manual" if manual_title else auto_source
 
@@ -216,14 +225,44 @@ def load_pdf_chunks(folder: str, manifest: dict) -> tuple[list[Document], list[d
                 "pages": len(raw_pages),
                 "chunks": per_file,
                 "noise_lines": len(noise),
+                # 人工填写的元数据（可能为空），写入 paper 表时使用
+                "meta": {
+                    "authors": str(entry.get("authors", "") or "").strip(),
+                    "venue": str(entry.get("venue", "") or "").strip(),
+                    "year": _parse_year(entry.get("year")),
+                    "external_id": str(entry.get("external_id", "") or "").strip(),
+                },
             }
         )
 
     return chunks, report
 
 
+def _parse_year(value) -> int | None:
+    """清单里的 year 可能被填成字符串或留空，这里统一成 int|None。"""
+    if value in (None, ""):
+        return None
+    try:
+        return int(str(value).strip()[:4])
+    except Exception:
+        return None
+
+
 def ingest(folder: str, reset: bool = True) -> tuple[int, list[dict], str]:
     """把目录下的 PDF 导入 papers collection。reset=True 时先清空。"""
+    from ai.rag.chromaClient import document_vector_store
+
+    if not os.path.isdir(folder):
+        raise SystemExit("找不到论文目录: %s" % folder)
+
+def ingest(folder: str, reset: bool = True, collection_name: str = "reid-papers") -> tuple[int, list[dict], str]:
+    """把目录下的 PDF 导入 papers collection，并把论文元数据写进 paper 表。
+
+    向量库和关系库各管一段：
+      · Chroma 存切块文本 + 向量（语义检索用）
+      · paper 表存论文属性（精确查询、metadata filter 用）
+    两边靠 paper.source_file ↔ Chroma 块的 metadata["source"] 对应起来。
+    """
     from ai.rag.chromaClient import document_vector_store
 
     if not os.path.isdir(folder):
@@ -247,7 +286,44 @@ def ingest(folder: str, reset: bool = True) -> tuple[int, list[dict], str]:
         time.sleep(0.2)
 
     manifest_path = save_manifest(folder, report)
+    _sync_paper_table(report, folder, collection_name)
     return len(chunks), report, manifest_path
+
+
+def _sync_paper_table(report: list[dict], folder: str, collection_name: str) -> None:
+    """把这一批论文的结构化元数据写进 paper 表（按 source_file upsert）。"""
+    import asyncio
+
+    from db.database import async_session_maker, create_db_and_tables
+    from db.models.paper import STATUS_INDEXED, Paper
+    from db.repository.collection_repo import CollectionRepository
+    from db.repository.paper_repo import PaperRepository
+
+    async def run() -> None:
+        await create_db_and_tables()
+        async with async_session_maker() as session:
+            collection = await CollectionRepository.get_or_create(
+                session=session, name=collection_name, description="ResearchPilot 论文知识库"
+            )
+            for row in report:
+                meta = row.get("meta") or {}
+                paper = Paper(
+                    source_file=row["file"],
+                    title=row["title"],
+                    authors=meta.get("authors") or "",
+                    venue=meta.get("venue") or "",
+                    year=meta.get("year"),
+                    external_id=meta.get("external_id") or "",
+                    pdf_path=os.path.relpath(os.path.join(folder, row["file"]), os.getcwd()),
+                    collection_id=collection.id or 0,
+                    status=STATUS_INDEXED,
+                    chunk_count=row["chunks"],
+                    indexed_at=datetime.now(),
+                )
+                await PaperRepository.upsert(session=session, paper=paper)
+            print("  已写入 paper 表 %d 条（知识库：%s）" % (len(report), collection_name))
+
+    asyncio.run(run())
 
 
 def main() -> None:
