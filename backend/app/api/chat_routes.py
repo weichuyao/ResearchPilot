@@ -10,7 +10,9 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.types import Command, Interrupt
 from api.schema.chatSchema import UserInput, ChatMessage, StreamInput
 from asyncio import CancelledError
-from ai.agent.agents import get_agent, DEFAULT_AGENT, CompiledStateGraph
+from ai.agent.agents import agents, get_agent, DEFAULT_AGENT, CompiledStateGraph
+from db.repository.conversation_repo import ConversationRepository
+from db.database import async_session_maker
 from typing import Any, Union, Dict, List, Optional
 from utils.chat_utils import langchain_to_chat_message, remove_tool_calls, convert_message_content_to_string
 from collections.abc import AsyncGenerator
@@ -44,9 +46,11 @@ async def invoke(user_input: UserInput) -> ChatMessage:
     If no agent_id is provided, the default proxy will be used.
     Use thread_id to persist and continue multi-turn dialogues. The run_id keyword argument will also be attached to the message for recording feedback.
     """
+    if user_input.agent_id not in agents:
+        raise HTTPException(status_code=404, detail=f"未知的 agent: {user_input.agent_id}")
     agent: CompiledStateGraph = get_agent(user_input.agent_id)
     
-    kwargs, run_id = await _handle_input(user_input, agent)
+    kwargs, run_id, thread_id = await _handle_input(user_input, agent)
     try:
         response_events = await agent.ainvoke(**kwargs, stream_mode=["updates", "values"])
         response_type, response = response_events[-1]
@@ -63,6 +67,7 @@ async def invoke(user_input: UserInput) -> ChatMessage:
             raise ValueError(f"Unexpected response type: {response_type}")
 
         output.run_id = str(run_id)
+        await _touch_conversation(thread_id, user_input)
         return output
     except Exception as e:
         logger.error(f"An exception occurred: {e}")
@@ -84,10 +89,11 @@ async def stream(user_input: StreamInput) -> StreamingResponse:
 
 async def _handle_input(
     user_input: UserInput, agent: CompiledStateGraph
-) -> tuple[dict[str, Any], UUID]:
+) -> tuple[dict[str, Any], UUID, str]:
     """
     Parse user input and handle any required interrupt resumption.
-    Returns kwargs for agent invocation and the run_id.
+    Returns kwargs for agent invocation, the run_id, and the thread_id
+    （会话索引 upsert 需要它）。
     """
     run_id = uuid4()
     thread_id = user_input.thread_id or str(uuid4())
@@ -129,7 +135,22 @@ async def _handle_input(
         "config": config,
     }
 
-    return kwargs, run_id
+    return kwargs, run_id, thread_id
+
+
+async def _touch_conversation(thread_id: str, user_input: UserInput) -> None:
+    """对话成功后更新会话索引（conversation_repo.upsert）。
+
+    标题 = 首条用户消息（repo 里只首次写入），agent_id 记下来是因为
+    读 checkpoint 必须用同一个图。
+    """
+    async with async_session_maker() as session:
+        await ConversationRepository.upsert(
+            session,
+            thread_id=thread_id,
+            title=user_input.message.strip(),
+            agent_id=user_input.agent_id or DEFAULT_AGENT,
+        )
 
 async def message_generator(
     user_input: StreamInput
@@ -137,9 +158,13 @@ async def message_generator(
     """
     An asynchronous generator for generating messages, used for the responses of streaming agents.
     """
+    if user_input.agent_id not in agents:
+        # SSE 响应头一旦发出状态码就锁死了，所以这个检查必须在流开始之前做。
+        raise HTTPException(status_code=404, detail=f"未知的 agent: {user_input.agent_id}")
     agent: CompiledStateGraph = get_agent(user_input.agent_id)
-    kwargs, run_id = await _handle_input(user_input, agent)
+    kwargs, run_id, thread_id = await _handle_input(user_input, agent)
 
+    completed = False
     try:
         async for stream_event in agent.astream(
             **kwargs, stream_mode=["updates", "messages", "custom"]
@@ -157,20 +182,6 @@ async def message_generator(
                             new_messages.append(AIMessage(content=interrupt.value))
                         continue
                     update_messages = updates.get("messages", [])
- 
-                     # Only retain the output of "supervisor"
-                    if node == "supervisor":
-                        if isinstance(update_messages[-1], AIMessage):
-                            update_messages = [update_messages[-1]]
-                        elif isinstance(update_messages[-1], ToolMessage):
-                            if len(update_messages) > 1:
-                                update_messages = [update_messages[-2],update_messages[-1]]
-                            else:
-                                update_messages = [update_messages[-1]]
-                        else:
-                            update_messages = []
-                    if node in ("math_agent", "code_agent"):
-                        update_messages = []
                     new_messages.extend(update_messages)
 
             if stream_mode == "custom":

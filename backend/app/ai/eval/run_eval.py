@@ -30,6 +30,15 @@ import os
 import re
 import sys
 import time
+import uuid
+
+# Windows + psycopg（checkpointer，改造 #5 之二）要求 SelectorEventLoop。
+# 策略必须在 asyncio.run 创建循环**之前**设 —— 本脚本对 checkpointer 的导入
+# 发生在 _main() 内部（那时循环已在跑），晚了，所以这里模块级直接设。
+import sys as _sys
+import asyncio as _asyncio
+if _sys.platform == "win32":
+    _asyncio.set_event_loop_policy(_asyncio.WindowsSelectorEventLoopPolicy())
 from datetime import datetime
 
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -260,7 +269,10 @@ async def run_item(item: dict, model, agent, model_name: str) -> dict:
     """
     record = {"id": item["id"], "type": item["type"], "question": item["question"]}
 
-    config = {"configurable": {"thread_id": "eval-%s" % item["id"], "model": model_name}}
+    # thread_id 带每次运行的随机前缀：checkpointer 落库后（改造 #5 之二），
+    # 固定的 "eval-<题号>" 会让第二轮评估吃到第一轮的对话历史 —— 评估静默失真，
+    # B 类题尤其危险（上一轮说过"未找到"，这一轮模型会顺着说）。每轮全新线程。
+    config = {"configurable": {"thread_id": "eval-%s-%s" % (uuid.uuid4().hex[:8], item["id"]), "model": model_name}}
     buffer = io.StringIO()
     started = time.time()
     with contextlib.redirect_stdout(buffer):
@@ -628,6 +640,11 @@ async def _main() -> None:
         print("未知的 agent %r。可选：%s" % (args.agent, ", ".join(sorted(agents))))
         return
     agent = get_agent(args.agent)
+
+    # checkpointer 落库后（改造 #5 之二），本进程要自己打开它的连接池 ——
+    # 这里有 startup 事件可蹭，不调的话第一笔 checkpoint 就是 PoolClosed（实测）。
+    from ai.agent.checkpointer import startup_checkpointer
+    await startup_checkpointer()
 
     # 评估脚本自己打印进度，应用日志只会碍事（httpx / chromadb 的每次调用都打一行），
     # 而且会被 contextlib.redirect_stdout 漏掉（logging 直写 stderr）。

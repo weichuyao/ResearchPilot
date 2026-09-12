@@ -10,10 +10,10 @@ from typing import Literal
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import AIMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig, RunnableLambda, RunnableSerializable
-from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, MessagesState, StateGraph
 from langgraph.prebuilt import ToolNode
 
+from ai.agent.checkpointer import get_checkpointer
 from ai.llm import get_model, settings
 from ai.tools.research_tools import list_papers, search_documents
 
@@ -105,13 +105,15 @@ agent.add_edge("tools", "model")
 agent.add_conditional_edges("model", pending_tool_calls, {"tools": "tools", "done": END})
 
 
-react_assistant = agent.compile(
-    checkpointer=MemorySaver(),
-)
-react_assistant.name = "react_assistant"
+def build_react_assistant():
+    """编译图。由 agents.py 惰性调用（不能在导入期编译：checkpointer 的构造
+    需要运行中的事件循环，见 ai/agent/checkpointer.py 的生命周期说明）。"""
+    graph = agent.compile(checkpointer=get_checkpointer())
+    graph.name = "react_assistant"
+    return graph
 
 # Save the graph as a PNG
-# graph_png = react_assistant.get_graph().draw_mermaid_png()
+# graph_png = agent.compile(checkpointer=get_checkpointer()).get_graph().draw_mermaid_png()
 
 # with open("graph.png", "wb") as f:
 #     f.write(graph_png)

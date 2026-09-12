@@ -26,6 +26,10 @@ dependencies = [
     "langchain-openai>=0.3.17",
     "langgraph>=0.5.0",
     "langgraph-supervisor>=0.0.27",
+    # 会话记忆落库（改造 #5 之二）：AsyncPostgresSaver。锁 2.x 是因为 3.x 的
+    # langgraph-checkpoint 4.x 与本项目 langchain-core 0.3 的 Reviver 不兼容（实测）
+    "langgraph-checkpoint-postgres>=2.0.24,<3",
+    "psycopg[binary]>=3.3.5",
     "mysql-connector-python>=9.3.0",
     "pydantic-settings>=2.9.1",
     "pdfminer.six>=20231228",

@@ -1,9 +1,10 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Callable
 
 from langgraph.graph.state import CompiledStateGraph
 from pydantic import BaseModel, Field
-from ai.agent.react_assistant import react_assistant
-from ai.agent.research_workflow import research_workflow
+from ai.agent.react_assistant import build_react_assistant
+from ai.agent.research_workflow import build_research_workflow
 
 
 # 默认 agent。
@@ -32,17 +33,28 @@ class AgentInfo(BaseModel):
 @dataclass
 class Agent:
     description: str
-    graph: CompiledStateGraph
+    # 图的编译是**惰性**的（改造 #5 之二）：AsyncPostgresSaver 的构造需要
+    # 运行中的事件循环，而「导入本模块」的上下文（TestClient、脚本）没有循环。
+    # 编译因此推迟到第一次 get_agent() —— 服务路径上一定在循环里（startup 事件
+    # 会先把所有图预热一遍），评估脚本则在 asyncio.run 里调用。
+    graph_factory: Callable[[], CompiledStateGraph]
+    _graph: CompiledStateGraph | None = field(default=None, repr=False)
+
+    @property
+    def graph(self) -> CompiledStateGraph:
+        if self._graph is None:
+            self._graph = self.graph_factory()
+        return self._graph
 
 
 agents: dict[str, Agent] = {
     "react-assistant": Agent(
         description="ReAct free-loop baseline over the research tools (no budget, no evidence assessment).",
-        graph=react_assistant,
+        graph_factory=build_react_assistant,
     ),
     "research-workflow": Agent(
         description="Corrective-RAG research workflow: analyze, retrieve, assess evidence, refine, synthesize.",
-        graph=research_workflow,
+        graph_factory=build_research_workflow,
     ),
 }
 

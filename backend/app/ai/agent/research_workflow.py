@@ -59,11 +59,11 @@ from typing import Annotated, Any, Literal, TypedDict
 
 from langchain_core.messages import AIMessage, AnyMessage, HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
-from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, StateGraph
 from langgraph.graph.message import add_messages
 from pydantic import BaseModel, Field
 
+from ai.agent.checkpointer import get_checkpointer
 from ai.llm import get_model, settings
 from ai.rag.pipeline import (
     EVIDENCE_RETRY_THRESHOLD,
@@ -538,5 +538,8 @@ graph.add_conditional_edges("assess", after_assess, {"refine": "refine", "synthe
 graph.add_edge("refine", "retrieve")
 graph.add_edge("synthesize", END)
 
-research_workflow = graph.compile(checkpointer=MemorySaver())
-research_workflow.name = "research_workflow"
+def build_research_workflow():
+    """编译图。由 agents.py 惰性调用（理由同 react_assistant）。"""
+    compiled = graph.compile(checkpointer=get_checkpointer())
+    compiled.name = "research_workflow"
+    return compiled
