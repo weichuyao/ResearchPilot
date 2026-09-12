@@ -11,7 +11,7 @@
 | 2 | 重写 RAG | ✅ 完成 | `parsers.py`（PDF/MD/DOCX/TXT + magic 嗅探）、`ingest.py`（800/150 切块）、`hybrid.py`（BM25 + RRF k=60）、`rerank.py`（cross-encoder，ONNX int8）、`pipeline.py`（二段式召回 → RRF → 重排 → 两信号证据评估 → 引用）、`textnorm.py`、位置标签抽象（`p.` / `sec.` / `blk.`） | — |
 | 3 | LangGraph research workflow | ✅ 完成 | `research_workflow.py`（26.5 KB）：`analyze → retrieve → assess → refine → synthesize`，`MAX_RETRIEVE_ROUNDS = 3`，三态判定 `sufficient` / `absent` / `insufficient` | — |
 | 4 | 接 MCP | ⬜ 未开始 | 仓库里 **0 个** mcp 文件 | 全部。押后到真要接 arXiv / PubMed 时再做 |
-| 5 | 完善 FastAPI | 🟡 部分 | `/documents` 五个端点（`POST` 202 / `GET` 列表 / `GET` 详情 / `DELETE` 204 / `POST reindex` 202）、`/health`、`/agents`、`/chat/invoke`、`/chat/stream` | **会话 API 完全没有**——数据库里没有 conversation / message 表，前端会话全靠 `localStorage`；Agent Task API 没有 |
+| 5 | 完善 FastAPI | 🟡 部分（2026-09-12 会话已补） | `/documents` 五个端点（`POST` 202 / `GET` 列表 / `GET` 详情 / `DELETE` 204 / `POST reindex` 202）、`/health`、`/agents`、`/chat/invoke`、`/chat/stream`；**会话 API**（`GET /conversations`、`GET /conversations/{id}/messages`、`DELETE /conversations/{id}` 204）+ checkpointer 落 PostgreSQL（AsyncPostgresSaver，图惰性编译），B4 已修（见 `reference/transformation-05-conversations-design.md`）；统一异常层（4xx detail 原样 / 5xx 日志带 traceback） | **Agent Task API 刻意不做**（没有后台 agent 运行的场景，理由在设计文档第三节）；`/documents/formats`（前端 accept 动态取）没做 |
 | 6 | 完善数据层 | 🟡 部分 | SQLite → PostgreSQL（asyncpg）已切完；compose 里的 `postgres:16-alpine`；`paper_repo.py` 全套（含 `delete_not_in` + `path_prefix`） | **Qdrant 对比没做**（只有 Chroma）；迁移还是手写 `ALTER TABLE` shim（`_add_missing_columns`），没上 Alembic |
 | 7 | 完善工程（异常/日志/任务状态/流式） | 🟡 部分（2026-09-12 日志已落盘） | 文档任务状态机 `pending / indexing / indexed / failed` + `error` 字段 + 前端轮询；SSE 流式输出；`requirements.lock` 锁依赖；**日志落文件**（`core/logging_config.py`：console + `RotatingFileHandler`，`backend/logs/app.log` 10MB×5，compose bind mount `./backend/logs:/app/logs`，uvicorn 日志一并进文件；配置从 `react_assistant.py` 的导入副作用里收敛出来，见 `reference/transformation-07-logging-design.md`） | 异常处理没有统一层；无请求 ID 关联（等 #5 用 thread_id 天然解决）；无结构化日志（接聚合平台时再说） |
 | 8 | RAG / Agent 评测 | ✅ 完成 | `run_eval.py`（20 题 A/B/C 类 + LLM judge + 语料指纹 `verified_on` 过期告警）、`rank_bench.py`（确定性、无 LLM）、`compare_runs.py`（重复运行取均值/极差 + 可比性告警）、`reid_paper_eval_set.json` | — |
@@ -42,6 +42,7 @@
 ## 建议顺序（按「一小时能看见变化」排）
 
 1. ~~**#1 残留清理 + #10 去硬编码**~~ —— ✅ 2026-09-12 完成
-2. ~~**#7 日志落文件**~~ —— ✅ 2026-09-12 完成（`transformation-07-logging-design.md`；统一异常层仍是 #7 的欠账，建议随 #5 一起做）
-3. **#5 会话 / Agent Task API** —— 体感最强的缺口（`MemorySaver` 只在进程内存，刷新即丢）；做的时候顺手修掉 `baseline-defects.md` B4（前后端会话状态不一致的根因就是它）和 #7 的统一异常层
+2. ~~**#7 日志落文件**~~ —— ✅ 2026-09-12 完成（`transformation-07-logging-design.md`）
+3. ~~**#5 会话 API（含 B4 / 统一异常层）**~~ —— ✅ 2026-09-12 完成（`transformation-05-conversations-design.md`；Agent Task API 刻意不做，理由在设计文档）
 4. **#6 Qdrant 对比**、**#4 MCP** —— 押后，等有真实需求再做
+5. 收尾候选：`/documents/formats`（前端 accept 动态取）、README 品牌更新、Alembic（等数据不再可重建）
