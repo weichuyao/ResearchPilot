@@ -629,9 +629,9 @@ async def _main() -> None:
         return
     agent = get_agent(args.agent)
 
-    # react_assistant 在导入时执行了 logging.basicConfig(level=DEBUG)，把根日志记录器
-    # 设成 DEBUG，于是 httpx / httpcore / openai 的每一次 HTTP 调用（含完整请求体）
-    # 都会打到 stderr，把评估报告淹掉。这里统一压掉 INFO 及以下。
+    # 评估脚本自己打印进度，应用日志只会碍事（httpx / chromadb 的每次调用都打一行），
+    # 而且会被 contextlib.redirect_stdout 漏掉（logging 直写 stderr）。
+    # 根日志配置在 core/logging_config.py（main 导入时），这里只是整体静音。
     import logging
     logging.disable(logging.INFO)
 

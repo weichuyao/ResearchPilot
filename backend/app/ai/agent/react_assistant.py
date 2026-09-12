@@ -18,8 +18,6 @@ from ai.llm import get_model, settings
 from ai.tools.research_tools import list_papers, search_documents
 
 
-import logging
-
 from langchain.globals import set_debug
 from langchain.globals import set_verbose
 
@@ -28,16 +26,9 @@ from langchain.globals import set_verbose
 set_debug(settings.DEBUG)
 set_verbose(False)
 
-# 这里曾经是 logging.basicConfig(level=logging.DEBUG)，等于把「根日志记录器」设成
-# DEBUG —— 于是 httpx / httpcore / openai 的每一次 HTTP 调用都会把完整请求体
-# （含用户提问和系统提示词）打到 stderr。噪音大到把正常输出淹掉，而且请求内容
-# 会进日志。根记录器只到 INFO，需要细节的库单独调。
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(filename)s[line:%(lineno)d] - %(funcName)s() - %(message)s',
-)
-for noisy in ("httpx", "httpcore", "openai", "urllib3", "chromadb"):
-    logging.getLogger(noisy).setLevel(logging.WARNING)
+# 注意：这里**没有** stdlib 日志配置。根日志的配置（格式 / 文件落盘 / 噪音库压制）
+# 统一在 core/logging_config.py，由 main.py 导入时执行 —— 之前它以 basicConfig 的
+# 形式藏在这个文件的导入副作用里，等于「谁导入 agent 谁才有日志配置」。
 
 
 class AgentState(MessagesState):

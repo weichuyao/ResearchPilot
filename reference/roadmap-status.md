@@ -13,7 +13,7 @@
 | 4 | 接 MCP | ⬜ 未开始 | 仓库里 **0 个** mcp 文件 | 全部。押后到真要接 arXiv / PubMed 时再做 |
 | 5 | 完善 FastAPI | 🟡 部分 | `/documents` 五个端点（`POST` 202 / `GET` 列表 / `GET` 详情 / `DELETE` 204 / `POST reindex` 202）、`/health`、`/agents`、`/chat/invoke`、`/chat/stream` | **会话 API 完全没有**——数据库里没有 conversation / message 表，前端会话全靠 `localStorage`；Agent Task API 没有 |
 | 6 | 完善数据层 | 🟡 部分 | SQLite → PostgreSQL（asyncpg）已切完；compose 里的 `postgres:16-alpine`；`paper_repo.py` 全套（含 `delete_not_in` + `path_prefix`） | **Qdrant 对比没做**（只有 Chroma）；迁移还是手写 `ALTER TABLE` shim（`_add_missing_columns`），没上 Alembic |
-| 7 | 完善工程（异常/日志/任务状态/流式） | 🟡 部分 | 文档任务状态机 `pending / indexing / indexed / failed` + `error` 字段 + 前端轮询；SSE 流式输出；`requirements.lock` 锁依赖 | **日志没落文件**——`oa_assistant.py`（现 `react_assistant.py`）里有一处 `logging.basicConfig`，但没有任何 FileHandler，容器一重启日志就没了；异常处理没有统一层 |
+| 7 | 完善工程（异常/日志/任务状态/流式） | 🟡 部分（2026-09-12 日志已落盘） | 文档任务状态机 `pending / indexing / indexed / failed` + `error` 字段 + 前端轮询；SSE 流式输出；`requirements.lock` 锁依赖；**日志落文件**（`core/logging_config.py`：console + `RotatingFileHandler`，`backend/logs/app.log` 10MB×5，compose bind mount `./backend/logs:/app/logs`，uvicorn 日志一并进文件；配置从 `react_assistant.py` 的导入副作用里收敛出来，见 `reference/transformation-07-logging-design.md`） | 异常处理没有统一层；无请求 ID 关联（等 #5 用 thread_id 天然解决）；无结构化日志（接聚合平台时再说） |
 | 8 | RAG / Agent 评测 | ✅ 完成 | `run_eval.py`（20 题 A/B/C 类 + LLM judge + 语料指纹 `verified_on` 过期告警）、`rank_bench.py`（确定性、无 LLM）、`compare_runs.py`（重复运行取均值/极差 + 可比性告警）、`reid_paper_eval_set.json` | — |
 | 9 | Docker Compose 一键部署 | ✅ 完成 | `docker-compose.yml` 三服务、两个 `Dockerfile`、`requirements.lock`、`启动 Docker.cmd` + `scripts/docker-up.ps1`（含镜像源回退、`GIT_REV` 构建参数、真探活 `/health`） | — |
 | 10 | 最后调整前端 | 🟡 部分（2026-09-12 大头已清） | 知识库抽屉（上传 / 列表 / 删除 / 重建索引 / 状态轮询）、SSE 流式渲染；Agent 选择器已改为从 `GET /agents` **动态取**（手工镜像已删）；默认 agent 不再硬编码（空值省略 `agent_id`，后端 `DEFAULT_AGENT` 兜底）；品牌文案已改 ResearchPilot（侧边栏 / 欢迎语 / `APP_NAME`） | 会话列表仍在 `localStorage`（属 #5 的会话持久化）；知识库抽屉 `accept` 扩展名仍是后端解析器注册表的手工镜像（改造 #5 设计文档第十节早就标了，建议加 `GET /documents/formats`） |
@@ -42,6 +42,6 @@
 ## 建议顺序（按「一小时能看见变化」排）
 
 1. ~~**#1 残留清理 + #10 去硬编码**~~ —— ✅ 2026-09-12 完成
-2. **#7 日志落文件** —— 现在日志只在控制台，出故障无法倒查
-3. **#5 会话 / Agent Task API** —— 体感最强的缺口（`MemorySaver` 只在进程内存，刷新即丢）；做的时候顺手修掉 `baseline-defects.md` B4（前后端会话状态不一致的根因就是它）
+2. ~~**#7 日志落文件**~~ —— ✅ 2026-09-12 完成（`transformation-07-logging-design.md`；统一异常层仍是 #7 的欠账，建议随 #5 一起做）
+3. **#5 会话 / Agent Task API** —— 体感最强的缺口（`MemorySaver` 只在进程内存，刷新即丢）；做的时候顺手修掉 `baseline-defects.md` B4（前后端会话状态不一致的根因就是它）和 #7 的统一异常层
 4. **#6 Qdrant 对比**、**#4 MCP** —— 押后，等有真实需求再做

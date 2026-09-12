@@ -41,6 +41,9 @@ __pycache__/
 /frontend/tsconfig.tsbuildinfo
 
 # --- 运行时生成的数据 ---
+# 后端日志（改造 #7）：运行时产物，轮转文件在 backend/logs/ 下
+/backend/logs/
+
 # Chroma 向量库可由 backend/tests/rag/importRag.py 从 EmployeeHandbook.pdf 重新生成
 **/chroma_db/
 

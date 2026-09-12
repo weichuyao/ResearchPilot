@@ -105,6 +105,15 @@ docker compose up -d --build backend   # 改完后端代码后重建
 
 ---
 
+## 日志在哪里
+
+后端日志同时写两处：stdout（`docker compose logs -f backend`）和
+**宿主机的 `backend/logs/app.log`**（compose 里 bind mount 进容器的 /app/logs，
+见 core/logging_config.py）。轮转上界 10 MB × 5 份 —— **容器重启、删除之后
+日志仍然在宿主机上**，这正是落文件要解决的问题：倒查故障要的是重启前的输出。
+
+评估脚本（run_eval.py）会把根日志整体静音，它的日志只在自己的报告里。
+
 ## 出问题怎么查
 
 ### 第一步：分清是"构建期"还是"运行期"

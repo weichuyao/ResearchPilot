@@ -118,6 +118,9 @@ services:
       - ./backend/resource/uploads:/app/resource/uploads
       # 重排模型 266MB。挂载而不是打进镜像：改代码时不必重下
       - ./backend/resource/models:/app/resource/models
+      # 日志落盘（改造 #7）：容器重启/删除后日志还在宿主机上 ——
+      # docker compose logs 只能看还在跑的进程的输出，倒查故障要的是重启前的。
+      - ./backend/logs:/app/logs
     # Linux 上 host.docker.internal 默认不存在。Docker Desktop（Win/Mac）本来就提供，
     # 加上这一行是为了让同一份 compose 在 Linux 上也能用
     extra_hosts:

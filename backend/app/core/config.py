@@ -24,6 +24,14 @@ class Settings(BaseSettings):
     HOST: str = "127.0.0.1"
     PORT: int = 8000
     DEV: bool = True
+
+    # --- 日志（改造 #7）---
+    # 日志目录，相对 backend/（见 core/logging_config.py 里锚定的理由）。
+    # 容器里这个目录由 compose 的 bind mount 提供（./backend/logs:/app/logs），
+    # 重启容器后日志还在 —— 落文件要的就是这个。
+    LOG_DIR: str = "logs"
+    # 根日志级别。DEBUG 会让 httpx 之外的大部分库的细节进来，排查用。
+    LOG_LEVEL: str = "INFO"
     
     DEEPSEEK_API_KEY: str | None = None
     OLLAMA_BASE_URL: str | None = None

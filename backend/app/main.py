@@ -1,10 +1,16 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from api.chat_routes import chat_router
 from api.document_routes import document_router
 from api.system_routes import system_router
-from fastapi.middleware.cors import CORSMiddleware
+from core.logging_config import setup_logging
 from db.database import create_db_and_tables
 
+# 日志配置在导入时执行（幂等）：任何一条启动路径（uvicorn / 脚本 / 测试）只要
+# 导入了 main 就有统一格式 + 文件落盘。在这之前它藏在 react_assistant 的
+# 导入副作用里 —— 谁导入 agent 谁才有日志配置，见 core/logging_config.py 的
+# 模块文档。
+setup_logging()
 
 app = FastAPI()
 

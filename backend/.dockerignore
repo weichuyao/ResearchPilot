@@ -17,6 +17,9 @@ resource/uploads/
 resource/models/
 resource/database.db
 
+# 日志是运行时产物，compose 里 bind mount（./backend/logs:/app/logs）
+logs/
+
 # 配置与密钥 —— backend/.env 里有真实 API key，绝不能进镜像
 .env
 
