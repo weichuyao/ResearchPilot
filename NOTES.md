@@ -83,7 +83,7 @@
   ```
 - 数据库基线（动手改代码前请记住，改完要核对没被破坏）：
   - PostgreSQL（compose 的 researchpilot-pg，端口 5433）；`department` / `employee` 等 OA 表已随 OA 清理退役
-  - `paper`：73 篇 / 6818 块（2026-09-12 清理 7 对重复入库并全量重索引后；21 篇有 year、10 篇有 arXiv 编号，1 篇 MACHANet 因 PDF 文件损坏长期 failed）
+  - `paper`：72 篇 / 6818 块（2026-09-12 清理 7 对重复入库并全量重索引后；21 篇有 year、10 篇有 arXiv 编号；损坏的 MACHANet 重复件已删，健康副本在库）
   - `conversation`：会话索引（消息本体在 LangGraph 的 checkpoint 表里）
 - LangGraph checkpointer：**PostgreSQL 版已接入**（AsyncPostgresSaver，改造 #5 之二）；
   `DATABASE_URL` 不是 postgres 时降级 MemorySaver 并打 WARNING。
