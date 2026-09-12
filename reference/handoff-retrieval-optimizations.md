@@ -1,85 +1,111 @@
-# 交接：检索优化项 2/3 收尾（写给下一个会话）
+# 交接总纲：ResearchPilot 项目全貌 + 当前任务（写给新会话）
 
-> 交接时间：2026-09-12 深夜。前一会话完成了三项检索层优化的项 1 和项 2/3 的
-> 主体代码，**剩 3 个未闭合的评估问题**。本文件是唯一的交接依据，读完即可开工。
+> 交接时间：2026-09-12 深夜。**先读这份建立全局，再按第五节干活。**
+> 项目的一切设计理由都在 `reference/` 下，本文件是入口地图。
 
-## 一、当前状态（务必先核对）
+## 一、这个项目是什么、要做到什么程度
 
-- HEAD = `670c682`（WIP 提交，含项 1 `cb2d46e`），工作树干净
-- **后端跑在 8002 端口**（不是 8001！8001 是个杀不掉的僵尸服务，跑旧代码，
-  用户重启电脑后清理；前端 `.env.local` 已指向 8002）
-- 前端 dev 在 3000；MCP 挂载带 `uvx --offline` 自动降级（当前挂 7/19 工具）
-- 后端改动**必须手动重启**（`--reload` 不可信，见 NOTES.md），重启后核对
-  `/health` 的 `started_at`
-- ⚠️ 曾有一次清理误杀了用户另一个项目在 8000 端口的服务（`uvicorn.exe
-  app.main:app --port 8000`），已告知用户
+**Mission**（详见 `MISSION.md`）：把 AI-ChatKit（OA 企业助手模板）改造成
+**ResearchPilot——面向 ReID 方向科研文献的研究助手**，并把每处改动讲清楚
+"为什么"，最终成为能扛住面试追问的简历项目。
 
-## 二、已验证生效的（不要回退）
+**学习模式**：用户本人是学习者，AI 按导师/承包商角色干活；硬性规矩是
+**任何改造先写设计文档（为什么/代价/验证标准），再动手，最后用数据验证**。
+设计文档全在 `reference/transformation-*.md`，决策总账在
+`reference/design-decisions.md`（9 个决策，全部带实测数据）。
 
-- **项 1**（`cb2d46e`）：ingest 三个建行点 + 上传路由，arXiv 编号/年份自动沉淀
-  （`_decode_arxiv_date` → year + `arXiv:原始编号`）；`search_documents` 新增
-  `year_from`
-- **项 2 核心机制**：`pipeline.py` 的 `_attach_context_chunks()` —— 重排 top_n
-  后补同论文相邻块（origin="context"，分数 None，cap=6）。**直连探针实测：
-  A08 查询的三个锚点（ship type / imaging perspective / loading and equipment
-  configuration）首次全部命中** —— 决策七的跨块枚举问题在检索层已根治
-- **项 3**：ingest 数字密度 > 0.25 → metadata `kind=table`；`format_hits` 加
-  `[experimental table]` 前缀；context 块的 how 文案独立（"adjacent context
-  chunk..."）。注意：已入库的 80 篇没有 kind 字段，重索引后才生效
+**铁律**（违反会毁掉这个项目的价值）：
+1. 先测量后改：任何优化必须有护栏验证（rank_bench + run_eval 30 题不退）
+2. 把测量缺陷和系统缺陷分开：历史上 3 次"指标说坏了"其实都是尺子坏了
+3. 降级必须看得见：任何静默降级都要打日志/暴露状态
+4. 评估集期望值依赖语料状态：语料一变，B 类题必须复核（有探针机制辅助，
+   见下文）
 
-## 三、待排查的 3 个问题（按此顺序）
+## 二、十项改造全部完成（当前形态）
 
-### 问题 1：A08 端到端仍 NOT_FOUND（最重要）
+| # | 改造 | 状态 |
+|---|---|---|
+| 1 | 业务重设计 | ✅ OA 残留清零，品牌「科研领航」（前端）/ResearchPilot（代码标识） |
+| 2 | RAG 重写 | ✅ pdfminer 版面感知解析、BM25+RRF 混合、交叉编码器重排（ONNX int8）、连字还原、页码引用 |
+| 3 | Research Workflow | ✅ Corrective-RAG 变体（analyze→retrieve→assess→refine→synthesize，轮次预算 3，三态判定） |
+| 4 | MCP | ✅ arXiv 检索（只进 react-assistant），白名单 7 工具，uvx --offline 自动降级 |
+| 5 | FastAPI | ✅ 文档五端点 + 会话三端点 + /agents + /formats + 统一异常层 |
+| 6 | 数据层 | ✅ PostgreSQL（业务表 + LangGraph checkpointer 落库）；Qdrant 已对比（决策保持 Chroma） |
+| 7 | 工程化 | ✅ 日志落盘（轮转）、状态机、requirements.lock、统一异常层 |
+| 8 | 评估 | ✅ 30 题评估集 + 确定性名次基准 + 探针机制 + 阈值校准脚本 |
+| 9 | Docker | ✅ api/pg/web 三服务 + 可选 qdrant |
+| 10 | 前端 | ✅ 苹果风主题、agent/格式动态取、会话走后端、重命名、多选上传、引用 chips |
 
-- **现象**：检索层探针三锚点全中，但 run_eval 里 agent 答"第三项被截断"
-- **疑点 A：`tool_queries` 在评估记录里是空的**（A05/A08 都是）——
-  `run_eval.py` 的 harvest 解析工具输出提取查询；本轮 `format_hits` 改了
-  how 文案和表格前缀，**先查 harvest 的解析正则是否被新格式弄坏**
-  （历史教训：改输出格式没同步解析正则，`retrieval_recall` 静默掉 0.25）
-- **疑点 B：context cap=6 的分配**——10 个重排命中跨多篇论文，每个吃 2 个
-  邻居，cap 先到先得，A2RNet (iii) 块的邻居可能被别的论文挤占。备选修法：
-  按论文分组配额，或每个命中只取 1 个紧邻
-- **排查入口**：`python app/ai/eval/run_eval.py --only A08`，然后读最新
-  报告 JSON 里 A08 的 tool_queries/answer；直连探针对照：
-  ```python
-  from ai.rag.pipeline import retrieve
-  out = retrieve('A2RNet SAP module three semantic attributes inferred global feature vector')
-  # 三个锚点应全 True（当前已验证）
-  ```
+**近期新增能力**（今天完成的）：语料 80→73 篇（用户批量上传后又在删减）、
+arXiv 编号→年份解码与年份筛选（两个模式都有）、引用可点击看原文、主题订阅、
+综述生成入口、后端黑盒测试脚本 `qa_blackbox_test.py`。
 
-### 问题 2：A05 锚点 `first-order difference` 字面缺失
+## 三、当前正在做的任务（本会话未完成的部分）
 
-- 直连探针：`kmin` 命中、`first-order difference` 未命中 → 语料里该串
-  字面不存在（agent 的回答内容方向是对的，缺字面术语）
-- **查语料变体**：DPEFormer 第 4 页附近找 "first order difference" /
-  "first-order differences" / 被连字或断词的变体（textnorm 已还原 ﬁ，但
-  可能是别的形态）。若确认语料写法不同 → 改评估集 A05 的 required_evidence
-  为语料中的真实字面串（人工核对后 --mark-verified）
+三项检索层优化（设计文档：
+`reference/transformation-retrieval-optimizations-design.md`）：
 
-### 问题 3：B05 翻 GROUNDED（判噪声还是真失效）
+- **项 1 结构化元数据** ✅ 完成（`cb2d46e`）
+- **项 2 相邻块 + 项 3 表格标注**：代码已提交（`670c682`，WIP），检索层已
+  实测生效（A08 三锚点直连全命中——决策七的跨块枚举问题在检索层根治），
+  **但端到端还有 3 个问题没闭合**：
+  1. **A08 端到端仍 NOT_FOUND**：agent 自己的查询没捞出 (iii) 块。疑点：
+     ① `run_eval.py` 的 harvest 解析（tool_queries 在评估记录里为空，
+     疑似被 `format_hits` 新格式弄坏——本项目踩过两次的老坑：改输出格式
+     没同步解析正则）；② context cap=6 被多篇论文的邻居挤占
+     （备选修法：按论文分组配额 / 每命中只取 1 个紧邻）
+  2. **A05 锚点 `first-order difference` 语料字面缺失**（kmin 命中）：
+     查 DPEFormer 第 4 页附近的实际写法（变体/断词），确认后改评估集
+     required_evidence 为真实字面串，`--mark-verified`
+  3. **B05 翻 GROUNDED**：复跑 3 次判噪声；语料 GAN 提及 ×154（探针已报警），
+     若真有 GAN 方法则人工修订期望值并记录
+- ⚠️ 用户正在删减语料（80→73 篇，19:41 删了 2602.x/2603.x 系列），
+  `verified_on`（81 篇/7406 块）已过期——**改完先按当前语料复核 B 类
+  期望值再跑全量**
 
-- 语料含 "GAN" ×154（探针已报警）。之前 B05 通过；本轮翻车
-- **动作**：复跑 `--only B05` 3 次看稳定性。稳定 GROUNDED → 读答案里引用的
-  论文，判断语料是否真有 GAN 相关方法（那 B05 期望值要人工修订 + 记录）；
-  抖动 → 属评委噪声，记录即可
+## 四、改完之后的全项目脉络（下一步方向）
 
-## 四、收尾标准（全部完成才算完）
+1. **收尾当前三项**（见第三节标准：30 题全量不退 + rank_bench + 文档）
+2. **语料稳定后补评估**：用户还在增删文献——每轮变动后跑探针（B 类缺席
+   告警）+ 阈值校准脚本（`calibrate_threshold.py`，当前 0.35 是 4 篇时代
+   校准的，语料稳定后建议重校）
+3. **第二梯队功能候选**（用户已知悉，未排期）：原文定位阅读器（PDF 第 X 页
+   跳转）、相关论文推荐（引用图/向量共现）、语料仪表盘（年份/主题分布，
+   年份解码数据现成）
+4. **第三梯队（需设计文档 + 评估扩充）**：实验数字精确检索（表格标注是
+   其前置，已铺）、对话内指代解析
+5. **MCP 扩展候选**：download/latex 系列 server 工具与自有入库链路的
+   整合、暴露自身为 MCP server、容器内 uvx
+6. **长期工程债**（书面押后，别主动做）：Alembic、Agent Task API、
+   文档预览、鉴权、结构化日志、语义缓存
 
-1. 三问题闭合（修复或人工修订评估集并记录）
-2. 全量护栏：`run_eval.py`（30 题，A/B/C verdict 全对）+ `rank_bench.py`
-   （注意：其数字与扩容前不可比，因为评估集变了；rank_bench 走
-   hybrid_search，不受相邻块影响）
-3. 更新 `design-decisions.md`（相邻块与表格标注的决策记录，含本次踩坑）
-4. 提交；`roadmap-status.md` 的检索优化补一条
-5. 测试脚本：`qa_blackbox_test.py`（后端黑盒，含 cleanup 子命令）
+## 五、环境须知（关键，血泪换来的）
 
-## 五、本次会话的重要教训（写给未来的自己）
+| 事项 | 现状与命令 |
+|---|---|
+| 后端 | **8002 端口**（不是 8001）：`cd backend && NO_PROXY="127.0.0.1,localhost,::1" .venv-py311\Scripts\python.exe -m uvicorn main:app --app-dir app --host 127.0.0.1 --port 8002 --log-level warning --reload` |
+| **--reload 不可信** | 三次看漏变更 + 并发编辑会崩 worker（exit 1）。改完后端**手动重启**，用 `/health` 的 `started_at` 核对 |
+| 8001 僵尸 | 杀不掉的旧服务（PID 归属错乱，疑似 WSL/docker 转发层），跑旧代码。**别往 8001 发请求**；用户重启电脑清理 |
+| 8000 端口 | 有个用户其他项目的服务（曾被误杀过一次，用户已重启）——**清理进程时别碰 8000** |
+| 前端 | 3000，`pnpm dev`；`.env.local` 指向 8002。改 .env.local 要重启前端 |
+| MCP | 依赖 uvx 拉 pypi：网络不通时自动降级 `--offline`（缓存在，实测可用）；挂载失败 = WARNING + 仅本地工具 |
+| 评估 | `run_eval.py`（30 题，--only 调试）；`rank_bench.py`（确定性名次）；探针告警在 run_eval 启动时打印 |
+| B 类复核 | 语料变更 → `verified_on` 过期告警 → 人工核对 B 类期望值 → `--mark-verified` |
+| 批量上传 | `scripts/batch_upload.py <文件夹> --wait`；用户真实数据在库里，**测试只允许自建自删** |
 
-1. **修竞态的代码会成为新的竞态源**：上一轮加的 abort effect 把新建会话
-   的流掐死了（用户实测抓到）——加生命周期钩子必须想清楚它触发时机
-2. **`--reload` 不可信**：三次看漏后端变更；8001 僵尸服务就是这么来的
-   （TaskStop 杀 shell 不杀 uvicorn 子树，supervisor 还会复活 worker）
-3. **bash heredoc 写正则会吃 `\b`**：正则一律按行号写入文件或用
-   `(?<!\d)` 形式
-4. **列表推导重新绑定**：`items = [过滤]` 后 `d["items"]` 不变——
-   评估集 30 题静默变 20 题就是这么来的
+## 六、本项目特有的坑（全部踩过，别再踩）
+
+1. 修竞态的代码会成为新的竞态源（abort effect 掐死新会话的流）
+2. 改 `format_hits` 格式必须同步 `run_eval.py` 的 `_SOURCE_RE`（掉过 0.25）
+3. 列表推导重新绑定：`items = [过滤]` 后 `d["items"]` 不变（30 题静默变 20）
+4. bash heredoc 写正则会吃 `\b`（正则按行号写入或用 `(?<!\d)` 形式）
+5. 跨事件循环复用 async engine = 静默炸（应用外访问数据库自建 engine）
+6. Chroma 的 relevance 实际是 l2 换算（1-d²/√2），不是余弦——阈值 0.35
+   的口径，Qdrant 适配器已对齐
+7. git_rev 在 `/health` 里是请求时读的，不能用来判断进程新旧；用 started_at
+
+## 七、用户偏好
+
+- 界面全中文、苹果风简约（已完成，用户在持续体验中反馈细节）
+- 沟通直接说结论和证据，别绕
+- 用户会自己在页面上测试并截图报问题——他的实测是最有效的 bug 发现渠道
