@@ -408,6 +408,20 @@ async def list_documents(limit: int = 50) -> DocumentList:
     return DocumentList(total=total, items=[_to_out(p) for p in papers])
 
 
+@document_router.get("/formats")
+async def get_formats() -> dict:
+    """支持的文件格式清单（解析器注册表的只读视图）。
+
+    ⚠️ 必须声明在 /{paper_id} **之前**：FastAPI 按声明顺序匹配，
+    "formats" 先撞上 {paper_id}: int 会变成 422。前端上传控件的 accept
+    从这里动态取 —— 之前是前端手工镜像，两边不同步就会
+    「界面说可以传、后端 415」。
+
+    （改造 #5 设计文档第十节标注的欠账，随收尾清掉。）
+    """
+    return {"formats": list(supported_extensions()), "note": describe_formats()}
+
+
 @document_router.get("/{paper_id}", response_model=DocumentOut)
 async def get_document(paper_id: int) -> DocumentOut:
     async with async_session_maker() as session:

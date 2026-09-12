@@ -32,13 +32,14 @@ import {
 
 import {
   DocumentOut, STATUS_COLOR, STATUS_LABEL,
-  deleteDocument, isInProgress, listDocuments, reindexDocument, uploadDocument,
+  deleteDocument, fetchFormats, isInProgress, listDocuments, reindexDocument, uploadDocument,
 } from "../lib/documentsApi";
 
 const { Text } = Typography;
 
-// 和后端解析器注册表支持的扩展名保持一致（ai/rag/parsers.py）
-const ACCEPT = ".pdf,.md,.markdown,.txt,.text,.docx";
+// accept 从后端 GET /documents/formats 动态取（解析器注册表的只读视图），
+// 不再手工镜像。加载完成前不设置 accept —— 文件选择器放开，
+// 后端 415 的 detail 会原样显示给用户。
 
 // 只要有文档在处理中就轮询。1.5 秒是"看起来实时"和"不把后端问爆"之间的折中；
 // 索引一篇论文要几十秒，再快也没意义。
@@ -53,7 +54,13 @@ const KnowledgeBaseDrawer: React.FC<Props> = ({ open, onClose }) => {
   const [docs, setDocs] = useState<DocumentOut[]>([]);
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState<Record<number, boolean>>({});
+  const [formats, setFormats] = useState<string[] | undefined>(undefined);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // accept 只在抽屉首次打开时拉一次（格式清单基本不变，没必要跟着轮询）
+  useEffect(() => {
+    if (open) fetchFormats().then(setFormats);
+  }, [open]);
 
   const refresh = useCallback(async (silent = true) => {
     if (!silent) setLoading(true);
@@ -130,7 +137,7 @@ const KnowledgeBaseDrawer: React.FC<Props> = ({ open, onClose }) => {
             刷新
           </Button>
           <Upload
-            accept={ACCEPT}
+            accept={formats?.join(",")}
             showUploadList={false}
             beforeUpload={handleUpload}
           >

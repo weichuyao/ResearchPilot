@@ -103,3 +103,22 @@ export const STATUS_COLOR: Record<DocStatus, string> = {
   indexed: "success",
   failed: "error",
 };
+
+/**
+ * 支持的上传格式，从后端 GET /documents/formats 动态取。
+ * 之前 ACCEPT 是前端的手工镜像 —— 两边不同步就会「界面说可以传、后端 415」
+ * （改造 #5 设计文档第十节标注的欠账）。拉取失败时返回 undefined，
+ * Upload 的 accept 不设置：文件选择器放开，后端 415 的 detail 会原样显示
+ * （与 AgentSelector「宁可空着也不漂移」同一原则）。
+ */
+export async function fetchFormats(): Promise<string[] | undefined> {
+  try {
+    const response = await fetch(`${BASE}/documents/formats`);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    return data.formats;
+  } catch (err) {
+    console.error("加载支持格式失败", err);
+    return undefined;
+  }
+}
