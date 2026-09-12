@@ -2,7 +2,7 @@
 
 import React from "react";
 
-import { Layout, Menu, Button, Select } from "antd";
+import { Layout, Menu, Button, Select, message as antdMessage } from "antd";
 import { useState, useEffect, useRef } from "react";
 import { BarsOutlined, DatabaseOutlined, PlusOutlined } from "@ant-design/icons";
 import "./globals.css";
@@ -12,19 +12,31 @@ import SessionListItem from './components/SessionListItem';
 import AgentSelector from './components/AgentSelector';
 import SiderComponent from './components/SiderComponent';
 import KnowledgeBaseDrawer from './components/KnowledgeBaseDrawer';
+import { ConversationInfo, deleteConversation, fetchConversations } from './lib/conversationsApi';
 
 const { Header, Content } = Layout;
 
   // Since ReactNode may not be imported correctly, use the more generic type 'any' instead
 export default function RootLayout({ children }: { children: any }) {
   const [collapsed, setCollapsed] = useState(false);
-  const [sessions, setSessions] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem("chatSessions") || "[]");
-    } catch (e) {
-      return [];
-    }
-  });
+  // 会话列表来自后端 GET /conversations（改造 #5 之二）。
+  // 之前存 localStorage —— 后端重启后界面还显示历史、后端却已失忆（缺陷 B4）。
+  // 现在后端是唯一事实源；拉取失败就空着并报错，不造本地假数据。
+  const [sessions, setSessions] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchConversations()
+      .then((list: ConversationInfo[]) =>
+        setSessions(
+          list.map((row) => ({
+            threadId: row.thread_id,
+            name: row.title,
+            lastUpdated: Date.parse(row.last_message_at) || 0,
+          }))
+        )
+      )
+      .catch((err) => console.error("加载会话列表失败", err));
+  }, []);
 
 
   const [currentThreadId, setCurrentThreadId] = useState(null);
@@ -66,23 +78,26 @@ export default function RootLayout({ children }: { children: any }) {
       lastUpdated: Date.now(),
     };
     // left sider auto select new session
+    // 乐观插入：此刻后端还没写会话行（首条消息还没答完），列表以后端拉取为准。
     setSessions((prev) => [...prev, newSession]);
     setCurrentThreadId(newThreadId);
-    localStorage.setItem(
-      "chatSessions",
-      JSON.stringify([...sessions, newSession])
-    );
     window.history.pushState({}, "", `/chat/${newThreadId}`);
   };
 
-  // delete session
-  const handleDeleteSession = (delThreadId: string) => {
+  // delete session：先调后端 DELETE（索引行 + checkpoint），成功才更新界面。
+  // 失败就报错并保留 —— 会话的 source of truth 在后端，不能界面删了、后端还在。
+  const handleDeleteSession = async (delThreadId: string) => {
+    try {
+      await deleteConversation(delThreadId);
+    } catch (err: any) {
+      console.error("删除会话失败", err);
+      antdMessage.error("删除会话失败" + (err?.message ? `：${err.message}` : ""));
+      return;
+    }
     const newSessions = sessions.filter(
       (session) => session.threadId !== delThreadId
     );
     setSessions(newSessions);
-    localStorage.setItem("chatSessions", JSON.stringify(newSessions));
-    localStorage.removeItem( "chatMessages-" + delThreadId);
     if(newSessions.length > 0){
       setCurrentThreadId([...newSessions].reverse()[0]?.threadId || "");
       window.history.pushState({}, "", `/chat/${currentThreadId}`);

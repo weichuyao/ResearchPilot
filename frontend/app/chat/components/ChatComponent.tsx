@@ -6,6 +6,7 @@ import { Message, ChatComponentProps } from '../types/chat.types';
 import { useStreamChat } from '../hooks/useStreamChat';
 import MessageBubble from '../components/MessageBubble';
 import useChatActions from '../hooks/useChatActions';
+import { fetchConversationMessages } from '../../lib/conversationsApi';
 
 const ChatComponent: React.FC<ChatComponentProps> = ({
   threadId,
@@ -31,32 +32,24 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
 
   useEffect(() => scrollToBottom(), [messages]);
 
-  useEffect(() => {
-    if(messages.length > 0){
-      localStorage.setItem(
-        "chatMessages-" + currentThreadId,
-        JSON.stringify(messages)
-      );
-    } 
-  }, [messages]);
-
-
   const { handleNewChat } = useChatActions({ setMessages, setInput, isStreaming, setIsStreaming });
 
+  // 进入会话时从后端拉历史（改造 #5 之二）。
+  // 之前读 localStorage：后端重启后界面还显示历史、后端却已失忆（缺陷 B4）。
+  // 现在消息的 source of truth 是后端 checkpointer；拉取失败就空着并报错。
   useEffect(() => {
-    console.log("currentThreadId", currentThreadId);
     if(!currentThreadId || currentThreadId === "") {
       handleNewChat();
       return;
     }
-    const storedMessages = localStorage.getItem(
-      "chatMessages-" + currentThreadId
-    );
-    if (storedMessages) {
-      setMessages(JSON.parse(storedMessages));
-    } else {
-      setMessages([]);
-    }
+    let cancelled = false;
+    fetchConversationMessages(currentThreadId)
+      .then((history) => { if (!cancelled) setMessages(history as Message[]); })
+      .catch((err) => {
+        console.error("加载会话历史失败", err);
+        if (!cancelled) setMessages([]);
+      });
+    return () => { cancelled = true; };
   }, [currentThreadId]);
 
   const { handleStream } = useStreamChat({ currentThreadId, agentId, setMessages, isStreaming, setIsStreaming });
