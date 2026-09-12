@@ -90,6 +90,14 @@ class SubQuestion(BaseModel):
     """一个待检索的子问题。"""
 
     question: str = Field(description="子问题，用中文复述要查什么")
+    year_from: int | None = Field(
+        default=None,
+        description=(
+            "如果子问题限定了发表/投稿年份，填四位年份下限（如 2025）。"
+            "相对说法（去年/今年）按当前日期换算；arXiv 编号隐含年份也要算"
+            "（2510 = 2025-10）。没有年份限定就省略。"
+        ),
+    )
     query: str = Field(
         description=(
             "第一次检索用的查询。写成**英文**，并尽量贴近论文的措辞"
@@ -276,6 +284,16 @@ async def retrieve_node(state: ResearchState, config: RunnableConfig) -> dict:
             allowed = await resolve_paper_sources(sub["paper"])
             if allowed is None:
                 logger.info("retrieve: 论文 %r 没有匹配，不做限定", sub["paper"])
+
+        if sub.get("year_from"):
+            from ai.tools.research_tools import papers_for_year
+            year_sources = await papers_for_year(int(sub["year_from"]))
+            allowed = (
+                [s for s in (allowed or year_sources) if s in set(year_sources or [])]
+                if year_sources else []
+            )
+            if not allowed:
+                logger.info("retrieve: 年份 >= %s 的限定下没有可用论文", sub["year_from"])
 
         outcome = retrieve(sub["query"], allowed_sources=allowed)
         sub["attempts"] += 1

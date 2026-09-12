@@ -84,6 +84,20 @@ def _format_paper(paper: Paper) -> str:
     return "  ".join(parts)
 
 
+async def papers_for_year(year_from: int) -> list[str] | None:
+    """返回投稿/发表年份 >= year_from 的全部 source 文件。
+
+    给 research_workflow 的年份筛选用（None = 没有匹配的论文）。
+    年份判定统一走 submission_year，与 list_papers 同一套口径。
+    """
+    async with async_session_maker() as session:
+        papers = await PaperRepository.list_papers(session=session)
+    sources = [
+        p.source_file for p in papers if (submission_year(p) or 0) >= year_from
+    ]
+    return sources or None
+
+
 async def resolve_paper_sources(paper: str) -> list[str] | None:
     """把「论文标题的一部分」解析成 Chroma 的 source 列表。
 
