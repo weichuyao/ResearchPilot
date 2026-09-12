@@ -66,3 +66,15 @@ export async function deleteConversation(threadId: string): Promise<void> {
     throw new Error(body?.detail || `DELETE HTTP ${response.status}`);
   }
 }
+
+export async function renameConversation(threadId: string, title: string): Promise<void> {
+  const response = await fetch(`${BASE}/conversations/${threadId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ title }),
+  });
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body?.detail || `PUT HTTP ${response.status}`);
+  }
+}

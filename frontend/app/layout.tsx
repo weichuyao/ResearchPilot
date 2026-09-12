@@ -12,7 +12,7 @@ import SessionListItem from './components/SessionListItem';
 import AgentSelector from './components/AgentSelector';
 import SiderComponent from './components/SiderComponent';
 import KnowledgeBaseDrawer from './components/KnowledgeBaseDrawer';
-import { ConversationInfo, deleteConversation, fetchConversations } from './lib/conversationsApi';
+import { ConversationInfo, deleteConversation, fetchConversations, renameConversation } from './lib/conversationsApi';
 
 const { Header, Content } = Layout;
 
@@ -124,7 +124,17 @@ export default function RootLayout({ children }: { children: any }) {
     setItems(() => {
       return reversedSessions.map((session) => ({
         key: session.threadId,
-        label: <SessionListItem session={session} onDelete={handleDeleteSession} />,
+        label: (
+          <SessionListItem
+            session={session}
+            onDelete={handleDeleteSession}
+            onRename={(threadId, title) =>
+              setSessions((prev: any[]) =>
+                prev.map((x) => (x.threadId === threadId ? { ...x, name: title } : x))
+              )
+            }
+          />
+        ),
       }));
     });
   }, [sessions]);

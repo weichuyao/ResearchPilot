@@ -10,6 +10,7 @@
 import logging
 
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, Field
 from langchain_core.runnables import RunnableConfig
 
 from ai.agent.agents import DEFAULT_AGENT, get_agent
@@ -61,6 +62,23 @@ async def get_messages(thread_id: str) -> list[ChatMessage]:
             # 单条消息解析失败只降级那一条，不让整个历史 500
             logger.warning("会话 %s 的历史消息解析失败：%s", thread_id, exc)
     return output
+
+
+class RenameIn(BaseModel):
+    title: str = Field(min_length=1, max_length=100, description="新的会话标题")
+
+
+@conversation_router.put("/{thread_id}")
+async def rename_conversation(thread_id: str, body: RenameIn) -> dict:
+    """重命名会话。用户不想用首条消息当标题时从这里改 —— upsert 的
+    「标题只写一次」规则只约束自动命名，不约束显式重命名。"""
+    async with async_session_maker() as session:
+        row = await ConversationRepository.update_title(
+            session, thread_id=thread_id, title=body.title.strip()
+        )
+    if row is None:
+        raise HTTPException(status_code=404, detail="会话不存在")
+    return {"thread_id": row.thread_id, "title": row.title}
 
 
 @conversation_router.delete("/{thread_id}", status_code=204)

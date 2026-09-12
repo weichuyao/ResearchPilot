@@ -54,6 +54,16 @@ class ConversationRepository:
         return row
 
     @classmethod
+    async def update_title(cls, session, thread_id: str, title: str) -> Conversation | None:
+        row = await cls.get_by_thread(session, thread_id)
+        if row is None:
+            return None
+        row.title = title
+        await session.commit()
+        await session.refresh(row)
+        return row
+
+    @classmethod
     async def delete(cls, session, thread_id: str) -> bool:
         """返回是否真的删了行。checkpoint 那一半由路由层调 adelete_thread。"""
         result = await session.execute(
