@@ -35,14 +35,14 @@ const SiderComponent: React.FC<SiderComponentProps> = ({
       width={200}
     >
       {!collapsed && (
-        <div className="logo flex items-center justify-center h-16 text-white text-lg">
+        <div className="logo flex items-center justify-center h-16 text-[#1d1d1f] text-base font-semibold tracking-wide">
           RESEARCHPILOT
         </div>
       )}
       <NewChatButton collapsed={collapsed} onClick={handlerNewChat} />
       {!collapsed && (
         <Menu
-          theme="dark"
+          theme="light"
           className="max-h-[calc(100vh-180px)] overflow-y-auto"
           defaultSelectedKeys={[currentThreadId]}
           selectedKeys={[currentThreadId]}

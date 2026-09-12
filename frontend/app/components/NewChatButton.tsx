@@ -16,7 +16,7 @@ const NewChatButton: React.FC<NewChatButtonProps> = ({ collapsed, onClick }) => 
       style={{ margin: "16px", width: collapsed ? "40px" : "calc(100% - 32px)" }}
       shape={collapsed ? "circle" : "round"}
     >
-      {!collapsed && "NEW CHAT"}
+      {!collapsed && "新建对话"}
     </Button>
   );
 };
