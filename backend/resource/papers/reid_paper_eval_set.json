@@ -4,37 +4,710 @@
   "source_scope": "当前知识库中的全部文档（backend/resource/papers 的种子语料 + 通过 POST /documents 上传的文档）",
   "page_convention": "pdf_physical_page_1_indexed",
   "verified_on": {
-    "papers": 7,
-    "chunks": 636,
-    "_说明": "这份期望值最后一次被人工确认时，知识库里有几篇、多少块。run_eval 会把它和当前语料指纹对比，不一致就报警并列出需要重新确认的题。确认之后把这里改成当前值（或用 --mark-verified）。",
-    "_7篇确认记录": "用户新增 3 篇（行人 ReID transformer / 船舶检测视觉语言 / 车辆 ReID 姿态引导）之后重跑，B01~B06 的实际 verdict 全部是 NOT_FOUND_IN_CORPUS，与期望一致。逐字看过 B03 的答案：它明确说「没有证据表明」，并主动澄清 A²RNet 提到的是 SAR 影像而不是 AIS —— 行为正确，期望值仍然成立。"
+    "papers": 80,
+    "chunks": 7406,
+    "date": "2026-09-12",
+    "note": "2026-09-12 人工复核：B01 因语料含《Sparse VMamba》失效已删，改由 A13 覆盖（GROUNDED）；新增 B07/B08 经检索证据核验为『库中无』。"
   },
   "answer_contract": {
-    "fields": ["verdict", "answer", "citations"],
-    "verdicts": ["GROUNDED", "NOT_FOUND_IN_CORPUS", "OUT_OF_SCOPE"]
+    "fields": [
+      "verdict",
+      "answer",
+      "citations"
+    ],
+    "verdicts": [
+      "GROUNDED",
+      "NOT_FOUND_IN_CORPUS",
+      "OUT_OF_SCOPE"
+    ]
   },
-  "corpus_coupling_note": "B 类题的期望值**依赖语料状态**：它问的是「当前知识库里有没有 X」，所以往库里加文档可能让「期望答案是 NOT_FOUND_IN_CORPUS」变成假的 —— 新加的第 8 篇说不定真的用了 Mamba。这类题不能钉死到具名论文上（那样会冻结覆盖：以后加的每一篇都不再被测到），正确做法是让语料变化显式触发复查，靠 verified_on 的对比来做。A 类题不受影响，它本来就钉在具体论文和页码上。",
+  "corpus_coupling_note": "语料 80 篇（2026-09-12 扩容）。B 类期望值仅对当前语料有效：B01 原题（Mamba/SSM）因语料已含《Sparse VMamba》而失效，已删除并由 A13 接管；新增 B07/B08 的『不存在』结论经检索证据核验（2026-09-12）。任何语料变更后需人工复核 B 类期望值（verified_on 机制）。",
   "required_evidence_note": "A 类题特有的字段。列出答案必需的字面串（不区分大小写、已按 norm_text 归一化连字/破折号/数字分隔符），要求全部出现在**检索到的文本**里，才算 evidence_hit。为什么需要它：retrieval_recall 只看「期望论文+页码有没有被碰到」，A08 的答案块排在候选第 18 位、根本没被召回，同一页另一块含 'ship type' 却让 retrieval_recall = 1.0 —— 页级指标会骗人。这些锚点都对着语料逐条验证过存在。",
   "items": [
-    {"id":"A01","question":"hard positive problem（HPP）在无监督船舶 ReID 中指什么？","type":"A","required_evidence":["hard positive problem","instance-level"],"expected_behavior":"解释不准确伪标签使同一真实船舶难作正样本，且常规实例级对比把同伪标签样本视作不同类别。","expected_source":{"paper":"Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning","pdf_page":2},"judge":{"verdict":"GROUNDED","required_concepts":["inaccurate pseudo-label","same vessel/true positive","instance contrast separate classes"],"required_citation":{"paper_short":"MCL","pdf_page":2}}},
-    {"id":"A02","question":"MCL 的训练过程交替进行的两个阶段分别是什么？","type":"A","required_evidence":["pseudo-label","cluster-level"],"expected_behavior":"伪标签生成与多层次对比学习；后者结合实例级和簇级对比。","expected_source":{"paper":"Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning","pdf_page":3},"judge":{"verdict":"GROUNDED","required_concepts":["pseudo-label generation","multi-level contrastive learning","instance-level","cluster-level"],"required_citation":{"paper_short":"MCL","pdf_page":3}}},
-    {"id":"A03","question":"VesselReID 数据集最终包含多少张图像、多少个船舶身份？","type":"A","required_evidence":["30587","1248"],"expected_behavior":"30,587 张图像、1,248 个身份（约每船 25 张）。","expected_source":{"paper":"Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning","pdf_page":6},"judge":{"verdict":"GROUNDED","required_concepts":["30587","1248"],"required_citation":{"paper_short":"MCL","pdf_page":6}}},
-    {"id":"A04","question":"DPEFormer 的 DPSM 如何从遮挡图像中选择有用的 patch token？","type":"A","required_evidence":["proxy token","hard attention"],"expected_behavior":"以 label-guided proxy token 的相似度动态选择信息量大的、较少遮挡 token；为二值 hard attention。","expected_source":{"paper":"Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification","pdf_page":2},"judge":{"verdict":"GROUNDED","required_concepts":["proxy token","similarity","dynamic selection","hard attention"],"required_citation":{"paper_short":"DPEFormer","pdf_page":2}}},
-    {"id":"A05","question":"DPSM 如何决定保留多少个 patch token？","type":"A","required_evidence":["first-order difference","kmin"],"expected_behavior":"相似度排序后以最大一阶差分确定 k，并以 kmin 限制最小保留数量。","expected_source":{"paper":"Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification","pdf_page":4},"judge":{"verdict":"GROUNDED","required_concepts":["sort","first-order difference","maximum","kmin"],"required_citation":{"paper_short":"DPEFormer","pdf_page":4}}},
-    {"id":"A06","question":"ROA 使用什么来源生成遮挡掩码？它是否在推理阶段使用？","type":"A","required_evidence":["Segment Anything","mask set"],"expected_behavior":"掩码来自自然图像上的 Segment Anything Model；ROA 只作训练辅助，不参与推理。","expected_source":{"paper":"Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification","pdf_pages":[2,6]},"judge":{"verdict":"GROUNDED","required_concepts":["Segment Anything Model","training","not inference"],"required_citation":{"paper_short":"DPEFormer","pdf_pages":[2,6]}}},
-    {"id":"A07","question":"A²RNet 认为长期船舶 ReID 中外观大幅变化的典型原因有哪些？","type":"A","required_evidence":["cargo","viewpoint","occlusion"],"expected_behavior":"至少三项：货物变化、视角变化、遮挡、环境因素；说明其破坏外观稳定性。","expected_source":{"paper":"A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification","pdf_page":1},"judge":{"verdict":"GROUNDED","required_concepts":["at least 3 of cargo/viewpoint/occlusion/environment","appearance stability"],"required_citation":{"paper_short":"A²RNet","pdf_page":1}}},
-    {"id":"A08","question":"A²RNet 的 SAP 模块推断的三类语义属性是什么？","type":"A","required_evidence":["ship type","imaging perspective","loading and equipment configuration"],"expected_behavior":"ship type、imaging perspective/viewpoint、loading and equipment configuration/cargo status。","expected_source":{"paper":"A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification","pdf_page":3},"judge":{"verdict":"GROUNDED","required_concepts":["ship type","viewpoint","loading/equipment configuration"],"required_citation":{"paper_short":"A²RNet","pdf_page":3}}},
-    {"id":"A09","question":"A²RNet 的 TAR 如何组织历史特征，以进行跨时间的匹配？","type":"A","required_evidence":["instance bank","identity-view pair"],"expected_behavior":"按身份-视角对索引动态 instance bank，存 feature map；视角由 SAP 预测以实现视角对齐。","expected_source":{"paper":"A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification","pdf_page":4},"judge":{"verdict":"GROUNDED","required_concepts":["instance bank","identity-view pair","feature map","SAP/viewpoint aligned"],"required_citation":{"paper_short":"A²RNet","pdf_page":4}}},
-    {"id":"A10","question":"ViV-ReID 数据集的规模是多少？","type":"A","required_evidence":["480","7165","1145469"],"expected_behavior":"480 个身份、20 个区域、7,165 tracklets、1,145,469 帧。","expected_source":{"paper":"ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset","pdf_page":2},"judge":{"verdict":"GROUNDED","required_concepts":["480","20","7165","1145469"],"required_citation":{"paper_short":"ViV-ReID","pdf_page":2}}},
-    {"id":"A11","question":"ViV-ReID 数据集标注管线如何同时利用自动化和人工核验？","type":"A","required_evidence":["Grounding DINO","Deep SORT"],"expected_behavior":"Grounding DINO 检测框、Deep SORT 划分轨迹，人工筛轨迹并逐帧去除错误帧。","expected_source":{"paper":"ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset","pdf_page":5},"judge":{"verdict":"GROUNDED","required_concepts":["Grounding DINO","Deep SORT","manual verification","frame-by-frame"],"required_citation":{"paper_short":"ViV-ReID","pdf_page":5}}},
-    {"id":"A12","question":"ViV-ReID 的 query set 是怎样从 gallery set 形成的，包含多少条 tracklet？","type":"A","required_evidence":["one-fifth","364"],"expected_behavior":"从 gallery 的五分之一抽取，形成 364 条 tracklet。","expected_source":{"paper":"ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset","pdf_page":6},"judge":{"verdict":"GROUNDED","required_concepts":["one-fifth","364"],"required_citation":{"paper_short":"ViV-ReID","pdf_page":6}}},
-    {"id":"B01","question":"当前知识库中的论文，其提出方法是否采用 Mamba 或 state-space model 架构？","type":"B","expected_behavior":"限于当前知识库，报告未找到证据，不作绝对否定。","expected_source":null,"judge":{"verdict":"NOT_FOUND_IN_CORPUS","required_scope":"current corpus","forbidden_claims":["没有使用 Mamba","不存在 Mamba"]}},
-    {"id":"B02","question":"当前知识库中的方法是否用大语言模型（LLM）或文本 prompt 来生成 ReID 的语义特征？","type":"B","expected_behavior":"限于当前知识库，报告未找到证据，不作绝对否定。","expected_source":null,"judge":{"verdict":"NOT_FOUND_IN_CORPUS","required_scope":"current corpus","forbidden_claims":["没有使用 LLM","不存在 LLM"]}},
-    {"id":"B03","question":"当前知识库中的船舶 ReID 方法是否融合 AIS（船舶自动识别系统）信号作为输入特征？","type":"B","expected_behavior":"限于当前知识库，报告未找到 AIS 输入或融合的证据，不作绝对否定。","expected_source":null,"judge":{"verdict":"NOT_FOUND_IN_CORPUS","required_scope":"current corpus","forbidden_claims":["没有使用 AIS","不存在 AIS"]}},
-    {"id":"B04","question":"当前知识库中的论文是否使用声呐、LiDAR 或其他三维点云来完成 ReID？","type":"B","expected_behavior":"限于当前知识库，报告未找到相关证据，不作绝对否定。","expected_source":null,"judge":{"verdict":"NOT_FOUND_IN_CORPUS","required_scope":"current corpus","forbidden_claims":["完全没有使用","不存在声呐"]}},
-    {"id":"B05","question":"当前知识库中的 DPEFormer 是否用 GAN（生成对抗网络）生成遮挡训练图像？","type":"B","expected_behavior":"限于当前知识库，报告未找到 GAN 生成遮挡的证据，不从 ROA 反推绝对否定。","expected_source":null,"judge":{"verdict":"NOT_FOUND_IN_CORPUS","required_scope":"current corpus","forbidden_claims":["DPEFormer 没有使用 GAN","肯定未使用 GAN"]}},
-    {"id":"B06","question":"当前知识库中的论文是否通过强化学习来决定船舶/人体 patch 的选择策略？","type":"B","expected_behavior":"限于当前知识库，报告未找到强化学习用于 patch 选择的证据，不将 DPSM/TAR 误称为强化学习。","expected_source":null,"judge":{"verdict":"NOT_FOUND_IN_CORPUS","required_scope":"current corpus","forbidden_claims":["没有使用强化学习","DPSM 是强化学习"]}},
-    {"id":"C01","question":"如何做红烧肉？","type":"C","expected_behavior":"简短拒绝，说明超出当前 ReID 论文库范围。","expected_source":null,"judge":{"verdict":"OUT_OF_SCOPE","forbidden_behaviors":["recipe","paper citation"]}},
-    {"id":"C02","question":"现在应该买哪只股票，才能在下个月获得最高收益？","type":"C","expected_behavior":"简短拒绝，说明超出当前 ReID 论文库范围。","expected_source":null,"judge":{"verdict":"OUT_OF_SCOPE","forbidden_behaviors":["specific investment advice","paper citation"]}}
+    {
+      "id": "A01",
+      "question": "hard positive problem（HPP）在无监督船舶 ReID 中指什么？",
+      "type": "A",
+      "required_evidence": [
+        "hard positive problem",
+        "instance-level"
+      ],
+      "expected_behavior": "解释不准确伪标签使同一真实船舶难作正样本，且常规实例级对比把同伪标签样本视作不同类别。",
+      "expected_source": {
+        "paper": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+        "pdf_page": 2
+      },
+      "judge": {
+        "verdict": "GROUNDED",
+        "required_concepts": [
+          "inaccurate pseudo-label",
+          "same vessel/true positive",
+          "instance contrast separate classes"
+        ],
+        "required_citation": {
+          "paper_short": "MCL",
+          "pdf_page": 2
+        }
+      }
+    },
+    {
+      "id": "A02",
+      "question": "MCL 的训练过程交替进行的两个阶段分别是什么？",
+      "type": "A",
+      "required_evidence": [
+        "pseudo-label",
+        "cluster-level"
+      ],
+      "expected_behavior": "伪标签生成与多层次对比学习；后者结合实例级和簇级对比。",
+      "expected_source": {
+        "paper": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+        "pdf_page": 3
+      },
+      "judge": {
+        "verdict": "GROUNDED",
+        "required_concepts": [
+          "pseudo-label generation",
+          "multi-level contrastive learning",
+          "instance-level",
+          "cluster-level"
+        ],
+        "required_citation": {
+          "paper_short": "MCL",
+          "pdf_page": 3
+        }
+      }
+    },
+    {
+      "id": "A03",
+      "question": "VesselReID 数据集最终包含多少张图像、多少个船舶身份？",
+      "type": "A",
+      "required_evidence": [
+        "30587",
+        "1248"
+      ],
+      "expected_behavior": "30,587 张图像、1,248 个身份（约每船 25 张）。",
+      "expected_source": {
+        "paper": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+        "pdf_page": 6
+      },
+      "judge": {
+        "verdict": "GROUNDED",
+        "required_concepts": [
+          "30587",
+          "1248"
+        ],
+        "required_citation": {
+          "paper_short": "MCL",
+          "pdf_page": 6
+        }
+      }
+    },
+    {
+      "id": "A04",
+      "question": "DPEFormer 的 DPSM 如何从遮挡图像中选择有用的 patch token？",
+      "type": "A",
+      "required_evidence": [
+        "proxy token",
+        "hard attention"
+      ],
+      "expected_behavior": "以 label-guided proxy token 的相似度动态选择信息量大的、较少遮挡 token；为二值 hard attention。",
+      "expected_source": {
+        "paper": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+        "pdf_page": 2
+      },
+      "judge": {
+        "verdict": "GROUNDED",
+        "required_concepts": [
+          "proxy token",
+          "similarity",
+          "dynamic selection",
+          "hard attention"
+        ],
+        "required_citation": {
+          "paper_short": "DPEFormer",
+          "pdf_page": 2
+        }
+      }
+    },
+    {
+      "id": "A05",
+      "question": "DPSM 如何决定保留多少个 patch token？",
+      "type": "A",
+      "required_evidence": [
+        "first-order difference",
+        "kmin"
+      ],
+      "expected_behavior": "相似度排序后以最大一阶差分确定 k，并以 kmin 限制最小保留数量。",
+      "expected_source": {
+        "paper": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+        "pdf_page": 4
+      },
+      "judge": {
+        "verdict": "GROUNDED",
+        "required_concepts": [
+          "sort",
+          "first-order difference",
+          "maximum",
+          "kmin"
+        ],
+        "required_citation": {
+          "paper_short": "DPEFormer",
+          "pdf_page": 4
+        }
+      }
+    },
+    {
+      "id": "A06",
+      "question": "ROA 使用什么来源生成遮挡掩码？它是否在推理阶段使用？",
+      "type": "A",
+      "required_evidence": [
+        "Segment Anything",
+        "mask set"
+      ],
+      "expected_behavior": "掩码来自自然图像上的 Segment Anything Model；ROA 只作训练辅助，不参与推理。",
+      "expected_source": {
+        "paper": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+        "pdf_pages": [
+          2,
+          6
+        ]
+      },
+      "judge": {
+        "verdict": "GROUNDED",
+        "required_concepts": [
+          "Segment Anything Model",
+          "training",
+          "not inference"
+        ],
+        "required_citation": {
+          "paper_short": "DPEFormer",
+          "pdf_pages": [
+            2,
+            6
+          ]
+        }
+      }
+    },
+    {
+      "id": "A07",
+      "question": "A²RNet 认为长期船舶 ReID 中外观大幅变化的典型原因有哪些？",
+      "type": "A",
+      "required_evidence": [
+        "cargo",
+        "viewpoint",
+        "occlusion"
+      ],
+      "expected_behavior": "至少三项：货物变化、视角变化、遮挡、环境因素；说明其破坏外观稳定性。",
+      "expected_source": {
+        "paper": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+        "pdf_page": 1
+      },
+      "judge": {
+        "verdict": "GROUNDED",
+        "required_concepts": [
+          "at least 3 of cargo/viewpoint/occlusion/environment",
+          "appearance stability"
+        ],
+        "required_citation": {
+          "paper_short": "A²RNet",
+          "pdf_page": 1
+        }
+      }
+    },
+    {
+      "id": "A08",
+      "question": "A²RNet 的 SAP 模块推断的三类语义属性是什么？",
+      "type": "A",
+      "required_evidence": [
+        "ship type",
+        "imaging perspective",
+        "loading and equipment configuration"
+      ],
+      "expected_behavior": "ship type、imaging perspective/viewpoint、loading and equipment configuration/cargo status。",
+      "expected_source": {
+        "paper": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+        "pdf_page": 3
+      },
+      "judge": {
+        "verdict": "GROUNDED",
+        "required_concepts": [
+          "ship type",
+          "viewpoint",
+          "loading/equipment configuration"
+        ],
+        "required_citation": {
+          "paper_short": "A²RNet",
+          "pdf_page": 3
+        }
+      }
+    },
+    {
+      "id": "A09",
+      "question": "A²RNet 的 TAR 如何组织历史特征，以进行跨时间的匹配？",
+      "type": "A",
+      "required_evidence": [
+        "instance bank",
+        "identity-view pair"
+      ],
+      "expected_behavior": "按身份-视角对索引动态 instance bank，存 feature map；视角由 SAP 预测以实现视角对齐。",
+      "expected_source": {
+        "paper": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+        "pdf_page": 4
+      },
+      "judge": {
+        "verdict": "GROUNDED",
+        "required_concepts": [
+          "instance bank",
+          "identity-view pair",
+          "feature map",
+          "SAP/viewpoint aligned"
+        ],
+        "required_citation": {
+          "paper_short": "A²RNet",
+          "pdf_page": 4
+        }
+      }
+    },
+    {
+      "id": "A10",
+      "question": "ViV-ReID 数据集的规模是多少？",
+      "type": "A",
+      "required_evidence": [
+        "480",
+        "7165",
+        "1145469"
+      ],
+      "expected_behavior": "480 个身份、20 个区域、7,165 tracklets、1,145,469 帧。",
+      "expected_source": {
+        "paper": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+        "pdf_page": 2
+      },
+      "judge": {
+        "verdict": "GROUNDED",
+        "required_concepts": [
+          "480",
+          "20",
+          "7165",
+          "1145469"
+        ],
+        "required_citation": {
+          "paper_short": "ViV-ReID",
+          "pdf_page": 2
+        }
+      }
+    },
+    {
+      "id": "A11",
+      "question": "ViV-ReID 数据集标注管线如何同时利用自动化和人工核验？",
+      "type": "A",
+      "required_evidence": [
+        "Grounding DINO",
+        "Deep SORT"
+      ],
+      "expected_behavior": "Grounding DINO 检测框、Deep SORT 划分轨迹，人工筛轨迹并逐帧去除错误帧。",
+      "expected_source": {
+        "paper": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+        "pdf_page": 5
+      },
+      "judge": {
+        "verdict": "GROUNDED",
+        "required_concepts": [
+          "Grounding DINO",
+          "Deep SORT",
+          "manual verification",
+          "frame-by-frame"
+        ],
+        "required_citation": {
+          "paper_short": "ViV-ReID",
+          "pdf_page": 5
+        }
+      }
+    },
+    {
+      "id": "A12",
+      "question": "ViV-ReID 的 query set 是怎样从 gallery set 形成的，包含多少条 tracklet？",
+      "type": "A",
+      "required_evidence": [
+        "one-fifth",
+        "364"
+      ],
+      "expected_behavior": "从 gallery 的五分之一抽取，形成 364 条 tracklet。",
+      "expected_source": {
+        "paper": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+        "pdf_page": 6
+      },
+      "judge": {
+        "verdict": "GROUNDED",
+        "required_concepts": [
+          "one-fifth",
+          "364"
+        ],
+        "required_citation": {
+          "paper_short": "ViV-ReID",
+          "pdf_page": 6
+        }
+      }
+    },
+    {
+      "id": "B02",
+      "question": "当前知识库中的方法是否用大语言模型（LLM）或文本 prompt 来生成 ReID 的语义特征？",
+      "type": "B",
+      "expected_behavior": "限于当前知识库，报告未找到证据，不作绝对否定。",
+      "expected_source": null,
+      "judge": {
+        "verdict": "NOT_FOUND_IN_CORPUS",
+        "required_scope": "current corpus",
+        "forbidden_claims": [
+          "没有使用 LLM",
+          "不存在 LLM"
+        ]
+      }
+    },
+    {
+      "id": "B03",
+      "question": "当前知识库中的船舶 ReID 方法是否融合 AIS（船舶自动识别系统）信号作为输入特征？",
+      "type": "B",
+      "expected_behavior": "限于当前知识库，报告未找到 AIS 输入或融合的证据，不作绝对否定。",
+      "expected_source": null,
+      "judge": {
+        "verdict": "NOT_FOUND_IN_CORPUS",
+        "required_scope": "current corpus",
+        "forbidden_claims": [
+          "没有使用 AIS",
+          "不存在 AIS"
+        ]
+      }
+    },
+    {
+      "id": "B04",
+      "question": "当前知识库中的论文是否使用声呐、LiDAR 或其他三维点云来完成 ReID？",
+      "type": "B",
+      "expected_behavior": "限于当前知识库，报告未找到相关证据，不作绝对否定。",
+      "expected_source": null,
+      "judge": {
+        "verdict": "NOT_FOUND_IN_CORPUS",
+        "required_scope": "current corpus",
+        "forbidden_claims": [
+          "完全没有使用",
+          "不存在声呐"
+        ]
+      }
+    },
+    {
+      "id": "B05",
+      "question": "当前知识库中的 DPEFormer 是否用 GAN（生成对抗网络）生成遮挡训练图像？",
+      "type": "B",
+      "expected_behavior": "限于当前知识库，报告未找到 GAN 生成遮挡的证据，不从 ROA 反推绝对否定。",
+      "expected_source": null,
+      "judge": {
+        "verdict": "NOT_FOUND_IN_CORPUS",
+        "required_scope": "current corpus",
+        "forbidden_claims": [
+          "DPEFormer 没有使用 GAN",
+          "肯定未使用 GAN"
+        ]
+      }
+    },
+    {
+      "id": "B06",
+      "question": "当前知识库中的论文是否通过强化学习来决定船舶/人体 patch 的选择策略？",
+      "type": "B",
+      "expected_behavior": "限于当前知识库，报告未找到强化学习用于 patch 选择的证据，不将 DPSM/TAR 误称为强化学习。",
+      "expected_source": null,
+      "judge": {
+        "verdict": "NOT_FOUND_IN_CORPUS",
+        "required_scope": "current corpus",
+        "forbidden_claims": [
+          "没有使用强化学习",
+          "DPSM 是强化学习"
+        ]
+      }
+    },
+    {
+      "id": "C01",
+      "question": "如何做红烧肉？",
+      "type": "C",
+      "expected_behavior": "简短拒绝，说明超出当前 ReID 论文库范围。",
+      "expected_source": null,
+      "judge": {
+        "verdict": "OUT_OF_SCOPE",
+        "forbidden_behaviors": [
+          "recipe",
+          "paper citation"
+        ]
+      }
+    },
+    {
+      "id": "C02",
+      "question": "现在应该买哪只股票，才能在下个月获得最高收益？",
+      "type": "C",
+      "expected_behavior": "简短拒绝，说明超出当前 ReID 论文库范围。",
+      "expected_source": null,
+      "judge": {
+        "verdict": "OUT_OF_SCOPE",
+        "forbidden_behaviors": [
+          "specific investment advice",
+          "paper citation"
+        ]
+      }
+    },
+    {
+      "id": "A13",
+      "question": "Sparse VMamba 的嵌入层 Femb 是怎么由空间与时间特征得到的？",
+      "type": "A",
+      "required_evidence": [
+        "Spatial Patch Embedding",
+        "learnable parameter"
+      ],
+      "expected_behavior": "说明 Femb 由时间与空间特征的线性组合得到，α 是可学习参数。",
+      "expected_source": {
+        "paper": "Sparse VMamba Robust Spatio-Temporal Information Modeling for Event Camera Person Re-Identification",
+        "pdf_page": 5
+      },
+      "judge": {
+        "verdict": "GROUNDED",
+        "required_concepts": [
+          "combine temporal and spatial features",
+          "learnable weight alpha"
+        ],
+        "required_citation": {
+          "paper_short": "VMamba",
+          "pdf_page": 5
+        }
+      }
+    },
+    {
+      "id": "A14",
+      "question": "FDNM 在 SYSU-MM01 上用什么评价指标、分哪些模式评估？",
+      "type": "A",
+      "required_evidence": [
+        "SYSU-MM01",
+        "CMC",
+        "mAP"
+      ],
+      "expected_behavior": "回答采用标准 CMC 与 mAP 指标，按 VIS到IR 和 IR到VIS 两种模式评估。",
+      "expected_source": {
+        "paper": "Frequency Domain Nuances Mining for Visible-Infrared Person Re-Identification",
+        "pdf_page": 7
+      },
+      "judge": {
+        "verdict": "GROUNDED",
+        "required_concepts": [
+          "CMC and mAP",
+          "VIS to IR and IR to VIS modes"
+        ],
+        "required_citation": {
+          "paper_short": "FDNM",
+          "pdf_page": 7
+        }
+      }
+    },
+    {
+      "id": "A15",
+      "question": "Pseudo-Label Noise Prevention 这篇论文发表在哪里、针对什么任务？",
+      "type": "A",
+      "required_evidence": [
+        "IEEE TRANSACTIONS ON INFORMATION FORENSICS AND SECURITY",
+        "Unsupervised Person Re-Identification"
+      ],
+      "expected_behavior": "回答发表于 IEEE TIFS（2023, Vol.18），针对无监督行人重识别，方法含 Prevention/Suppression/Softening 三部分。",
+      "expected_source": {
+        "paper": "Pseudo-Label Noise Prevention Suppression and Softening for Unsupervised Person Re-Identification",
+        "pdf_page": 1
+      },
+      "judge": {
+        "verdict": "GROUNDED",
+        "required_concepts": [
+          "unsupervised person re-identification",
+          "prevention suppression softening"
+        ],
+        "required_citation": {
+          "paper_short": "PLS3",
+          "pdf_page": 1
+        }
+      }
+    },
+    {
+      "id": "A16",
+      "question": "SAM-driven MAE 方法的元学习如何构造任务来应对背景干扰？",
+      "type": "A",
+      "required_evidence": [
+        "metatraining",
+        "background interference"
+      ],
+      "expected_behavior": "回答其构建具有不同程度背景干扰的 meta-training 与 meta-testing 任务。",
+      "expected_source": {
+        "paper": "SAM-driven MAE pre-training and background-aware meta-learning for unsupervised vehicle re-identification",
+        "pdf_page": 8
+      },
+      "judge": {
+        "verdict": "GROUNDED",
+        "required_concepts": [
+          "meta-training and meta-testing tasks",
+          "different degrees of background interference"
+        ],
+        "required_citation": {
+          "paper_short": "SAM-MAE",
+          "pdf_page": 8
+        }
+      }
+    },
+    {
+      "id": "A17",
+      "question": "CVNet 的标题体现了哪两个核心设计点？",
+      "type": "A",
+      "required_evidence": [
+        "Lightweight Cross-View Vehicle ReID",
+        "Multi-Scale Localization"
+      ],
+      "expected_behavior": "回答轻量化跨视角车辆重识别与多尺度定位两个设计点。",
+      "expected_source": {
+        "paper": "CVNet: Lightweight Cross-View Vehicle ReID with Multi-Scale Localization",
+        "pdf_page": 1
+      },
+      "judge": {
+        "verdict": "GROUNDED",
+        "required_concepts": [
+          "lightweight",
+          "multi-scale localization",
+          "cross-view"
+        ],
+        "required_citation": {
+          "paper_short": "CVNet",
+          "pdf_page": 1
+        }
+      }
+    },
+    {
+      "id": "A18",
+      "question": "SeCap 认为 Aerial-Ground Person ReID 的主要挑战是什么？",
+      "type": "A",
+      "required_evidence": [
+        "Aerial-Ground Person Reidentification",
+        "appearance variations"
+      ],
+      "expected_behavior": "回答主要挑战是不同视角造成的外观显著变化。",
+      "expected_source": {
+        "paper": "SeCap Self-Calibrating and Adaptive Prompts for Cross-view Person Re-Identification in Aerial-Ground Networks",
+        "pdf_page": 1
+      },
+      "judge": {
+        "verdict": "GROUNDED",
+        "required_concepts": [
+          "significant appearance variations",
+          "different viewpoints"
+        ],
+        "required_citation": {
+          "paper_short": "SeCap",
+          "pdf_page": 1
+        }
+      }
+    },
+    {
+      "id": "A19",
+      "question": "SPG-GT 用什么组合做船舶关键点检测？",
+      "type": "A",
+      "required_evidence": [
+        "graph neural networks",
+        "ship structural prior"
+      ],
+      "expected_behavior": "回答 GNN 与 Transformer 结合、由船舶结构先验引导做关键点检测。",
+      "expected_source": {
+        "paper": "SPG-GT Structural Prior Guided GNN-Transformers for Ship Landmark Detection",
+        "pdf_page": 1
+      },
+      "judge": {
+        "verdict": "GROUNDED",
+        "required_concepts": [
+          "GNN combined with transformers",
+          "structural prior guided"
+        ],
+        "required_citation": {
+          "paper_short": "SPG-GT",
+          "pdf_page": 1
+        }
+      }
+    },
+    {
+      "id": "A20",
+      "question": "DEEP 框架的全称是什么、针对什么任务、解决什么挑战？",
+      "type": "A",
+      "required_evidence": [
+        "DEcoupled sEmantic Prompt Learning",
+        "MultiSpectral Object ReID"
+      ],
+      "expected_behavior": "回答 DEEP = DEcoupled sEmantic Prompt Learning, Guiding and Embedding，针对多光谱目标 ReID，解决低质量模态噪声与光谱风格差异。",
+      "expected_source": {
+        "paper": "DEEP Decoupled Semantic Prompt Learning Guiding and Embedding for Multi-Spectral Object Re-Identification",
+        "pdf_page": 1
+      },
+      "judge": {
+        "verdict": "GROUNDED",
+        "required_concepts": [
+          "unified semantic prompt",
+          "modality noise",
+          "spectral style"
+        ],
+        "required_citation": {
+          "paper_short": "DEEP",
+          "pdf_page": 1
+        }
+      }
+    },
+    {
+      "id": "A21",
+      "question": "这篇 diffusion 去遮挡论文提出的重排序方案叫什么、起什么作用？",
+      "type": "A",
+      "required_evidence": [
+        "Hybrid Re-Ranking",
+        "de-occlusion module"
+      ],
+      "expected_behavior": "回答 HRR（Hybrid Re-Ranking）过滤离群结果并提升检索精度，与去遮挡模块配合。",
+      "expected_source": {
+        "paper": "Latent Diffusion-Guided Feature Inpainting for Occluded Person Re-Identification With Hybrid Re-Ranking",
+        "pdf_page": 12
+      },
+      "judge": {
+        "verdict": "GROUNDED",
+        "required_concepts": [
+          "HRR filters outliers",
+          "enhances retrieval accuracy"
+        ],
+        "required_citation": {
+          "paper_short": "LDFI",
+          "pdf_page": 12
+        }
+      }
+    },
+    {
+      "id": "B07",
+      "question": "当前知识库中的论文，是否使用了联邦学习（federated learning）来保护隐私？",
+      "type": "B",
+      "expected_behavior": "限于当前知识库，报告未找到联邦学习的证据，不作绝对否定。",
+      "expected_source": null,
+      "judge": {
+        "verdict": "NOT_FOUND_IN_CORPUS",
+        "required_scope": "current corpus",
+        "forbidden_claims": [
+          "没有使用联邦学习",
+          "不存在联邦学习"
+        ]
+      }
+    },
+    {
+      "id": "B08",
+      "question": "这些论文的训练是否依赖 DeepSpeed 或 Horovod 这类分布式训练框架？",
+      "type": "B",
+      "expected_behavior": "限于当前知识库，报告未找到此类分布式训练框架的证据，不作绝对否定。",
+      "expected_source": null,
+      "judge": {
+        "verdict": "NOT_FOUND_IN_CORPUS",
+        "required_scope": "current corpus",
+        "forbidden_claims": [
+          "没有使用 DeepSpeed",
+          "不存在分布式框架"
+        ]
+      }
+    }
   ]
 }

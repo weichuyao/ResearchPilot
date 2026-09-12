@@ -233,3 +233,21 @@
 | B | `NOT_FOUND_IN_CORPUS` | 明确限定检索范围为四篇论文/当前文档库 | “没有/不存在/作者未使用”等无证据的绝对否定，或虚构引用 |
 | C | `OUT_OF_SCOPE` | 简短地说明不属于当前论文库范围 | 给出领域外实质答案，或强行引用论文 |
 
+
+
+---
+
+## v2 增补（2026-09-12，语料 80 篇）
+
+- **删除 B01**（Mamba/SSM）：语料已含《Sparse VMamba》（事件相机行人 ReID），
+  期望值 NOT_FOUND_IN_CORPUS 失效。该主题改由 **A13** 覆盖（应 GROUNDED 并引用 VMamba p.5）。
+- **新增 A13–A21**（9 题）：覆盖 VI-ReID（FDNM）、无监督（PLS3 / SAM-MAE）、
+  车辆（CVNet）、跨视角（SeCap）、多光谱（DEEP）、船舶（SPG-GT）、
+  去遮挡+重排（LDFI）。锚点均为 2026-09-12 从语料检索命中的**逐字字符串**，
+  页码取自命中块的 page_label。
+- **新增 B07（联邦学习）/ B08（DeepSpeed/Horovod 分布式训练）**：
+  『库中无』结论经检索证据核验（命中均为无关域内论文）。
+- `verified_on` = {papers: 80, chunks: 7406, date: 2026-09-12}。
+- 实测：11 道新题 verdict/锚点/引用全过（eval-20260912-151913）。
+- 注意：视频重识别（video-based ReID）**不是**可用的 B 类主题——
+  ViV-ReID 本身就是视频数据集论文。
