@@ -189,12 +189,26 @@ async def search_documents(query: str, paper: Optional[str] = None, year_from: O
             )
 
     if year_from:
-        year_sources = papers_for_year(int(year_from))
-        allowed_sources = (
-            [x for x in (allowed_sources or year_sources or []) if x in set(year_sources or [])]
-            if year_sources
-            else []
-        )
+        # papers_for_year 是 async 的 —— 这里必须 await（漏过一次：coroutine 对象
+        # 恒为真值，下一步 set(coroutine) 直接 TypeError，带年份的搜索整条炸掉）
+        year_sources = await papers_for_year(int(year_from))
+        if not year_sources:
+            return (
+                "No papers in the knowledge base were submitted in or after %d. "
+                "This means the corpus does not contain such papers; it does NOT mean "
+                "no such papers exist anywhere." % int(year_from)
+            )
+        base = allowed_sources or year_sources
+        allowed_sources = [x for x in base if x in set(year_sources)]
+        # 空列表必须显式拦下：retrieve 对 allowed_sources=[] 视为「不过滤」，
+        # 交集为空时会把年份过滤静默吞掉、返回全库结果
+        if not allowed_sources:
+            return (
+                "No papers match the requested filters (year >= %d%s). "
+                "This means the corpus does not contain such papers; it does NOT mean "
+                "no such papers exist anywhere."
+                % (int(year_from), ", paper contains %r" % paper if paper else "")
+            )
 
     outcome = retrieve(query, allowed_sources=allowed_sources)
     if outcome.rejected:

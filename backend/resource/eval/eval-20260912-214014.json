@@ -1,0 +1,2455 @@
+{
+  "summary": {
+    "total": 6,
+    "judged": 6,
+    "not_judged": 0,
+    "parse_warnings": 0,
+    "metric_reliable": true,
+    "B": {
+      "count": 6,
+      "verdict_accuracy": 1.0,
+      "over_claim_rate": 0.0,
+      "scope_qualified_rate": 1.0
+    },
+    "process": {
+      "avg_tool_calls": 4.5,
+      "avg_context_chars": 55521,
+      "avg_seconds": 7.5
+    },
+    "agent": "react-assistant",
+    "model": "deepseek-chat",
+    "corpus": {
+      "papers": 72,
+      "chunks": 6818
+    },
+    "fixture": {
+      "stale": false,
+      "verified_on": {
+        "papers": 72,
+        "chunks": 6818
+      },
+      "scoped_items": [
+        "B03",
+        "B04",
+        "B05",
+        "B06",
+        "B07",
+        "B08"
+      ],
+      "b_probe_alarms": {
+        "B03": {
+          "AIS": 16,
+          "automatic identification system": 1
+        },
+        "B04": {
+          "LiDAR": 11,
+          "point cloud": 8,
+          "sonar": 5
+        },
+        "B05": {
+          "GAN": 151
+        },
+        "B06": {
+          "reinforcement learning": 13
+        },
+        "B07": {
+          "federated": 3
+        }
+      }
+    }
+  },
+  "records": [
+    {
+      "id": "B03",
+      "type": "B",
+      "question": "当前知识库中的船舶 ReID 方法是否融合 AIS（船舶自动识别系统）信号作为输入特征？",
+      "seconds": 9.8,
+      "tool_calls": 4,
+      "queries": [
+        "search_documents({\"query\": \"ship re-identification AIS automatic identification system signal fusion\"})",
+        "search_documents({\"query\": \"vessel ReID input features AIS trajectory\"})",
+        "search_documents({\"query\": \"incorporate AIS data as input feature for re-identification network\"})",
+        "search_documents({\"query\": \"AIS transponder metadata auxiliary information ship identity matching\"})"
+      ],
+      "retrieved": [
+        {
+          "title": "2508.02384v1",
+          "prefix": "p",
+          "page": "9",
+          "score": 0.54
+        },
+        {
+          "title": "Wang Cross-modal Ship Re-Identification via Optical and SAR Imagery A Novel ICCV 2025 paper",
+          "prefix": "p",
+          "page": "10",
+          "score": 0.47
+        },
+        {
+          "title": "SDF-Net Structure-Aware Disentangled Feature Learning for",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.49
+        },
+        {
+          "title": "Wang Cross-modal Ship Re-Identification via Optical and SAR Imagery A Novel ICCV 2025 paper",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.49
+        },
+        {
+          "title": "mulit",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.5
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.5
+        },
+        {
+          "title": "mulit",
+          "prefix": "p",
+          "page": "14",
+          "score": 0.48
+        },
+        {
+          "title": "Wang Cross-modal Ship Re-Identification via Optical and SAR Imagery A Novel ICCV 2025 paper",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.48
+        },
+        {
+          "title": "2512.03404v1",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.5
+        },
+        {
+          "title": "Ship Landmark An Informative Ship Image Annotation and Its Applications",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "2508.02384v1",
+          "prefix": "p",
+          "page": "10",
+          "score": null
+        },
+        {
+          "title": "Wang Cross-modal Ship Re-Identification via Optical and SAR Imagery A Novel ICCV 2025 paper",
+          "prefix": "p",
+          "page": "10",
+          "score": null
+        },
+        {
+          "title": "SDF-Net Structure-Aware Disentangled Feature Learning for",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "mulit",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "mulit",
+          "prefix": "p",
+          "page": "14",
+          "score": null
+        },
+        {
+          "title": "Wang Cross-modal Ship Re-Identification via Optical and SAR Imagery A Novel ICCV 2025 paper",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.48
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "prefix": "p",
+          "page": "12",
+          "score": 0.45
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.45
+        },
+        {
+          "title": "Wang Cross-modal Ship Re-Identification via Optical and SAR Imagery A Novel ICCV 2025 paper",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.44
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.48
+        },
+        {
+          "title": "Wang Cross-modal Ship Re-Identification via Optical and SAR Imagery A Novel ICCV 2025 paper",
+          "prefix": "p",
+          "page": "8",
+          "score": 0.44
+        },
+        {
+          "title": "2512.03404v1",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.44
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "Wang Cross-modal Ship Re-Identification via Optical and SAR Imagery A Novel ICCV 2025 paper",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.45
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "prefix": "p",
+          "page": "12",
+          "score": null
+        },
+        {
+          "title": "ViV-ReID: Bidirectional Structural-Aware Spatial-Temporal Graph Networks on Large-Scale Video-Based Vessel Re-Identification Dataset",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "Wang Cross-modal Ship Re-Identification via Optical and SAR Imagery A Novel ICCV 2025 paper",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "Wang Cross-modal Ship Re-Identification via Optical and SAR Imagery A Novel ICCV 2025 paper",
+          "prefix": "p",
+          "page": "8",
+          "score": null
+        },
+        {
+          "title": "2512.03404v1",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "Unsupervised Maritime Vessel Re-Identification With Multi-Level Contrastive Learning",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "SDF-Net Structure-Aware Disentangled Feature Learning for",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.41
+        },
+        {
+          "title": "Wang Cross-modal Ship Re-Identification via Optical and SAR Imagery A Novel ICCV 2025 paper",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "Representation Selective Coupling via Token Sparsification for Multi-Spectral Object Re-Identification",
+          "prefix": "p",
+          "page": "14",
+          "score": 0.41
+        },
+        {
+          "title": "Ship Landmark An Informative Ship Image Annotation and Its Applications",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "PEFN A Patches Enhancement and Hierarchical Fusion Network for Robust Vehicle Reidentification",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.42
+        },
+        {
+          "title": "Wu Discover Cross-Modality Nuances for Visible-Infrared Person Re-Identification CVPR 2021 paper",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.42
+        },
+        {
+          "title": "Wang Cross-modal Ship Re-Identification via Optical and SAR Imagery A Novel ICCV 2025 paper",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "mulit",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.41
+        },
+        {
+          "title": "Wang Cross-modal Ship Re-Identification via Optical and SAR Imagery A Novel ICCV 2025 paper",
+          "prefix": "p",
+          "page": "8",
+          "score": null
+        },
+        {
+          "title": "Representation Selective Coupling via Token Sparsification for Multi-Spectral Object Re-Identification",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "SDF-Net Structure-Aware Disentangled Feature Learning for",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "Representation Selective Coupling via Token Sparsification for Multi-Spectral Object Re-Identification",
+          "prefix": "p",
+          "page": "14",
+          "score": null
+        },
+        {
+          "title": "Ship Landmark An Informative Ship Image Annotation and Its Applications",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "PEFN A Patches Enhancement and Hierarchical Fusion Network for Robust Vehicle Reidentification",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "Wu Discover Cross-Modality Nuances for Visible-Infrared Person Re-Identification CVPR 2021 paper",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "Wang Cross-modal Ship Re-Identification via Optical and SAR Imagery A Novel ICCV 2025 paper",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.46
+        },
+        {
+          "title": "Wang Cross-modal Ship Re-Identification via Optical and SAR Imagery A Novel ICCV 2025 paper",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.41
+        },
+        {
+          "title": "Wang Cross-modal Ship Re-Identification via Optical and SAR Imagery A Novel ICCV 2025 paper",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.4
+        },
+        {
+          "title": "Wang Cross-modal Ship Re-Identification via Optical and SAR Imagery A Novel ICCV 2025 paper",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.44
+        },
+        {
+          "title": "2512.03404v1",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.44
+        },
+        {
+          "title": "MVReID-Former Multi-View Vision Transformer for Cross-Camera Person and Vehicle Re-Identification in Surveillance Networks",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "mulit",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.43
+        },
+        {
+          "title": "2508.02384v1",
+          "prefix": "p",
+          "page": "9",
+          "score": 0.43
+        },
+        {
+          "title": "MVReID-Former Multi-View Vision Transformer for Cross-Camera Person and Vehicle Re-Identification in Surveillance Networks",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "MVReID-Former Multi-View Vision Transformer for Cross-Camera Person and Vehicle Re-Identification in Surveillance Networks",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "Wang Cross-modal Ship Re-Identification via Optical and SAR Imagery A Novel ICCV 2025 paper",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "2512.03404v1",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "MVReID-Former Multi-View Vision Transformer for Cross-Camera Person and Vehicle Re-Identification in Surveillance Networks",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "mulit",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "2508.02384v1",
+          "prefix": "p",
+          "page": "10",
+          "score": null
+        }
+      ],
+      "parse_warnings": 0,
+      "context_chars": 56700,
+      "answer": "Based on my searches, here is what the knowledge base shows:\n\n## 结论：知识库中**没有**任何船舶 ReID 方法将 AIS 信号作为输入特征进行融合\n\n### 详细说明\n\n**1. 现有船舶 ReID 方法的输入模态**\n\n知识库中的船舶 ReID 方法全部基于**视觉/遥感影像**，未涉及 AIS 信号：\n\n- **跨模态光学-SAR 方法**：HOSS ReID 数据集与 TransOSS 方法（Wang, *Cross-modal Ship Re-Identification via Optical and SAR Imagery*, p.2, p.8）使用光学与 SAR 图像；SDF-Net（p.2）同样在光学-SAR 上做结构感知解耦特征学习。\n- **多光谱方法**：CMShipReID 数据集包含可见光、近红外、热红外模态（SDF-Net, p.3）。\n- **视频方法**：ViV-ReID / Bi-SSTN（p.1）基于可见光视频帧。\n- **长时方法**：A²RNet（p.2）依赖历史观测样本的时序关联，而非 AIS。\n\n这些方法的\"融合\"指的是**不同成像模态之间**的特征融合（如 SDF-Net 的 additive residual fusion，p.3），以及全局/局部特征的融合，与 AIS 无关。\n\n**2. AIS 在知识库中出现的语境**\n\nAIS 仅作为**背景/相关工作**被提及，且明确是在**船舶跟踪（tracking）**任务中，而非 ReID：\n\n- Wang 等（p.3）提到：\"The Automatic Identification System (AIS) is frequently employed to aid in tracking vessels\"，并引用 Liu et al. [25] 提出 GEO 光学卫星影像与 AIS 的**轨迹级数据融合**算法以提升定位精度。但该文紧接着指出这类方法\"limited to tracking vessels with active AIS transponders, making it difficult to track non-cooperative targets\"——即作者将 AIS 依赖视为局限，其自身工作\"leverages image data exclusively\"（p.2）。\n- *Ship Landmark*（p.1）把 AIS 列为船舶感知手段之一，但指出研究者\"given most attention to the vision-based techniques\"。\n\n**3. 需要注意的边界**\n\n知识库中**没有**出现\"将 AIS 作为 ReID 网络输入特征\"的做法——但这只能说明这些文档未涉及该做法，不能据此断言该方向不存在。事实上，Wang 等（p.8）在展望未来工作时提到\"Future work could also incorporate modalities like text and multispectral imagery\"，并未将 AIS 列入，但这也只是该文的规划，不代表领域全貌。\n\n**总结**：就当前知识库而言，船舶 ReID 方法的输入特征均为影像模态（光学/SAR/红外/视频），AIS 仅在与 ReID 分离的跟踪任务中被讨论，且被作者视为对非合作目标不适用。",
+      "retrieval_hit": null,
+      "retrieval_rank": null,
+      "evidence_required": [],
+      "evidence_found": [],
+      "evidence_missing": [],
+      "evidence_hit": null,
+      "judge_raw": "{\n  \"verdict\": \"NOT_FOUND_IN_CORPUS\",\n  \"verdict_reason\": \"The answer's core conclusion is that the corpus contains no evidence of ship ReID methods fusing AIS signals, while explicitly limiting the claim to the knowledge base.\",\n  \"concepts_covered\": [\n    \"限于当前知识库，报告未找到 AIS 输入或融合的证据，不作绝对否定\"\n  ],\n  \"concepts_missing\": [],\n  \"forbidden_violations\": [],\n  \"citation_ok\": true,\n  \"citation_evidence\": \"Wang, *Cross-modal Ship Re-Identification via Optical and SAR Imagery*, p.2, p.8\",\n  \"scope_qualified\": true,\n  \"scope_reason\": \"The answer repeatedly limits its conclusion to the current knowledge ",
+      "judge": {
+        "verdict": "NOT_FOUND_IN_CORPUS",
+        "verdict_reason": "The answer's core conclusion is that the corpus contains no evidence of ship ReID methods fusing AIS signals, while explicitly limiting the claim to the knowledge base.",
+        "concepts_covered": [
+          "限于当前知识库，报告未找到 AIS 输入或融合的证据，不作绝对否定"
+        ],
+        "concepts_missing": [],
+        "forbidden_violations": [],
+        "citation_ok": true,
+        "citation_evidence": "Wang, *Cross-modal Ship Re-Identification via Optical and SAR Imagery*, p.2, p.8",
+        "scope_qualified": true,
+        "scope_reason": "The answer repeatedly limits its conclusion to the current knowledge base, e.g., '就当前知识库而言' and '知识库中没有出现...但这只能说明这些文档未涉及该做法，不能据此断言该方向不存在'."
+      },
+      "verdict": "NOT_FOUND_IN_CORPUS",
+      "verdict_correct": true,
+      "concepts_covered": 1,
+      "concepts_total": null,
+      "forbidden_violations": [],
+      "citation_ok": true,
+      "scope_qualified": true,
+      "expected_verdict": "NOT_FOUND_IN_CORPUS"
+    },
+    {
+      "id": "B04",
+      "type": "B",
+      "question": "当前知识库中的论文是否使用声呐、LiDAR 或其他三维点云来完成 ReID？",
+      "seconds": 8.7,
+      "tool_calls": 6,
+      "queries": [
+        "search_documents({\"query\": \"sonar LiDAR 3D point cloud person re-identification\"})",
+        "search_documents({\"query\": \"point cloud based ReID modality\"})",
+        "list_papers({})",
+        "search_documents({\"query\": \"LiDAR point cloud sonar modality for person re-identification benchmark\"})",
+        "search_documents({\"query\": \"3D point cloud depth modality identity matching\"})",
+        "search_documents({\"query\": \"modalities included RGB infrared thermal event camera LiDAR\", \"paper\": \"Multi-modal\"})"
+      ],
+      "retrieved": [
+        {
+          "title": "Sparse VMamba Robust Spatio-Temporal Information Modeling for Event Camera Person Re-Identification",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.49
+        },
+        {
+          "title": "Outliers Adaptation Exploration and Centroids Matching Label Refinement for Unsupervised Person Re-identification",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.47
+        },
+        {
+          "title": "2510.22268v2",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.46
+        },
+        {
+          "title": "Khalid Bridging the Sky and Ground Towards View-Invariant Feature Learning for ICCV 2025 paper",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.46
+        },
+        {
+          "title": "Person re-identification transformer with patch attention and pruning",
+          "prefix": "p",
+          "page": "9",
+          "score": 0.43
+        },
+        {
+          "title": "Zhang 等 - 2026 - Scene-adaptive semantic segmentation guided by multi-level boundary-semantic-reinforcement for unman",
+          "prefix": "p",
+          "page": "13",
+          "score": null
+        },
+        {
+          "title": "Person re-identification transformer with patch attention and pruning",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.48
+        },
+        {
+          "title": "Zhang 等 - 2026 - Scene-adaptive semantic segmentation guided by multi-level boundary-semantic-reinforcement for unman",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "Zhang 等 - 2026 - Scene-adaptive semantic segmentation guided by multi-level boundary-semantic-reinforcement for unman",
+          "prefix": "p",
+          "page": "12",
+          "score": null
+        },
+        {
+          "title": "Zhang 等 - 2026 - Scene-adaptive semantic segmentation guided by multi-level boundary-semantic-reinforcement for unman",
+          "prefix": "p",
+          "page": "12",
+          "score": null
+        },
+        {
+          "title": "Sparse VMamba Robust Spatio-Temporal Information Modeling for Event Camera Person Re-Identification",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "Outliers Adaptation Exploration and Centroids Matching Label Refinement for Unsupervised Person Re-identification",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "2510.22268v2",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "Khalid Bridging the Sky and Ground Towards View-Invariant Feature Learning for ICCV 2025 paper",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "Person re-identification transformer with patch attention and pruning",
+          "prefix": "p",
+          "page": "9",
+          "score": null
+        },
+        {
+          "title": "Zhang 等 - 2026 - Scene-adaptive semantic segmentation guided by multi-level boundary-semantic-reinforcement for unman",
+          "prefix": "p",
+          "page": "13",
+          "score": null
+        },
+        {
+          "title": "Wang Cross-modal Ship Re-Identification via Optical and SAR Imagery A Novel ICCV 2025 paper",
+          "prefix": "p",
+          "page": "7",
+          "score": 0.39
+        },
+        {
+          "title": "Multi-modal",
+          "prefix": "p",
+          "page": "5",
+          "score": 0.44
+        },
+        {
+          "title": "Multi-modal",
+          "prefix": "p",
+          "page": "8",
+          "score": 0.42
+        },
+        {
+          "title": "Multi-modal",
+          "prefix": "p",
+          "page": "8",
+          "score": 0.43
+        },
+        {
+          "title": "Multi-modal",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.41
+        },
+        {
+          "title": "Identity Clue Refinement and Enhancement for Visible-Infrared Person Re-Identification",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.42
+        },
+        {
+          "title": "Zhang 等 - 2026 - Scene-adaptive semantic segmentation guided by multi-level boundary-semantic-reinforcement for unman",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "Zhang 等 - 2026 - Scene-adaptive semantic segmentation guided by multi-level boundary-semantic-reinforcement for unman",
+          "prefix": "p",
+          "page": "13",
+          "score": null
+        },
+        {
+          "title": "Zhang 等 - 2026 - Scene-adaptive semantic segmentation guided by multi-level boundary-semantic-reinforcement for unman",
+          "prefix": "p",
+          "page": "13",
+          "score": null
+        },
+        {
+          "title": "SDF-Net Structure-Aware Disentangled Feature Learning for",
+          "prefix": "p",
+          "page": "7",
+          "score": null
+        },
+        {
+          "title": "Wang Cross-modal Ship Re-Identification via Optical and SAR Imagery A Novel ICCV 2025 paper",
+          "prefix": "p",
+          "page": "7",
+          "score": null
+        },
+        {
+          "title": "Multi-modal",
+          "prefix": "p",
+          "page": "5",
+          "score": null
+        },
+        {
+          "title": "Multi-modal",
+          "prefix": "p",
+          "page": "8",
+          "score": null
+        },
+        {
+          "title": "Multi-modal",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "Identity Clue Refinement and Enhancement for Visible-Infrared Person Re-Identification",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "Zhang 等 - 2026 - Scene-adaptive semantic segmentation guided by multi-level boundary-semantic-reinforcement for unman",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "Multi-modal",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.45
+        },
+        {
+          "title": "Outliers Adaptation Exploration and Centroids Matching Label Refinement for Unsupervised Person Re-identification",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.45
+        },
+        {
+          "title": "Identity Clue Refinement and Enhancement for Visible-Infrared Person Re-Identification",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.48
+        },
+        {
+          "title": "2510.22268v2",
+          "prefix": "p",
+          "page": "12",
+          "score": null
+        },
+        {
+          "title": "Wu Discover Cross-Modality Nuances for Visible-Infrared Person Re-Identification CVPR 2021 paper",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.47
+        },
+        {
+          "title": "Zhang 等 - 2026 - Scene-adaptive semantic segmentation guided by multi-level boundary-semantic-reinforcement for unman",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "Zhang 等 - 2026 - Scene-adaptive semantic segmentation guided by multi-level boundary-semantic-reinforcement for unman",
+          "prefix": "p",
+          "page": "12",
+          "score": null
+        },
+        {
+          "title": "Zhang 等 - 2026 - Scene-adaptive semantic segmentation guided by multi-level boundary-semantic-reinforcement for unman",
+          "prefix": "p",
+          "page": "12",
+          "score": null
+        },
+        {
+          "title": "2508.02384v1",
+          "prefix": "p",
+          "page": "10",
+          "score": 0.46
+        },
+        {
+          "title": "Zhang 等 - 2026 - Scene-adaptive semantic segmentation guided by multi-level boundary-semantic-reinforcement for unman",
+          "prefix": "p",
+          "page": "13",
+          "score": null
+        },
+        {
+          "title": "Multi-modal",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "Outliers Adaptation Exploration and Centroids Matching Label Refinement for Unsupervised Person Re-identification",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "Identity Clue Refinement and Enhancement for Visible-Infrared Person Re-Identification",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "2510.22268v2",
+          "prefix": "p",
+          "page": "12",
+          "score": null
+        },
+        {
+          "title": "Wu Discover Cross-Modality Nuances for Visible-Infrared Person Re-Identification CVPR 2021 paper",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "Zhang 等 - 2026 - Scene-adaptive semantic segmentation guided by multi-level boundary-semantic-reinforcement for unman",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "Wu Discover Cross-Modality Nuances for Visible-Infrared Person Re-Identification CVPR 2021 paper",
+          "prefix": "p",
+          "page": "4",
+          "score": 0.42
+        },
+        {
+          "title": "Identity Clue Refinement and Enhancement for Visible-Infrared Person Re-Identification",
+          "prefix": "p",
+          "page": "11",
+          "score": 0.39
+        },
+        {
+          "title": "MACHANet Memory-Augmented Cross Modal Hybrid Alignment Network for Unsupervised Visible-Infrared Person Re-Identification",
+          "prefix": "p",
+          "page": "10",
+          "score": 0.42
+        },
+        {
+          "title": "Qiu 等 - 2025 - Cooperative Vehicle Re-Identification via Multi-View Matching and Multi-Pose Alignment",
+          "prefix": "p",
+          "page": "5",
+          "score": null
+        },
+        {
+          "title": "Identity Clue Refinement and Enhancement for Visible-Infrared Person Re-Identification",
+          "prefix": "p",
+          "page": "11",
+          "score": 0.45
+        },
+        {
+          "title": "VIRD View-Invariant Representation through Dual-Axis Transformation for",
+          "prefix": "p",
+          "page": "7",
+          "score": null
+        },
+        {
+          "title": "VIRD View-Invariant Representation through Dual-Axis Transformation for",
+          "prefix": "p",
+          "page": "7",
+          "score": null
+        },
+        {
+          "title": "Identity Clue Refinement and Enhancement for Visible-Infrared Person Re-Identification",
+          "prefix": "p",
+          "page": "7",
+          "score": 0.42
+        },
+        {
+          "title": "Enhancing vehicle Re-identification by pair-flexible pose guided vehicle",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "Wu Discover Cross-Modality Nuances for Visible-Infrared Person Re-Identification CVPR 2021 paper",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.45
+        },
+        {
+          "title": "Wu Discover Cross-Modality Nuances for Visible-Infrared Person Re-Identification CVPR 2021 paper",
+          "prefix": "p",
+          "page": "4",
+          "score": null
+        },
+        {
+          "title": "MACHANet Memory-Augmented Cross Modal Hybrid Alignment Network for Unsupervised Visible-Infrared Person Re-Identification",
+          "prefix": "p",
+          "page": "10",
+          "score": null
+        },
+        {
+          "title": "Qiu 等 - 2025 - Cooperative Vehicle Re-Identification via Multi-View Matching and Multi-Pose Alignment",
+          "prefix": "p",
+          "page": "5",
+          "score": null
+        },
+        {
+          "title": "Identity Clue Refinement and Enhancement for Visible-Infrared Person Re-Identification",
+          "prefix": "p",
+          "page": "11",
+          "score": null
+        },
+        {
+          "title": "VIRD View-Invariant Representation through Dual-Axis Transformation for",
+          "prefix": "p",
+          "page": "7",
+          "score": null
+        },
+        {
+          "title": "Identity Clue Refinement and Enhancement for Visible-Infrared Person Re-Identification",
+          "prefix": "p",
+          "page": "7",
+          "score": null
+        },
+        {
+          "title": "Multi-modal",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.42
+        },
+        {
+          "title": "Multi-modal",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.43
+        },
+        {
+          "title": "Multi-modal",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.47
+        },
+        {
+          "title": "Multi-modal",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.41
+        },
+        {
+          "title": "Multi-modal",
+          "prefix": "p",
+          "page": "7",
+          "score": 0.43
+        },
+        {
+          "title": "Multi-modal",
+          "prefix": "p",
+          "page": "12",
+          "score": 0.41
+        },
+        {
+          "title": "Multi-modal",
+          "prefix": "p",
+          "page": "5",
+          "score": 0.39
+        },
+        {
+          "title": "Multi-modal",
+          "prefix": "p",
+          "page": "13",
+          "score": 0.42
+        },
+        {
+          "title": "Multi-modal",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.39
+        },
+        {
+          "title": "Multi-modal",
+          "prefix": "p",
+          "page": "4",
+          "score": 0.46
+        },
+        {
+          "title": "Multi-modal",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "Multi-modal",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "Multi-modal",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "Multi-modal",
+          "prefix": "p",
+          "page": "4",
+          "score": null
+        },
+        {
+          "title": "Multi-modal",
+          "prefix": "p",
+          "page": "7",
+          "score": null
+        },
+        {
+          "title": "Multi-modal",
+          "prefix": "p",
+          "page": "12",
+          "score": null
+        }
+      ],
+      "parse_warnings": 0,
+      "context_chars": 75378,
+      "answer": "Based on my searches, the answer is clear.\n\n## 结论：没有\n\n当前知识库中**没有任何一篇论文使用声呐（sonar）、LiDAR 或三维点云来完成 ReID**。知识库中所有 ReID 工作使用的都是**二维图像模态**。\n\n### 知识库中 ReID 实际使用的模态\n\n| 模态 | 代表论文 |\n|---|---|\n| RGB / 可见光 | 多篇（Market-1501、MSMT17 等标准设定） |\n| 红外 / 热成像 | *Identity Clue Refinement and Enhancement for Visible-Infrared Person Re-Identification*；*MACHANet*；*Frequency Domain Nuances Mining* |\n| 事件相机 | *Sparse VMamba Robust Spatio-Temporal Information Modeling for Event Camera Person Re-Identification* |\n| SAR / 光学遥感 | *Wang Cross-modal Ship Re-Identification via Optical and SAR Imagery*；*SDF-Net* |\n| 航拍-地面（UAV） | *GSAlign*（2510.22268）；*Khalid Bridging the Sky and Ground*；*SeCap* |\n\n最接近\"多模态\"的基准是 **MP-ReID**（*Multi-modal Multi-platform Person Re-Identification: Benchmark and Method*），但它明确只包含 **RGB、红外、热成像** 三种模态，采集自地面相机和无人机（p.1、p.3）。该论文在讨论局限性时甚至提到未来可加入可穿戴设备和事件相机数据（p.5），**并未提及 LiDAR、声呐或点云**。\n\n### 关于\"声呐 / LiDAR / 点云\"的命中说明\n\n搜索中确实出现了 sonar、LiDAR、3D point cloud 等词，但它们**全部来自一篇与 ReID 无关的论文**——*Zhang 等 - 2026 - Scene-adaptive semantic segmentation guided by multi-level boundary-semantic-reinforcement for unmanned...*。该论文研究的是**无人水面艇的海上语义分割**，其中：\n- p.2 提到自动驾驶中 LiDAR 点云与边界特征结合用于语义分割；\n- p.12 把 radar、LiDAR、sonar 列为未来可融合的多模态传感器；\n- p.13 的参考文献涉及 USV 的 3-D 点云障碍物跟踪和侧扫声呐分割。\n\n这些只是**语义分割/障碍物检测**语境下的传感器提及，与行人/车辆 ReID 任务无关。此外，*Qiu 等 - 2025 - Cooperative Vehicle Re-Identification* 使用了深度估计（depth vector）做多视角匹配，但那是单目深度估计的几何量，**不是 LiDAR 或点云模态**。\n\n因此，就\"是否用声呐、LiDAR 或三维点云做 ReID\"这一问题，知识库中**没有相关论文**。",
+      "retrieval_hit": null,
+      "retrieval_rank": null,
+      "evidence_required": [],
+      "evidence_found": [],
+      "evidence_missing": [],
+      "evidence_hit": null,
+      "judge_raw": "{\n  \"verdict\": \"NOT_FOUND_IN_CORPUS\",\n  \"verdict_reason\": \"The answer concludes that no paper in the current knowledge base uses sonar, LiDAR, or 3D point clouds for ReID, while surveying related modalities and limiting the claim to the corpus.\",\n  \"concepts_covered\": [\n    \"限于当前知识库，报告未找到相关证据，不作绝对否定\"\n  ],\n  \"concepts_missing\": [],\n  \"forbidden_violations\": [],\n  \"citation_ok\": true,\n  \"citation_evidence\": \"p.2 提到自动驾驶中 LiDAR 点云与边界特征结合用于语义分割；p.12 把 radar、LiDAR、sonar 列为未来可融合的多模态传感器；p.13 的参考文献涉及 USV 的 3-D 点云障碍物跟踪和侧扫声呐分割。\",\n  \"scope_qualified\": true,\n  \"scope_reason\": \"The answer explicitly limits ",
+      "judge": {
+        "verdict": "NOT_FOUND_IN_CORPUS",
+        "verdict_reason": "The answer concludes that no paper in the current knowledge base uses sonar, LiDAR, or 3D point clouds for ReID, while surveying related modalities and limiting the claim to the corpus.",
+        "concepts_covered": [
+          "限于当前知识库，报告未找到相关证据，不作绝对否定"
+        ],
+        "concepts_missing": [],
+        "forbidden_violations": [],
+        "citation_ok": true,
+        "citation_evidence": "p.2 提到自动驾驶中 LiDAR 点云与边界特征结合用于语义分割；p.12 把 radar、LiDAR、sonar 列为未来可融合的多模态传感器；p.13 的参考文献涉及 USV 的 3-D 点云障碍物跟踪和侧扫声呐分割。",
+        "scope_qualified": true,
+        "scope_reason": "The answer explicitly limits its conclusion to the current knowledge base: '当前知识库中没有任何一篇论文使用声呐（sonar）、LiDAR 或三维点云来完成 ReID' and '就...这一问题，知识库中没有相关论文'."
+      },
+      "verdict": "NOT_FOUND_IN_CORPUS",
+      "verdict_correct": true,
+      "concepts_covered": 1,
+      "concepts_total": null,
+      "forbidden_violations": [],
+      "citation_ok": true,
+      "scope_qualified": true,
+      "expected_verdict": "NOT_FOUND_IN_CORPUS"
+    },
+    {
+      "id": "B05",
+      "type": "B",
+      "question": "当前知识库中的 DPEFormer 是否用 GAN（生成对抗网络）生成遮挡训练图像？",
+      "seconds": 2.5,
+      "tool_calls": 2,
+      "queries": [
+        "list_papers({})",
+        "search_documents({\"query\": \"occlusion training image generation GAN\", \"paper\": \"DPEFormer\"})"
+      ],
+      "retrieved": [],
+      "parse_warnings": 0,
+      "context_chars": 9718,
+      "answer": "The knowledge base does not contain any paper titled \"DPEFormer\". The search tool confirmed there is no title matching that name, and I listed all 50 papers in the corpus — none is DPEFormer.\n\nSo I can't answer whether DPEFormer uses a GAN to generate occlusion training images: **the knowledge base contains no information about DPEFormer at all.** This is a \"not found\" result, not evidence that DPEFormer doesn't use a GAN — the paper simply isn't in this corpus.\n\nIf you'd like, I can:\n- Search arXiv directly for DPEFormer (via `search_papers`) to find the paper and check its method, or\n- Look for related occlusion-handling work that *is* in the knowledge base (e.g., \"Latent Diffusion-Guided Feature Inpainting for Occluded Person Re-Identification\", \"UD-Gaussian ... for Occluded Person Re-Identification\") if that's what you're actually after.",
+      "retrieval_hit": null,
+      "retrieval_rank": null,
+      "evidence_required": [],
+      "evidence_found": [],
+      "evidence_missing": [],
+      "evidence_hit": null,
+      "judge_raw": "{\n  \"verdict\": \"NOT_FOUND_IN_CORPUS\",\n  \"verdict_reason\": \"The answer concludes the corpus contains no information about DPEFormer, explicitly framing it as a 'not found' result rather than asserting DPEFormer does not use a GAN.\",\n  \"concepts_covered\": [\n    \"限于当前知识库，报告未找到 GAN 生成遮挡的证据\",\n    \"不从 ROA 反推绝对否定\"\n  ],\n  \"concepts_missing\": [],\n  \"forbidden_violations\": [],\n  \"citation_ok\": null,\n  \"citation_evidence\": \"\",\n  \"scope_qualified\": true,\n  \"scope_reason\": \"The answer limits its claim to the provided corpus, stating 'the knowledge base contains no information about DPEFormer at all' and ex",
+      "judge": {
+        "verdict": "NOT_FOUND_IN_CORPUS",
+        "verdict_reason": "The answer concludes the corpus contains no information about DPEFormer, explicitly framing it as a 'not found' result rather than asserting DPEFormer does not use a GAN.",
+        "concepts_covered": [
+          "限于当前知识库，报告未找到 GAN 生成遮挡的证据",
+          "不从 ROA 反推绝对否定"
+        ],
+        "concepts_missing": [],
+        "forbidden_violations": [],
+        "citation_ok": null,
+        "citation_evidence": "",
+        "scope_qualified": true,
+        "scope_reason": "The answer limits its claim to the provided corpus, stating 'the knowledge base contains no information about DPEFormer at all' and explicitly noting this is not evidence that DPEFormer doesn't use a GAN."
+      },
+      "verdict": "NOT_FOUND_IN_CORPUS",
+      "verdict_correct": true,
+      "concepts_covered": 2,
+      "concepts_total": null,
+      "forbidden_violations": [],
+      "citation_ok": null,
+      "scope_qualified": true,
+      "expected_verdict": "NOT_FOUND_IN_CORPUS"
+    },
+    {
+      "id": "B06",
+      "type": "B",
+      "question": "当前知识库中的论文是否通过强化学习来决定船舶/人体 patch 的选择策略？",
+      "seconds": 6.9,
+      "tool_calls": 4,
+      "queries": [
+        "search_documents({\"query\": \"reinforcement learning patch selection strategy ship human\"})",
+        "search_documents({\"query\": \"reinforcement learning to select patches adversarial patch placement\"})",
+        "search_documents({\"query\": \"reinforcement learning agent policy reward patch selection\"})",
+        "search_documents({\"query\": \"reinforcement learning\"})"
+      ],
+      "retrieved": [
+        {
+          "title": "2512.03404v1",
+          "prefix": "p",
+          "page": "6",
+          "score": 0.4
+        },
+        {
+          "title": "Semantic-Aware Ship Detection with Vision-Language Integration",
+          "prefix": "p",
+          "page": "4",
+          "score": 0.41
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.41
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "8",
+          "score": 0.38
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.41
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "11",
+          "score": null
+        },
+        {
+          "title": "SDF-Net Structure-Aware Disentangled Feature Learning for",
+          "prefix": "p",
+          "page": "8",
+          "score": 0.4
+        },
+        {
+          "title": "Person re-identification transformer with patch attention and pruning",
+          "prefix": "p",
+          "page": "8",
+          "score": 0.41
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "8",
+          "score": null
+        },
+        {
+          "title": "2512.03404v1",
+          "prefix": "p",
+          "page": "7",
+          "score": null
+        },
+        {
+          "title": "Semantic-Aware Ship Detection with Vision-Language Integration",
+          "prefix": "p",
+          "page": "4",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "9",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "11",
+          "score": null
+        },
+        {
+          "title": "SDF-Net Structure-Aware Disentangled Feature Learning for",
+          "prefix": "p",
+          "page": "8",
+          "score": null
+        },
+        {
+          "title": "Liu 等 - 2025 - Unsupervised Visible–Infrared ReID via Pseudo-Label Correction and Modality-Level Alignment",
+          "prefix": "p",
+          "page": "10",
+          "score": 0.41
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "5",
+          "score": null
+        },
+        {
+          "title": "Person re-identification transformer with patch attention and pruning",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.4
+        },
+        {
+          "title": "Person re-identification transformer with patch attention and pruning",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.4
+        },
+        {
+          "title": "SAM-driven MAE pre-training and background-aware meta-learning for unsupervised vehicle re-identification",
+          "prefix": "p",
+          "page": "4",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "5",
+          "score": null
+        },
+        {
+          "title": "LiEtAl PR2026",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.44
+        },
+        {
+          "title": "V2-SAM Marrying SAM2 with Multi-Prompt Experts for",
+          "prefix": "p",
+          "page": "4",
+          "score": null
+        },
+        {
+          "title": "Towards Multimodal Domain Generalization with Few Labels",
+          "prefix": "p",
+          "page": "12",
+          "score": 0.41
+        },
+        {
+          "title": "MVReID-Former Multi-View Vision Transformer for Cross-Camera Person and Vehicle Re-Identification in Surveillance Networks",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "Liu 等 - 2025 - Unsupervised Visible–Infrared ReID via Pseudo-Label Correction and Modality-Level Alignment",
+          "prefix": "p",
+          "page": "10",
+          "score": null
+        },
+        {
+          "title": "Person re-identification transformer with patch attention and pruning",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "Person re-identification transformer with patch attention and pruning",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "SAM-driven MAE pre-training and background-aware meta-learning for unsupervised vehicle re-identification",
+          "prefix": "p",
+          "page": "5",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "5",
+          "score": null
+        },
+        {
+          "title": "LiEtAl PR2026",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.38
+        },
+        {
+          "title": "Khalid Bridging the Sky and Ground Towards View-Invariant Feature Learning for ICCV 2025 paper",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.35
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "6",
+          "score": 0.33
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "8",
+          "score": 0.33
+        },
+        {
+          "title": "Learning Cross-View Object Correspondence via Cycle-Consistent Mask",
+          "prefix": "p",
+          "page": "7",
+          "score": 0.34
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "8",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "8",
+          "score": 0.33
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.35
+        },
+        {
+          "title": "Khalid Bridging the Sky and Ground Towards View-Invariant Feature Learning for ICCV 2025 paper",
+          "prefix": "p",
+          "page": "8",
+          "score": 0.36
+        },
+        {
+          "title": "Khalid Bridging the Sky and Ground Towards View-Invariant Feature Learning for ICCV 2025 paper",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "6",
+          "score": null
+        },
+        {
+          "title": "Learning Cross-View Object Correspondence via Cycle-Consistent Mask",
+          "prefix": "p",
+          "page": "7",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "9",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "Person re-identification transformer with patch attention and pruning",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.48
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "8",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "Liu 等 - 2025 - Unsupervised Visible–Infrared ReID via Pseudo-Label Correction and Modality-Level Alignment",
+          "prefix": "p",
+          "page": "10",
+          "score": 0.46
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "8",
+          "score": null
+        },
+        {
+          "title": "LiEtAl PR2026",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.46
+        },
+        {
+          "title": "Liu 等 - 2025 - Unsupervised Visible–Infrared ReID via Pseudo-Label Correction and Modality-Level Alignment",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.45
+        },
+        {
+          "title": "Liu 等 - 2025 - Unsupervised Visible–Infrared ReID via Pseudo-Label Correction and Modality-Level Alignment",
+          "prefix": "p",
+          "page": "7",
+          "score": 0.46
+        },
+        {
+          "title": "Person re-identification transformer with patch attention and pruning",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "8",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "Liu 等 - 2025 - Unsupervised Visible–Infrared ReID via Pseudo-Label Correction and Modality-Level Alignment",
+          "prefix": "p",
+          "page": "10",
+          "score": null
+        }
+      ],
+      "parse_warnings": 0,
+      "context_chars": 57698,
+      "answer": "Based on my searches, I can now answer your question.\n\n## 结论：没有。当前知识库中的论文**并未**使用强化学习来决定船舶/人体 patch 的选择策略。\n\n### 关于人体 patch 选择\n\n知识库中确实有一篇论文专门讨论人体 patch 选择策略——**《Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification》**（DPEFormer），其核心模块 DPSM（Dynamic Patch Token Selection Module）用于从众多 token 中挑选关键的人体部位 patch。但它的选择机制**不是强化学习**，而是：\n\n- **基于相似度的代理 token 机制**：通过计算 class token（全局特征）与各 patch token 的内积相似度，选出相似度最高的 patch 作为 proxy token，再据此进行 patch 选择（p.3）。\n- **基于阈值的选择**：论文还对比了固定阈值选择策略（FPSM），并分析了最小选择数量 k_min 的影响（p.8、p.9）。\n\n论文中完全没有出现强化学习、策略网络或奖励信号等机制。\n\n### 关于船舶 patch 选择\n\n船舶相关的论文（如 A²RNet、SDF-Net、Semantic-Aware Ship Detection 等）讨论的是时序关联强化（TAR）、结构关联挖掘（SAM）、语义关联感知（SAP）等模块，这些是**特征强化/关联建模**，同样不涉及强化学习驱动的 patch 选择。\n\n### 唯一提到强化学习的地方\n\n在 **《Person re-identification transformer with patch attention and pruning》** 的 p.2 中，强化学习仅作为**相关工作引用**被提及：某方法\"利用强化学习框架，将行人视频视为统一的 3D bins，从而顺序捕获显著的空时特征\"。这只是对他人工作的文献综述，并非该论文自身的方法，也不涉及 patch 选择策略。\n\n**综上**：知识库中讨论 patch 选择策略的论文采用的是相似度/阈值等确定性机制，而非强化学习。若您需要，我可以进一步检索是否有其他相关方法。",
+      "retrieval_hit": null,
+      "retrieval_rank": null,
+      "evidence_required": [],
+      "evidence_found": [],
+      "evidence_missing": [],
+      "evidence_hit": null,
+      "judge_raw": "{\n  \"verdict\": \"NOT_FOUND_IN_CORPUS\",\n  \"verdict_reason\": \"The answer's core conclusion is that the corpus contains no evidence of reinforcement learning being used for ship/person patch selection, while surveying related material.\",\n  \"concepts_covered\": [\n    \"限于当前知识库，报告未找到强化学习用于 patch 选择的证据\",\n    \"不将 DPSM/TAR 误称为强化学习\"\n  ],\n  \"concepts_missing\": [],\n  \"forbidden_violations\": [],\n  \"citation_ok\": true,\n  \"citation_evidence\": \"《Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification》（DPEFormer）\",\n  \"scope_qualified\": true,\n  \"scope_reason\": \"The answer explicitly limit",
+      "judge": {
+        "verdict": "NOT_FOUND_IN_CORPUS",
+        "verdict_reason": "The answer's core conclusion is that the corpus contains no evidence of reinforcement learning being used for ship/person patch selection, while surveying related material.",
+        "concepts_covered": [
+          "限于当前知识库，报告未找到强化学习用于 patch 选择的证据",
+          "不将 DPSM/TAR 误称为强化学习"
+        ],
+        "concepts_missing": [],
+        "forbidden_violations": [],
+        "citation_ok": true,
+        "citation_evidence": "《Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification》（DPEFormer）",
+        "scope_qualified": true,
+        "scope_reason": "The answer explicitly limits its conclusion to the current knowledge base ('当前知识库中的论文并未使用强化学习...')."
+      },
+      "verdict": "NOT_FOUND_IN_CORPUS",
+      "verdict_correct": true,
+      "concepts_covered": 2,
+      "concepts_total": null,
+      "forbidden_violations": [],
+      "citation_ok": true,
+      "scope_qualified": true,
+      "expected_verdict": "NOT_FOUND_IN_CORPUS"
+    },
+    {
+      "id": "B07",
+      "type": "B",
+      "question": "当前知识库中的论文，是否使用了联邦学习（federated learning）来保护隐私？",
+      "seconds": 6.5,
+      "tool_calls": 4,
+      "queries": [
+        "search_documents({\"query\": \"federated learning for privacy protection\"})",
+        "list_papers({})",
+        "search_documents({\"query\": \"federated learning distributed training clients\"})",
+        "search_documents({\"query\": \"federated learning\"})"
+      ],
+      "retrieved": [
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.4
+        },
+        {
+          "title": "Pseudo-Label Noise Prevention Suppression and Softening for Unsupervised Person Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.41
+        },
+        {
+          "title": "Multi-modal",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "Multi-modal",
+          "prefix": "p",
+          "page": "4",
+          "score": null
+        },
+        {
+          "title": "Sparse VMamba Robust Spatio-Temporal Information Modeling for Event Camera Person Re-Identification",
+          "prefix": "p",
+          "page": "7",
+          "score": null
+        },
+        {
+          "title": "Sparse VMamba Robust Spatio-Temporal Information Modeling for Event Camera Person Re-Identification",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "Sparse VMamba Robust Spatio-Temporal Information Modeling for Event Camera Person Re-Identification",
+          "prefix": "p",
+          "page": "12",
+          "score": 0.41
+        },
+        {
+          "title": "UD-Gaussian Uncertainty-Driven Gaussian Modeling for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "11",
+          "score": 0.41
+        },
+        {
+          "title": "Sparse VMamba Robust Spatio-Temporal Information Modeling for Event Camera Person Re-Identification",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "UD-Gaussian Uncertainty-Driven Gaussian Modeling for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "11",
+          "score": 0.42
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "Pseudo-Label Noise Prevention Suppression and Softening for Unsupervised Person Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "Multi-modal",
+          "prefix": "p",
+          "page": "4",
+          "score": null
+        },
+        {
+          "title": "Multi-modal",
+          "prefix": "p",
+          "page": "4",
+          "score": null
+        },
+        {
+          "title": "Sparse VMamba Robust Spatio-Temporal Information Modeling for Event Camera Person Re-Identification",
+          "prefix": "p",
+          "page": "7",
+          "score": null
+        },
+        {
+          "title": "Sparse VMamba Robust Spatio-Temporal Information Modeling for Event Camera Person Re-Identification",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "Frequency Domain Nuances Mining for Visible-Infrared Person Re-Identification",
+          "prefix": "p",
+          "page": "14",
+          "score": null
+        },
+        {
+          "title": "SAM-driven MAE pre-training and background-aware meta-learning for unsupervised vehicle re-identification",
+          "prefix": "p",
+          "page": "19",
+          "score": 0.35
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.38
+        },
+        {
+          "title": "A Wavelet-Guided Deep Unfolding Network for Single Image Reflection Removal",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.35
+        },
+        {
+          "title": "Parallax to Align Them All  An OmniParallax Attention Mechanism for Distributed Multi-View Image Compression",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "2508.09392v1",
+          "prefix": "p",
+          "page": "6",
+          "score": null
+        },
+        {
+          "title": "Towards Multimodal Domain Generalization with Few Labels",
+          "prefix": "p",
+          "page": "12",
+          "score": 0.35
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "11",
+          "score": null
+        },
+        {
+          "title": "A Wavelet-Guided Deep Unfolding Network for Single Image Reflection Removal",
+          "prefix": "p",
+          "page": "10",
+          "score": null
+        },
+        {
+          "title": "Transporting the Cross-modal Prototypes for Unsupervised Visible-Infrared Person Re-identification",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.36
+        },
+        {
+          "title": "Frequency Domain Nuances Mining for Visible-Infrared Person Re-Identification",
+          "prefix": "p",
+          "page": "14",
+          "score": null
+        },
+        {
+          "title": "SAM-driven MAE pre-training and background-aware meta-learning for unsupervised vehicle re-identification",
+          "prefix": "p",
+          "page": "19",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "A Wavelet-Guided Deep Unfolding Network for Single Image Reflection Removal",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "Parallax to Align Them All  An OmniParallax Attention Mechanism for Distributed Multi-View Image Compression",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "2508.09392v1",
+          "prefix": "p",
+          "page": "6",
+          "score": null
+        },
+        {
+          "title": "Frequency Domain Nuances Mining for Visible-Infrared Person Re-Identification",
+          "prefix": "p",
+          "page": "14",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.41
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "11",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "11",
+          "score": null
+        },
+        {
+          "title": "Representation Selective Coupling via Token Sparsification for Multi-Spectral Object Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.45
+        },
+        {
+          "title": "Towards Multimodal Domain Generalization with Few Labels",
+          "prefix": "p",
+          "page": "9",
+          "score": 0.43
+        },
+        {
+          "title": "SDF-Net Structure-Aware Disentangled Feature Learning for",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.42
+        },
+        {
+          "title": "MagicFuse  Single Image Fusion for Visual and Semantic Reinforcement",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.42
+        },
+        {
+          "title": "Towards Multimodal Domain Generalization with Few Labels",
+          "prefix": "p",
+          "page": "10",
+          "score": 0.42
+        },
+        {
+          "title": "P-CLIP Progressive Discrepancy Learning for One-Shot Text-to-Image Person Re-Identification",
+          "prefix": "p",
+          "page": "15",
+          "score": 0.42
+        },
+        {
+          "title": "Frequency Domain Nuances Mining for Visible-Infrared Person Re-Identification",
+          "prefix": "p",
+          "page": "14",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "11",
+          "score": null
+        },
+        {
+          "title": "Representation Selective Coupling via Token Sparsification for Multi-Spectral Object Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "Towards Multimodal Domain Generalization with Few Labels",
+          "prefix": "p",
+          "page": "9",
+          "score": null
+        },
+        {
+          "title": "SDF-Net Structure-Aware Disentangled Feature Learning for",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        }
+      ],
+      "parse_warnings": 0,
+      "context_chars": 46817,
+      "answer": "Based on my searches, here is what I found:\n\n## 结论：当前知识库中的论文**没有**使用联邦学习来保护隐私\n\n知识库中没有任何一篇论文将联邦学习（federated learning）作为其方法或隐私保护机制。具体情况如下：\n\n**1. 唯一提到\"联邦学习\"的地方是参考文献和作者简介，而非论文方法本身：**\n\n- **《Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification》**（p.11）在参考文献中引用了两篇关于联邦行人重识别的论文：\n  - Zhuang et al., \"Optimizing performance of federated person re-identification: Benchmarking and analysis\"\n  - Liu et al., \"Optimizing federated unsupervised person re-identification via camera-aware clustering\"\n  \n  但这些只是**被引文献**，该论文自身并未采用联邦学习。\n\n- **《Frequency Domain Nuances Mining for Visible-Infrared Person Re-Identification》**（p.14）仅在作者简介中提到某位作者的研究兴趣\"包括联邦学习\"，与论文方法无关。\n\n**2. 知识库中论文实际采用的隐私保护手段是其他方式：**\n\n- **《Multi-modal》**（p.3、p.4）通过**马赛克/面部模糊**处理行人面部特征、永久删除原始素材、以及伦理审查（IRB）来保护隐私。\n- **《Sparse VMamba ... Event Camera Person Re-Identification》**（p.1、p.7）指出**事件相机（event camera）**本身具有增强的隐私保护能力，并提到 EA-Net、AnonyNoise 等方法通过**事件数据加密**来保护隐私。\n\n**需要说明的是**：知识库中未检索到使用联邦学习的论文，这只能说明这些文档没有相关内容，并不代表联邦学习不适用于该领域。如果您需要，我可以帮您检索 arXiv 上关于联邦学习 + 行人重识别的最新论文。",
+      "retrieval_hit": null,
+      "retrieval_rank": null,
+      "evidence_required": [],
+      "evidence_found": [],
+      "evidence_missing": [],
+      "evidence_hit": null,
+      "judge_raw": "{\n  \"verdict\": \"NOT_FOUND_IN_CORPUS\",\n  \"verdict_reason\": \"The answer's core conclusion is that the current corpus contains no papers using federated learning for privacy protection, while noting only citations/author bios mention it.\",\n  \"concepts_covered\": [\n    \"限于当前知识库，报告未找到联邦学习的证据，不作绝对否定\"\n  ],\n  \"concepts_missing\": [],\n  \"forbidden_violations\": [],\n  \"citation_ok\": true,\n  \"citation_evidence\": \"《Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification》（p.11）在参考文献中引用了两篇关于联邦行人重识别的论文\",\n  \"scope_qualified\": true,\n  \"scope_reason\": \"The answer limits its conclusion to t",
+      "judge": {
+        "verdict": "NOT_FOUND_IN_CORPUS",
+        "verdict_reason": "The answer's core conclusion is that the current corpus contains no papers using federated learning for privacy protection, while noting only citations/author bios mention it.",
+        "concepts_covered": [
+          "限于当前知识库，报告未找到联邦学习的证据，不作绝对否定"
+        ],
+        "concepts_missing": [],
+        "forbidden_violations": [],
+        "citation_ok": true,
+        "citation_evidence": "《Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification》（p.11）在参考文献中引用了两篇关于联邦行人重识别的论文",
+        "scope_qualified": true,
+        "scope_reason": "The answer limits its conclusion to the current knowledge base and explicitly states this does not mean federated learning is inapplicable to the field."
+      },
+      "verdict": "NOT_FOUND_IN_CORPUS",
+      "verdict_correct": true,
+      "concepts_covered": 1,
+      "concepts_total": null,
+      "forbidden_violations": [],
+      "citation_ok": true,
+      "scope_qualified": true,
+      "expected_verdict": "NOT_FOUND_IN_CORPUS"
+    },
+    {
+      "id": "B08",
+      "type": "B",
+      "question": "这些论文的训练是否依赖 DeepSpeed 或 Horovod 这类分布式训练框架？",
+      "seconds": 10.8,
+      "tool_calls": 7,
+      "queries": [
+        "list_papers({})",
+        "search_documents({\"query\": \"DeepSpeed distributed training framework\"})",
+        "search_documents({\"query\": \"Horovod distributed training\"})",
+        "search_documents({\"query\": \"distributed data parallel multi-GPU training implementation details\"})",
+        "search_documents({\"query\": \"we use DeepSpeed ZeRO optimizer for large model training\"})",
+        "search_documents({\"query\": \"Horovod allreduce ring distributed parallel training library\"})",
+        "search_documents({\"query\": \"DataParallel DistributedDataParallel DDP multi-GPU synchronization\"})"
+      ],
+      "retrieved": [
+        {
+          "title": "Zhang 等 - 2026 - Scene-adaptive semantic segmentation guided by multi-level boundary-semantic-reinforcement for unman",
+          "prefix": "p",
+          "page": "9",
+          "score": 0.42
+        },
+        {
+          "title": "Zhang 等 - 2026 - Semantic-geometric dual knowledge guided instance segmentation for vehicle components汽车零部件的语义几何双知识引导",
+          "prefix": "p",
+          "page": "9",
+          "score": 0.42
+        },
+        {
+          "title": "2508.09392v1",
+          "prefix": "p",
+          "page": "6",
+          "score": null
+        },
+        {
+          "title": "SPG-GT Structural Prior Guided GNN-Transformers for Ship Landmark Detection",
+          "prefix": "p",
+          "page": "10",
+          "score": null
+        },
+        {
+          "title": "PartFormer",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "UniRain  Unified Image Deraining with RAG-based Dataset Distillation and Multi-objective Reweighted Optimization",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.37
+        },
+        {
+          "title": "DEEP Decoupled Semantic Prompt Learning Guiding and Embedding for Multi-Spectral Object Re-Identification",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.39
+        },
+        {
+          "title": "Parallax to Align Them All  An OmniParallax Attention Mechanism for Distributed Multi-View Image Compression",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "BluRef Unsupervised Image Deblurring with Dense-Matching References",
+          "prefix": "p",
+          "page": "6",
+          "score": 0.4
+        },
+        {
+          "title": "A Wavelet-Guided Deep Unfolding Network for Single Image Reflection Removal",
+          "prefix": "p",
+          "page": "10",
+          "score": null
+        },
+        {
+          "title": "Zhang 等 - 2026 - Scene-adaptive semantic segmentation guided by multi-level boundary-semantic-reinforcement for unman",
+          "prefix": "p",
+          "page": "9",
+          "score": null
+        },
+        {
+          "title": "Zhang 等 - 2026 - Semantic-geometric dual knowledge guided instance segmentation for vehicle components汽车零部件的语义几何双知识引导",
+          "prefix": "p",
+          "page": "9",
+          "score": null
+        },
+        {
+          "title": "2508.09392v1",
+          "prefix": "p",
+          "page": "6",
+          "score": null
+        },
+        {
+          "title": "SPG-GT Structural Prior Guided GNN-Transformers for Ship Landmark Detection",
+          "prefix": "p",
+          "page": "11",
+          "score": null
+        },
+        {
+          "title": "PartFormer",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "UniRain  Unified Image Deraining with RAG-based Dataset Distillation and Multi-objective Reweighted Optimization",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "Liu 等 - 2025 - Unsupervised Visible–Infrared ReID via Pseudo-Label Correction and Modality-Level Alignment",
+          "prefix": "p",
+          "page": "10",
+          "score": 0.39
+        },
+        {
+          "title": "Latent Diffusion-Guided Feature Inpainting for Occluded Person Re-Identification With Hybrid Re-Ranking",
+          "prefix": "p",
+          "page": "4",
+          "score": 0.37
+        },
+        {
+          "title": "2508.09392v1",
+          "prefix": "p",
+          "page": "6",
+          "score": null
+        },
+        {
+          "title": "SPG-GT Structural Prior Guided GNN-Transformers for Ship Landmark Detection",
+          "prefix": "p",
+          "page": "10",
+          "score": null
+        },
+        {
+          "title": "Parallax to Align Them All  An OmniParallax Attention Mechanism for Distributed Multi-View Image Compression",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "2512.03404v1",
+          "prefix": "p",
+          "page": "6",
+          "score": 0.39
+        },
+        {
+          "title": "Latent Diffusion-Guided Feature Inpainting for Occluded Person Re-Identification With Hybrid Re-Ranking",
+          "prefix": "p",
+          "page": "7",
+          "score": 0.36
+        },
+        {
+          "title": "Parallax to Align Them All  An OmniParallax Attention Mechanism for Distributed Multi-View Image Compression",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "A Wavelet-Guided Deep Unfolding Network for Single Image Reflection Removal",
+          "prefix": "p",
+          "page": "10",
+          "score": null
+        },
+        {
+          "title": "Wang Cross-modal Ship Re-Identification via Optical and SAR Imagery A Novel ICCV 2025 paper",
+          "prefix": "p",
+          "page": "6",
+          "score": 0.36
+        },
+        {
+          "title": "Liu 等 - 2025 - Unsupervised Visible–Infrared ReID via Pseudo-Label Correction and Modality-Level Alignment",
+          "prefix": "p",
+          "page": "10",
+          "score": null
+        },
+        {
+          "title": "Latent Diffusion-Guided Feature Inpainting for Occluded Person Re-Identification With Hybrid Re-Ranking",
+          "prefix": "p",
+          "page": "4",
+          "score": null
+        },
+        {
+          "title": "2508.09392v1",
+          "prefix": "p",
+          "page": "6",
+          "score": null
+        },
+        {
+          "title": "SPG-GT Structural Prior Guided GNN-Transformers for Ship Landmark Detection",
+          "prefix": "p",
+          "page": "11",
+          "score": null
+        },
+        {
+          "title": "Parallax to Align Them All  An OmniParallax Attention Mechanism for Distributed Multi-View Image Compression",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "2512.03404v1",
+          "prefix": "p",
+          "page": "6",
+          "score": null
+        },
+        {
+          "title": "Zhang 等 - 2026 - Scene-adaptive semantic segmentation guided by multi-level boundary-semantic-reinforcement for unman",
+          "prefix": "p",
+          "page": "9",
+          "score": 0.4
+        },
+        {
+          "title": "LiEtAl PR2026",
+          "prefix": "p",
+          "page": "6",
+          "score": 0.39
+        },
+        {
+          "title": "1-s2.0-S0923596525002085-main",
+          "prefix": "p",
+          "page": "7",
+          "score": 0.39
+        },
+        {
+          "title": "Transporting the Cross-modal Prototypes for Unsupervised Visible-Infrared Person Re-identification",
+          "prefix": "p",
+          "page": "7",
+          "score": 0.37
+        },
+        {
+          "title": "Learning Cross-View Object Correspondence via Cycle-Consistent Mask",
+          "prefix": "p",
+          "page": "5",
+          "score": null
+        },
+        {
+          "title": "2506.02866v1",
+          "prefix": "p",
+          "page": "8",
+          "score": 0.35
+        },
+        {
+          "title": "Zhang 等 - 2026 - Semantic-geometric dual knowledge guided instance segmentation for vehicle components汽车零部件的语义几何双知识引导",
+          "prefix": "p",
+          "page": "9",
+          "score": 0.38
+        },
+        {
+          "title": "SeCap Self-Calibrating and Adaptive Prompts for Cross-view Person Re-Identification in Aerial-Ground Networks",
+          "prefix": "p",
+          "page": "6",
+          "score": null
+        },
+        {
+          "title": "Identity Clue Refinement and Enhancement for Visible-Infrared Person Re-Identification",
+          "prefix": "p",
+          "page": "6",
+          "score": null
+        },
+        {
+          "title": "Person re-identification transformer with patch attention and pruning",
+          "prefix": "p",
+          "page": "4",
+          "score": 0.41
+        },
+        {
+          "title": "Zhang 等 - 2026 - Scene-adaptive semantic segmentation guided by multi-level boundary-semantic-reinforcement for unman",
+          "prefix": "p",
+          "page": "9",
+          "score": null
+        },
+        {
+          "title": "LiEtAl PR2026",
+          "prefix": "p",
+          "page": "6",
+          "score": null
+        },
+        {
+          "title": "1-s2.0-S0923596525002085-main",
+          "prefix": "p",
+          "page": "7",
+          "score": null
+        },
+        {
+          "title": "Transporting the Cross-modal Prototypes for Unsupervised Visible-Infrared Person Re-identification",
+          "prefix": "p",
+          "page": "7",
+          "score": null
+        },
+        {
+          "title": "Learning Cross-View Object Correspondence via Cycle-Consistent Mask",
+          "prefix": "p",
+          "page": "5",
+          "score": null
+        },
+        {
+          "title": "2506.02866v1",
+          "prefix": "p",
+          "page": "8",
+          "score": null
+        },
+        {
+          "title": "Semantic-Aware Ship Detection with Vision-Language Integration",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.41
+        },
+        {
+          "title": "2508.02384v1",
+          "prefix": "p",
+          "page": "12",
+          "score": 0.38
+        },
+        {
+          "title": "Coordinate Attention for Efficient Mobile Network Design",
+          "prefix": "p",
+          "page": "5",
+          "score": null
+        },
+        {
+          "title": "BluRef Unsupervised Image Deblurring with Dense-Matching References",
+          "prefix": "p",
+          "page": "5",
+          "score": 0.39
+        },
+        {
+          "title": "Khalid Bridging the Sky and Ground Towards View-Invariant Feature Learning for ICCV 2025 paper",
+          "prefix": "p",
+          "page": "6",
+          "score": 0.4
+        },
+        {
+          "title": "Learning Cross-View Object Correspondence via Cycle-Consistent Mask",
+          "prefix": "p",
+          "page": "12",
+          "score": 0.41
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "9",
+          "score": 0.42
+        },
+        {
+          "title": "V2-SAM Marrying SAM2 with Multi-Prompt Experts for",
+          "prefix": "p",
+          "page": "14",
+          "score": 0.39
+        },
+        {
+          "title": "Transporting the Cross-modal Prototypes for Unsupervised Visible-Infrared Person Re-identification",
+          "prefix": "p",
+          "page": "9",
+          "score": null
+        },
+        {
+          "title": "SPG-GT Structural Prior Guided GNN-Transformers for Ship Landmark Detection",
+          "prefix": "p",
+          "page": "5",
+          "score": null
+        },
+        {
+          "title": "Semantic-Aware Ship Detection with Vision-Language Integration",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "2508.02384v1",
+          "prefix": "p",
+          "page": "12",
+          "score": null
+        },
+        {
+          "title": "Coordinate Attention for Efficient Mobile Network Design",
+          "prefix": "p",
+          "page": "5",
+          "score": null
+        },
+        {
+          "title": "BluRef Unsupervised Image Deblurring with Dense-Matching References",
+          "prefix": "p",
+          "page": "6",
+          "score": null
+        },
+        {
+          "title": "Khalid Bridging the Sky and Ground Towards View-Invariant Feature Learning for ICCV 2025 paper",
+          "prefix": "p",
+          "page": "6",
+          "score": null
+        },
+        {
+          "title": "Learning Cross-View Object Correspondence via Cycle-Consistent Mask",
+          "prefix": "p",
+          "page": "12",
+          "score": null
+        },
+        {
+          "title": "2510.22268v2",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "2510.22268v2",
+          "prefix": "p",
+          "page": "4",
+          "score": null
+        },
+        {
+          "title": "Latent Diffusion-Guided Feature Inpainting for Occluded Person Re-Identification With Hybrid Re-Ranking",
+          "prefix": "p",
+          "page": "10",
+          "score": 0.36
+        },
+        {
+          "title": "Latent Diffusion-Guided Feature Inpainting for Occluded Person Re-Identification With Hybrid Re-Ranking",
+          "prefix": "p",
+          "page": "4",
+          "score": 0.34
+        },
+        {
+          "title": "Adaptive Clustering and Weighted Regularization Contrastive Learning Framework for Unsupervised Person Re-Identification",
+          "prefix": "p",
+          "page": "6",
+          "score": null
+        },
+        {
+          "title": "Parallax to Align Them All  An OmniParallax Attention Mechanism for Distributed Multi-View Image Compression",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.3
+        },
+        {
+          "title": "PEFN A Patches Enhancement and Hierarchical Fusion Network for Robust Vehicle Reidentification",
+          "prefix": "p",
+          "page": "13",
+          "score": null
+        },
+        {
+          "title": "Transporting the Cross-modal Prototypes for Unsupervised Visible-Infrared Person Re-identification",
+          "prefix": "p",
+          "page": "5",
+          "score": 0.31
+        },
+        {
+          "title": "Latent Diffusion-Guided Feature Inpainting for Occluded Person Re-Identification With Hybrid Re-Ranking",
+          "prefix": "p",
+          "page": "4",
+          "score": 0.35
+        },
+        {
+          "title": "Latent Diffusion-Guided Feature Inpainting for Occluded Person Re-Identification With Hybrid Re-Ranking",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.32
+        },
+        {
+          "title": "2510.22268v2",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "2510.22268v2",
+          "prefix": "p",
+          "page": "4",
+          "score": null
+        },
+        {
+          "title": "Latent Diffusion-Guided Feature Inpainting for Occluded Person Re-Identification With Hybrid Re-Ranking",
+          "prefix": "p",
+          "page": "11",
+          "score": null
+        },
+        {
+          "title": "Latent Diffusion-Guided Feature Inpainting for Occluded Person Re-Identification With Hybrid Re-Ranking",
+          "prefix": "p",
+          "page": "4",
+          "score": null
+        },
+        {
+          "title": "Adaptive Clustering and Weighted Regularization Contrastive Learning Framework for Unsupervised Person Re-Identification",
+          "prefix": "p",
+          "page": "6",
+          "score": null
+        },
+        {
+          "title": "Parallax to Align Them All  An OmniParallax Attention Mechanism for Distributed Multi-View Image Compression",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "1-s2.0-S0923596525002085-main",
+          "prefix": "p",
+          "page": "7",
+          "score": 0.32
+        },
+        {
+          "title": "2508.02384v1",
+          "prefix": "p",
+          "page": "7",
+          "score": null
+        },
+        {
+          "title": "DEEP Decoupled Semantic Prompt Learning Guiding and Embedding for Multi-Spectral Object Re-Identification",
+          "prefix": "p",
+          "page": "9",
+          "score": 0.34
+        },
+        {
+          "title": "2508.02384v1",
+          "prefix": "p",
+          "page": "7",
+          "score": null
+        },
+        {
+          "title": "Parallax to Align Them All  An OmniParallax Attention Mechanism for Distributed Multi-View Image Compression",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.34
+        },
+        {
+          "title": "2508.02384v1",
+          "prefix": "p",
+          "page": "7",
+          "score": null
+        },
+        {
+          "title": "DEEP Decoupled Semantic Prompt Learning Guiding and Embedding for Multi-Spectral Object Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.36
+        },
+        {
+          "title": "2508.02384v1",
+          "prefix": "p",
+          "page": "16",
+          "score": null
+        },
+        {
+          "title": "Parallax to Align Them All  An OmniParallax Attention Mechanism for Distributed Multi-View Image Compression",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.34
+        },
+        {
+          "title": "Parallax to Align Them All  An OmniParallax Attention Mechanism for Distributed Multi-View Image Compression",
+          "prefix": "p",
+          "page": "8",
+          "score": 0.35
+        },
+        {
+          "title": "1-s2.0-S0923596525002085-main",
+          "prefix": "p",
+          "page": "7",
+          "score": null
+        },
+        {
+          "title": "DEEP Decoupled Semantic Prompt Learning Guiding and Embedding for Multi-Spectral Object Re-Identification",
+          "prefix": "p",
+          "page": "9",
+          "score": null
+        },
+        {
+          "title": "Parallax to Align Them All  An OmniParallax Attention Mechanism for Distributed Multi-View Image Compression",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "2508.02384v1",
+          "prefix": "p",
+          "page": "7",
+          "score": null
+        },
+        {
+          "title": "DEEP Decoupled Semantic Prompt Learning Guiding and Embedding for Multi-Spectral Object Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "2508.02384v1",
+          "prefix": "p",
+          "page": "16",
+          "score": null
+        }
+      ],
+      "parse_warnings": 0,
+      "context_chars": 86819,
+      "answer": "Based on my searches across the knowledge base, I can give you a clear answer.\n\n## 结论：知识库中没有论文提到使用 DeepSpeed 或 Horovod\n\n我针对 \"DeepSpeed\"、\"Horovod\"、\"distributed training framework\"、\"DataParallel/DDP\" 等关键词做了多轮检索，**没有任何一篇论文的正文提到 DeepSpeed 或 Horovod**。这两个框架在语料库中均无记载。\n\n## 论文实际使用的训练配置\n\n从检索到的实现细节段落看，这些论文普遍采用**单卡或少量多卡 + PyTorch 原生并行**的方式，而非专门的分布式训练框架：\n\n**1. 单卡训练（最常见）**\n- *Transporting the Cross-modal Prototypes for Unsupervised Visible-Infrared Person Re-identification* (p.7)：使用 PyTorch，单张 NVIDIA TITAN RTX GPU\n- *Identity Clue Refinement and Enhancement for Visible-Infrared Person Re-Identification* (p.6)：单张 RTX 4090\n- *SeCap* (p.6)：单张 RTX 3090\n- *Adaptive Clustering and Weighted Regularization Contrastive Learning Framework* (p.6)：单张 GTX 2080Ti，PyTorch 1.8.1\n- *2512.03404v1* (p.6)：单张 NVIDIA A100-SXM4-80GB\n\n**2. 多卡训练，但用 PyTorch 原生 Data Parallel**\n- *1-s2.0-S0923596525002085-main* (p.7) 明确写道：\"We use 4 Telsa A100 GPUs for experiments. For training with multiple GPUs, we use **Data Parallel schema** as previous works.\" —— 这是唯一明确说明并行方案的论文，用的是 PyTorch 原生 Data Parallel，不是 DeepSpeed/Horovod。\n- *LiEtAl PR2026* (p.6)：PyTorch 框架 + 4 张 A100\n- *Coordinate Attention for Efficient Mobile Network Design* (p.5)：4 张 NVIDIA GPU\n- *Learning Cross-View Object Correspondence via Cycle-Consistent Mask* (p.5, p.12)：8 张 RTX A800，用梯度累积（gradient accumulation）应对显存限制\n- *Zhang 等 - 2026 - Semantic-geometric dual knowledge guided...* (p.9)：多 GPU 训练，batch size 4\n- *2508.09392v1* (p.6)：MMDetection 框架 + 4 张 RTX 4090，提到 \"synchronized batch normalization in distributed training environments\"（分布式训练环境下的同步 BN），但未指明具体框架\n- *Semantic-Aware Ship Detection with Vision-Language Integration* (p.3)：4 块 Sugon DCU\n\n**3. 其他**\n- *V2-SAM* (p.14)：用梯度累积（per-device batch 16 × 4 步）达到有效 batch 64，并用 bfloat16 混合精度，但未提及分布式框架。\n\n## 说明\n\n需要强调的是：**\"未提到\" 不等于 \"没有使用\"**。这些论文大多只在实现细节里简要交代硬件和优化器，并未系统说明并行训练方案，因此无法据此断定它们一定没用 DeepSpeed 或 Horovod——只能说知识库中的文本没有提供这方面的信息。如果你需要确认某篇具体论文，建议查阅其官方代码仓库。",
+      "retrieval_hit": null,
+      "retrieval_rank": null,
+      "evidence_required": [],
+      "evidence_found": [],
+      "evidence_missing": [],
+      "evidence_hit": null,
+      "judge_raw": "{\n  \"verdict\": \"NOT_FOUND_IN_CORPUS\",\n  \"verdict_reason\": \"The answer's core conclusion is that the corpus contains no mention of DeepSpeed or Horovod, while explicitly limiting the claim to the knowledge base and avoiding an absolute negative.\",\n  \"concepts_covered\": [\n    \"限于当前知识库，报告未找到此类分布式训练框架的证据，不作绝对否定。\"\n  ],\n  \"concepts_missing\": [],\n  \"forbidden_violations\": [],\n  \"citation_ok\": true,\n  \"citation_evidence\": \"没有任何一篇论文的正文提到 DeepSpeed 或 Horovod\",\n  \"scope_qualified\": true,\n  \"scope_reason\": \"The answer explicitly limits its conclusion to the knowledge base and states that '未提到' does not eq",
+      "judge": {
+        "verdict": "NOT_FOUND_IN_CORPUS",
+        "verdict_reason": "The answer's core conclusion is that the corpus contains no mention of DeepSpeed or Horovod, while explicitly limiting the claim to the knowledge base and avoiding an absolute negative.",
+        "concepts_covered": [
+          "限于当前知识库，报告未找到此类分布式训练框架的证据，不作绝对否定。"
+        ],
+        "concepts_missing": [],
+        "forbidden_violations": [],
+        "citation_ok": true,
+        "citation_evidence": "没有任何一篇论文的正文提到 DeepSpeed 或 Horovod",
+        "scope_qualified": true,
+        "scope_reason": "The answer explicitly limits its conclusion to the knowledge base and states that '未提到' does not equal '没有使用', avoiding an absolute negative."
+      },
+      "verdict": "NOT_FOUND_IN_CORPUS",
+      "verdict_correct": true,
+      "concepts_covered": 1,
+      "concepts_total": null,
+      "forbidden_violations": [],
+      "citation_ok": true,
+      "scope_qualified": true,
+      "expected_verdict": "NOT_FOUND_IN_CORPUS"
+    }
+  ]
+}

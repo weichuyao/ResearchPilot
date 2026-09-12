@@ -10,7 +10,7 @@
 
 ## 为什么用 TestClient 而不是起一个服务
 
-避免和用户正在跑的后端抢 8001 端口、抢 SQLite 写锁。TestClient 在进程内把应用
+避免和用户正在跑的后端抢 8002 端口、抢 PostgreSQL 连接。TestClient 在进程内把应用
 跑起来，验证的是同一份代码。
 
 ## 验收标准（对应设计文档第七节）
@@ -52,11 +52,15 @@ def _bootstrap() -> str:
 # ---------------------------------------------------------------------------
 # 造四种格式的测试文件
 # ---------------------------------------------------------------------------
-def make_pdf() -> bytes:
+def make_pdf(suffix: str = "") -> bytes:
     """手写 + pypdf 转存。
 
     手写 PDF 的交叉引用表很难算对，但 pypdf 读的时候会重建它，
     所以「手写 + 转存」就能得到一个完全合法的 PDF，不需要额外依赖。
+
+    `suffix` 让调用方能生成**内容不同**的文件：入库层的内容指纹防重
+    会拒绝与已入库文档重合的上传，想要两个都能索引成功的用例
+    （比如长文件名回归）就必须内容各异。
     """
     from pypdf import PdfReader, PdfWriter
 
@@ -67,6 +71,8 @@ It mentions a distinctive term, %s, which appears nowhere in the real corpus.
 
 A second paragraph mentions the same term again so the keyword index has
 something to match: %s.""" % (MARKER, MARKER)
+    if suffix:
+        body += "\n\nVariant marker for this test case only: %s." % suffix
 
     ops = ["BT", "/F1 11 Tf", "72 720 Td", "14 TL"]
     for line in body.strip().splitlines():
@@ -432,13 +438,19 @@ def main() -> int:
                      "Person_and_Vehicle_Re-Identification_in_Surveillance_Networks_"
                      "Journal_Version_Final_Accepted_Manuscript_2024.pdf")
         print("[长文件名] %d 字符" % len(long_name))
+        # 内容必须唯一（后缀区分）：make_pdf() 每次生成的内容相同，而入库层
+        # 的内容指纹防重会拒绝与已入库文档 100% 重合的新上传 ——
+        # 这条用例测的是「长文件名的扩展名不被截掉」，不是重复入库。
         r = client.post("/documents",
-                        files={"file": (long_name, make_pdf(), "application/pdf")},
+                        files={"file": (long_name, make_pdf(suffix="long-filename-regression"), "application/pdf")},
                         data={"title": "长文件名回归测试"})
         if r.status_code != 202:
             failures.append("长文件名上传应为 202，实际 %s：%s" % (r.status_code, r.text[:160]))
         else:
             long_id = r.json()["id"]
+            # 202 受理时就登记（source_file 未知先留空）：索引失败的记录
+            # 也必须能被清理，否则跑完测试留一条 failed 行
+            TRACKED.append((long_id, ""))
             state = wait_for(client, long_id)
             if not state or state["status_text"] != "indexed":
                 failures.append("长文件名文档索引失败：%s" % state)

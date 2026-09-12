@@ -19,7 +19,7 @@ import time
 import httpx
 
 # 环境变量可能存在但为空 —— or 兜底，不能用 get 的默认值参数
-BASE = os.environ.get("NEXT_PUBLIC_API_BASE_URL") or "http://127.0.0.1:8001"
+BASE = os.environ.get("NEXT_PUBLIC_API_BASE_URL") or "http://127.0.0.1:8002"
 SUPPORTED = {".pdf", ".docx", ".md", ".markdown", ".txt", ".text"}
 
 

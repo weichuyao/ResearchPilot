@@ -4,7 +4,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$ports = @(3000, 8001)
+$ports = @(3000, 8002)
 if ($StopOllama) { $ports += 11434 }
 
 function Get-ListeningProcessId {

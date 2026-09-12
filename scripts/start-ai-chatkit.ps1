@@ -166,16 +166,19 @@ else {
     Write-Warning ("httpx could not reach Ollama on 127.0.0.1:11434 (result: {0}). RAG embeddings will fail with HTTP 502. Turn the system proxy off, add 127.0.0.1 to its bypass list, or set NO_PROXY manually." -f $loopbackStatus)
 }
 
-if (-not (Test-LocalPort 8001)) {
-    Write-Host 'Starting backend at http://localhost:8001 ...'
+if (-not (Test-LocalPort 8002)) {
+    Write-Host 'Starting backend at http://localhost:8002 ...'
+    # 必须经 run_server.py 启动：Windows 上裸 `python -m uvicorn` 是 Proactor
+    # 循环，psycopg 异步（checkpointer）连不上，30 秒 PoolTimeout 后退出。
+    # run_server.py 在 uvicorn.run 之前设 Selector 策略（见 backend/run_server.py）。
     Start-Process -FilePath $backendPython `
-        -ArgumentList '-m', 'uvicorn', 'main:app', '--app-dir', 'app', '--host', '127.0.0.1', '--port', '8001' `
+        -ArgumentList 'run_server.py' `
         -WorkingDirectory $backendDir `
         -WindowStyle Hidden
-    Wait-ForLocalPort -Port 8001 -ServiceName 'Backend'
+    Wait-ForLocalPort -Port 8002 -ServiceName 'Backend'
 }
 else {
-    Write-Host 'Backend already listening on 8001; its environment is left untouched.' -ForegroundColor Yellow
+    Write-Host 'Backend already listening on 8002; its environment is left untouched.' -ForegroundColor Yellow
     Write-Host 'If it was started before this proxy fix, restart it (stop-ai-chatkit.ps1, then this script) so NO_PROXY applies.' -ForegroundColor Yellow
 }
 
@@ -206,7 +209,7 @@ if (-not (Test-LocalPort 3000)) {
 Write-Host ''
 Write-Host 'AI ChatKit is ready.' -ForegroundColor Green
 Write-Host 'Frontend: http://localhost:3000'
-Write-Host 'Backend:  http://localhost:8001/docs'
+Write-Host 'Backend:  http://localhost:8002/docs'
 
 if (-not $NoBrowser -and $Browser -ne 'none') {
     $browserExecutable = Resolve-BrowserExecutable -Name $Browser
