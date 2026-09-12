@@ -538,8 +538,8 @@ graph.add_conditional_edges("assess", after_assess, {"refine": "refine", "synthe
 graph.add_edge("refine", "retrieve")
 graph.add_edge("synthesize", END)
 
-def build_research_workflow():
-    """编译图。由 agents.py 惰性调用（理由同 react_assistant）。"""
+async def build_research_workflow():
+    """编译图。惰性 + async（签名与 react_assistant 统一，见 agents.py）。"""
     compiled = graph.compile(checkpointer=get_checkpointer())
     compiled.name = "research_workflow"
     return compiled

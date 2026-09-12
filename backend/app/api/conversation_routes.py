@@ -48,7 +48,7 @@ async def get_messages(thread_id: str) -> list[ChatMessage]:
 
     # 必须用**当时的那个图**读：不同图的 state schema 不同，
     # thread 是绑定在图上的。会话行里存 agent_id 就是为了这里。
-    agent = get_agent(row.agent_id or DEFAULT_AGENT)
+    agent = await get_agent(row.agent_id or DEFAULT_AGENT)
     config = RunnableConfig(configurable={"thread_id": thread_id})
     state = await agent.aget_state(config=config)
     messages = (state.values or {}).get("messages", [])
@@ -78,7 +78,7 @@ async def delete_conversation(thread_id: str):
         agent_id = row.agent_id or DEFAULT_AGENT
 
     # checkpointer 不走业务 session —— 它的表是 LangGraph 自己的。
-    agent = get_agent(agent_id)
+    agent = await get_agent(agent_id)
     try:
         await agent.checkpointer.adelete_thread(thread_id)
     except Exception as exc:

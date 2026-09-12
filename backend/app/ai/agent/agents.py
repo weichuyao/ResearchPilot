@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Callable
+from typing import Awaitable, Callable
 
 from langgraph.graph.state import CompiledStateGraph
 from pydantic import BaseModel, Field
@@ -35,16 +35,10 @@ class Agent:
     description: str
     # 图的编译是**惰性**的（改造 #5 之二）：AsyncPostgresSaver 的构造需要
     # 运行中的事件循环，而「导入本模块」的上下文（TestClient、脚本）没有循环。
-    # 编译因此推迟到第一次 get_agent() —— 服务路径上一定在循环里（startup 事件
-    # 会先把所有图预热一遍），评估脚本则在 asyncio.run 里调用。
-    graph_factory: Callable[[], CompiledStateGraph]
+    # 改造 #4 起工厂还是 async —— react-assistant 编译时要经 stdio 挂载 MCP 工具。
+    # 首次编译发生在 startup 预热（循环内）或第一次请求。
+    graph_factory: Callable[[], Awaitable[CompiledStateGraph]]
     _graph: CompiledStateGraph | None = field(default=None, repr=False)
-
-    @property
-    def graph(self) -> CompiledStateGraph:
-        if self._graph is None:
-            self._graph = self.graph_factory()
-        return self._graph
 
 
 agents: dict[str, Agent] = {
@@ -59,9 +53,12 @@ agents: dict[str, Agent] = {
 }
 
 ## Get agent by agent_id
-def get_agent(agent_id: str) -> CompiledStateGraph:
-    """Get agent by agent_id"""
-    return agents[agent_id].graph
+async def get_agent(agent_id: str) -> CompiledStateGraph:
+    """取（并在首次调用时编译）agent 图。必须在事件循环内调用。"""
+    agent = agents[agent_id]
+    if agent._graph is None:
+        agent._graph = await agent.graph_factory()
+    return agent._graph
 
 
 def get_all_agent_info() -> list[AgentInfo]:

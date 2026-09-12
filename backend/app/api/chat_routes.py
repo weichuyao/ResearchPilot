@@ -48,7 +48,7 @@ async def invoke(user_input: UserInput) -> ChatMessage:
     """
     if user_input.agent_id not in agents:
         raise HTTPException(status_code=404, detail=f"未知的 agent: {user_input.agent_id}")
-    agent: CompiledStateGraph = get_agent(user_input.agent_id)
+    agent: CompiledStateGraph = await get_agent(user_input.agent_id)
     
     kwargs, run_id, thread_id = await _handle_input(user_input, agent)
     try:
@@ -161,7 +161,7 @@ async def message_generator(
     if user_input.agent_id not in agents:
         # SSE 响应头一旦发出状态码就锁死了，所以这个检查必须在流开始之前做。
         raise HTTPException(status_code=404, detail=f"未知的 agent: {user_input.agent_id}")
-    agent: CompiledStateGraph = get_agent(user_input.agent_id)
+    agent: CompiledStateGraph = await get_agent(user_input.agent_id)
     kwargs, run_id, thread_id = await _handle_input(user_input, agent)
 
     completed = False

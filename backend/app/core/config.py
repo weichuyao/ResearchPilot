@@ -52,6 +52,12 @@ class Settings(BaseSettings):
     # 636 块的语料上代价可忽略；Chroma 没有这个能力，这正是对比的痛点之一。
     QDRANT_EXACT: bool = False
 
+    # --- MCP（改造 #4）---
+    # 目前只有 arXiv 一条。ENABLED=false 时一个子进程都不拉（评估/测试用）。
+    MCP_ARXIV_ENABLED: bool = False
+    # stdio 传输的启动命令，空格切分。uvx 首次运行会下载包，之后走缓存。
+    MCP_ARXIV_COMMAND: str = "uvx arxiv-mcp-server"
+
     # 当前代码的 git 提交号，给 /health 用。
     #
     # 本机跑的时候 /health 直接读 .git 目录就行（见 api/system_routes.py）。

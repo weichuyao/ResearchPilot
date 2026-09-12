@@ -23,6 +23,10 @@
 
 from __future__ import annotations
 
+# 验收脚本不碰 MCP 子进程/网络（必须在 __future__ 之后、其它 import 之前）
+import os as _os
+_os.environ["MCP_ARXIV_ENABLED"] = "false"
+
 import io
 import os
 import sys

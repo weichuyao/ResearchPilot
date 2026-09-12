@@ -32,6 +32,8 @@ dependencies = [
     "psycopg[binary]>=3.3.5",
     # 向量库对比（改造 #6 之二）：默认仍是 Chroma，qdrant 由 VECTOR_STORE 切换
     "qdrant-client>=1.19.0",
+    # MCP（改造 #4）：把外部 MCP server 的工具转成 LangChain 工具
+    "langchain-mcp-adapters>=0.3.2",
     "mysql-connector-python>=9.3.0",
     "pydantic-settings>=2.9.1",
     "pdfminer.six>=20231228",

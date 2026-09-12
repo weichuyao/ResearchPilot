@@ -46,7 +46,7 @@ async def initialize_database() -> None:
     # 预热：惰性编译的图在这里全部编译（此刻事件循环在跑）。
     # 图的结构错误在启动时暴露，而不是留给第一个请求；/agents 列表也顺带变快。
     for agent_id in agents:
-        get_agent(agent_id)
+        await get_agent(agent_id)
     logger.info("agents 预热完成：%s", ", ".join(agents))
 
 

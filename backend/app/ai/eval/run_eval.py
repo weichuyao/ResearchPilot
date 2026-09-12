@@ -639,7 +639,10 @@ async def _main() -> None:
     if args.agent not in agents:
         print("未知的 agent %r。可选：%s" % (args.agent, ", ".join(sorted(agents))))
         return
-    agent = get_agent(args.agent)
+    # 评估路径必须与外部世界隔离（MCP server 是网络 + 子进程，会引入
+    # 不可复现的延迟/失败）—— 评估只测本地语料能力。
+    os.environ["MCP_ARXIV_ENABLED"] = "false"
+    agent = await get_agent(args.agent)
 
     # checkpointer 落库后（改造 #5 之二），本进程要自己打开它的连接池 ——
     # 这里有 startup 事件可蹭，不调的话第一笔 checkpoint 就是 PoolClosed（实测）。

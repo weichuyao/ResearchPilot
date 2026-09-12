@@ -16,6 +16,7 @@ from langgraph.prebuilt import ToolNode
 from ai.agent.checkpointer import get_checkpointer
 from ai.llm import get_model, settings
 from ai.tools.research_tools import list_papers, search_documents
+from ai.tools.mcp_tools import get_mcp_tools
 
 
 from langchain.globals import set_debug
@@ -34,9 +35,10 @@ set_verbose(False)
 class AgentState(MessagesState):
     """State of the agent."""
 
-tools = [list_papers, search_documents]
+# 本地工具永远在场；MCP 外部工具（arXiv 等）在编译时尝试挂载（见 build）。
+BASE_TOOLS = [list_papers, search_documents]
 
-def wrap_model(model: BaseChatModel) -> RunnableSerializable[AgentState, AIMessage]:
+def wrap_model(model: BaseChatModel, tools) -> RunnableSerializable[AgentState, AIMessage]:
     model = model.bind_tools(tools)
     preprocessor = RunnableLambda(
         lambda state: [SystemMessage(content=instructions)] + state["messages"],
@@ -73,15 +75,6 @@ instructions = """
 """
 
 
-async def call_model(state: AgentState, config: RunnableConfig) -> AgentState:
-    """This node is to call llm model"""
-
-    m = get_model(config["configurable"].get("model", settings.DEFAULT_MODEL))
-    model_runnable = wrap_model(m)
-    response = await model_runnable.ainvoke(state, config)
-
-    return {"messages": [response]}
-
 
 
 # After "model", if there are tool calls, run "tools". Otherwise END.
@@ -94,26 +87,25 @@ def pending_tool_calls(state: AgentState) -> Literal["tools", "done"]:
     return "done"
 
 
-# Define the graph
-agent = StateGraph(AgentState)
-agent.add_node("model", call_model)
-agent.add_node("tools", ToolNode(tools = tools))
+async def build_react_assistant():
+    """装配并编译图。惰性调用，两个原因：
+    1. checkpointer 构造需要运行中的事件循环（ai/agent/checkpointer.py）；
+    2. MCP 工具在这里经 stdio 挂载（ai/tools/mcp_tools.py）—— 拉不起来就
+       WARNING + 只有本地工具，本 agent 的其余部分不受影响。"""
+    tools = BASE_TOOLS + list(await get_mcp_tools())
 
-agent.set_entry_point("model")
-agent.add_edge("tools", "model")
+    async def call_model(state: AgentState, config: RunnableConfig) -> AgentState:
+        m = get_model(config["configurable"].get("model", settings.DEFAULT_MODEL))
+        response = await wrap_model(m, tools).ainvoke(state, config)
+        return {"messages": [response]}
 
-agent.add_conditional_edges("model", pending_tool_calls, {"tools": "tools", "done": END})
+    builder = StateGraph(AgentState)
+    builder.add_node("model", call_model)
+    builder.add_node("tools", ToolNode(tools=tools))
+    builder.set_entry_point("model")
+    builder.add_edge("tools", "model")
+    builder.add_conditional_edges("model", pending_tool_calls, {"tools": "tools", "done": END})
 
-
-def build_react_assistant():
-    """编译图。由 agents.py 惰性调用（不能在导入期编译：checkpointer 的构造
-    需要运行中的事件循环，见 ai/agent/checkpointer.py 的生命周期说明）。"""
-    graph = agent.compile(checkpointer=get_checkpointer())
+    graph = builder.compile(checkpointer=get_checkpointer())
     graph.name = "react_assistant"
     return graph
-
-# Save the graph as a PNG
-# graph_png = agent.compile(checkpointer=get_checkpointer()).get_graph().draw_mermaid_png()
-
-# with open("graph.png", "wb") as f:
-#     f.write(graph_png)
