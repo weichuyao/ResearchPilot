@@ -12,7 +12,7 @@
 **学习模式**：用户本人是学习者，AI 按导师/承包商角色干活；硬性规矩是
 **任何改造先写设计文档（为什么/代价/验证标准），再动手，最后用数据验证**。
 设计文档全在 `reference/transformation-*.md`，决策总账在
-`reference/design-decisions.md`（9 个决策，全部带实测数据）。
+`reference/design-decisions.md`（10 个决策，全部带实测数据）。
 
 **铁律**（违反会毁掉这个项目的价值）：
 1. 先测量后改：任何优化必须有护栏验证（rank_bench + run_eval 30 题不退）
@@ -36,36 +36,31 @@
 | 9 | Docker | ✅ api/pg/web 三服务 + 可选 qdrant |
 | 10 | 前端 | ✅ 苹果风主题、agent/格式动态取、会话走后端、重命名、多选上传、引用 chips |
 
-**近期新增能力**（今天完成的）：语料 80→73 篇（用户批量上传后又在删减）、
-arXiv 编号→年份解码与年份筛选（两个模式都有）、引用可点击看原文、主题订阅、
-综述生成入口、后端黑盒测试脚本 `qa_blackbox_test.py`。
+**近期新增能力**（2026-09-12）：**检索优化三项全部落地**（结构化元数据 +
+年份过滤、相邻块两轮分配 + 检索层内容去重、表格块标注——全量重索引后
+kind 6818/6818 块（table 108）、year 21/73、external_id 10/73，见决策十
+及后续一/二/三）；语料 80→73 篇（清理 7 对重复入库 + ingest 层内容指纹
+防重）；arXiv 编号→年份解码与年份筛选（两个模式都有）、引用可点击看原文、
+主题订阅、综述生成入口、后端黑盒测试脚本 `qa_blackbox_test.py`。
 
-## 三、当前正在做的任务（本会话未完成的部分）
+## 三、检索优化三项（✅ 已全部完成，2026-09-12）
 
-三项检索层优化（设计文档：
-`reference/transformation-retrieval-optimizations-design.md`）：
-
-- **项 1 结构化元数据** ✅ 完成（`cb2d46e`）
-- **项 2 相邻块 + 项 3 表格标注**：代码已提交（`670c682`，WIP），检索层已
-  实测生效（A08 三锚点直连全命中——决策七的跨块枚举问题在检索层根治），
-  **但端到端还有 3 个问题没闭合**：
-  1. **A08 端到端仍 NOT_FOUND**：agent 自己的查询没捞出 (iii) 块。疑点：
-     ① `run_eval.py` 的 harvest 解析（tool_queries 在评估记录里为空，
-     疑似被 `format_hits` 新格式弄坏——本项目踩过两次的老坑：改输出格式
-     没同步解析正则）；② context cap=6 被多篇论文的邻居挤占
-     （备选修法：按论文分组配额 / 每命中只取 1 个紧邻）
-  2. **A05 锚点 `first-order difference` 语料字面缺失**（kmin 命中）：
-     查 DPEFormer 第 4 页附近的实际写法（变体/断词），确认后改评估集
-     required_evidence 为真实字面串，`--mark-verified`
-  3. **B05 翻 GROUNDED**：复跑 3 次判噪声；语料 GAN 提及 ×154（探针已报警），
-     若真有 GAN 方法则人工修订期望值并记录
-- ⚠️ 用户正在删减语料（80→73 篇，19:41 删了 2602.x/2603.x 系列），
-  `verified_on`（81 篇/7406 块）已过期——**改完先按当前语料复核 B 类
-  期望值再跑全量**
+- **项 1 结构化元数据** ✅（`cb2d46e` 代码 + `dc32ec8` 重索引落地：元数据回填
+  `refresh_paper_metadata` 挂进索引后台任务收口，上传/重索引两路径一致）
+- **项 2 相邻块** ✅（两轮分配：每命中先各拿一个续块 i+1、有剩再补前块，
+  防头部命中独占 cap；配检索层内容去重——语料 7 对重复副本曾把候选池
+  减半并瓜分名额，A08 由此根治，`a9a4418`）
+- **项 3 表格标注** ✅（重索引后 108 个 table 块，`[experimental table]`
+  前缀已修活——WIP 提交里它是死代码）
+- 收尾时的三个疑问全部闭合：A08 端到端 GROUNDED、A05 锚点经修订
+  （`maximal gradient magnitude`）全绿、B05 复跑判定为评委噪声。
+  全量护栏：30 题 A/B/C verdict 全对、evidence_recall 1.0、黑盒 11/11。
+  详见决策十及"后续之一/二/三"。
 
 ## 四、改完之后的全项目脉络（下一步方向）
 
-1. **收尾当前三项**（见第三节标准：30 题全量不退 + rank_bench + 文档）
+1. ~~**收尾当前三项**~~ —— ✅ 2026-09-12 完成（30 题全量不退 + rank_bench +
+   决策十；`verified_on` 已复核更新到 73 篇/6818 块）
 2. **语料稳定后补评估**：用户还在增删文献——每轮变动后跑探针（B 类缺席
    告警）+ 阈值校准脚本（`calibrate_threshold.py`，当前 0.35 是 4 篇时代
    校准的，语料稳定后建议重校）
@@ -83,8 +78,9 @@ arXiv 编号→年份解码与年份筛选（两个模式都有）、引用可�
 
 | 事项 | 现状与命令 |
 |---|---|
-| 后端 | **8002 端口**（不是 8001）：`cd backend && NO_PROXY="127.0.0.1,localhost,::1" .venv-py311\Scripts\python.exe -m uvicorn main:app --app-dir app --host 127.0.0.1 --port 8002 --log-level warning --reload` |
-| **--reload 不可信** | 三次看漏变更 + 并发编辑会崩 worker（exit 1）。改完后端**手动重启**，用 `/health` 的 `started_at` 核对 |
+| 后端 | **8002 端口**（不是 8001）：`cd backend && NO_PROXY="127.0.0.1,localhost,::1" .venv-py311\Scripts\python.exe run_server.py` |
+| **为什么必须用 run_server.py** | Windows 裸 `python -m uvicorn` = psycopg PoolTimeout（psycopg 异步只支持 Selector 循环，uvicorn 0.34 只在 `--reload` 子进程自带 Selector）；run_server.py 在 `uvicorn.run` 前设策略，无 --reload 依赖 |
+| **热加载不可信** | --reload 实测多次看漏变更（并发编辑还会崩 worker）。改完后端**重启进程**，用 `/health` 的 `started_at` 核对（git_rev 是请求时读的，不能判进程新旧） |
 | 8001 僵尸 | 杀不掉的旧服务（PID 归属错乱，疑似 WSL/docker 转发层），跑旧代码。**别往 8001 发请求**；用户重启电脑清理 |
 | 8000 端口 | 有个用户其他项目的服务（曾被误杀过一次，用户已重启）——**清理进程时别碰 8000** |
 | 前端 | 3000，`pnpm dev`；`.env.local` 指向 8002。改 .env.local 要重启前端 |
@@ -103,6 +99,9 @@ arXiv 编号→年份解码与年份筛选（两个模式都有）、引用可�
 6. Chroma 的 relevance 实际是 l2 换算（1-d²/√2），不是余弦——阈值 0.35
    的口径，Qdrant 适配器已对齐
 7. git_rev 在 `/health` 里是请求时读的，不能用来判断进程新旧；用 started_at
+8. Windows 裸 `python -m uvicorn` 起服务 = psycopg PoolTimeout（Proactor 循环 +
+   psycopg 异步不兼容，uvicorn 0.34 只在 `--reload` 子进程自带 Selector）；
+   用 `run_server.py`，别再加 `--reload` 绕。启动失败先看是不是这个
 
 ## 七、用户偏好
 
