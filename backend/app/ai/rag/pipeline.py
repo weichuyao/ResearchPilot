@@ -21,12 +21,14 @@
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass
 
 from langchain_core.documents import Document
 
 from ai.rag.hybrid import doc_key, hybrid_search
 from ai.rag.rerank import rerank_hits, score_pairs
+from ai.rag.textnorm import norm_for_match
 
 
 # 检索相关性阈值。校准过程见 design-decisions.md 决策一。
@@ -67,6 +69,13 @@ FINAL_TOP_N = 10
 DEFAULT_CANDIDATES = RERANK_CANDIDATES
 DEFAULT_TOP_N = FINAL_TOP_N
 
+# 混合召回的超采样倍数。语料里存在同一篇 PDF 被上传两次的重复副本（实测 80 篇里有
+# 7 对，见 design-decisions.md 决策八）：副本的向量几乎相同，在召回里双双挤进前排，
+# 10 个候选有一半名额花在重复内容上，还会各自瓜分相邻块的 cap（A08 的 (iii) 块
+# 就是这样被挤出去的）。先超采样再按内容去重，截回候选数，重排成本不变；
+# 无重复的查询去重后顺序不变，行为与以前完全一致。
+CANDIDATE_OVERFETCH = 3
+
 
 @dataclass
 class Outcome:
@@ -106,6 +115,36 @@ class Outcome:
         return max(scores) if scores else None
 
 
+def _content_key(doc: Document) -> str:
+    """块的**跨副本**内容标识。
+
+    doc_key 绑定 source（哪个文件），区分不了同一 PDF 的两份副本；
+    这里对归一化后的文本取哈希 —— 归一化用评估锚点匹配的同一个函数
+    （ai/rag/textnorm.py），保证「评估说缺的锚点」和「去重说重的块」是同一种文本观。
+    """
+    return hashlib.sha1(norm_for_match(doc.page_content).encode("utf-8")).hexdigest()
+
+
+def _dedupe_hits(
+    hits: list[tuple[Document, str, float | None]], limit: int
+) -> list[tuple[Document, str, float | None]]:
+    """按内容去重，同内容只保留融合排名最靠前的那份副本，截到 limit 条。
+
+    保序：无重复时输出与输入完全一致（前 limit 条原样通过）。
+    """
+    seen: set[str] = set()
+    out: list[tuple[Document, str, float | None]] = []
+    for doc, origin, score in hits:
+        key = _content_key(doc)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append((doc, origin, score))
+        if len(out) >= limit:
+            break
+    return out
+
+
 def _attach_context_chunks(
     ordered: list[tuple[Document, str, float | None]], cap: int = 6
 ) -> list[tuple[Document, str, float | None]]:
@@ -114,17 +153,24 @@ def _attach_context_chunks(
     根治决策七诚实清单里的遗留：枚举跨 931 字符 > chunk_size 800 时答案被
     切块边界切断（A08 的 (iii) 在下一个块里）。相邻块不参与重排与阀门
     （分数记 None），只作为上下文进入 LLM 的材料 —— 锚点能对上即可。
+
+    名额分配用**两轮制**：第一轮每个命中只拿一个「续块」（i+1），第二轮
+    名额有剩才回头补「前块」（i-1）。旧实现每个命中同时拿前后两块、先到先得，
+    结果前几名命中就把 cap 吃光（实测 A08：前 3 名拿走全部 6 个名额，
+    第 4 名的续块正是含 "(iii) loading and equipment configuration" 的那块，
+    挤不进来，agent 只好回答「第三项被截断」）。被切断的枚举/句子几乎总是
+    **向后延续**，所以续块优先。
     """
     if not ordered:
         return ordered
     from ai.rag.chromaClient import document_vector_store
 
     have = {doc_key(d.metadata, d.page_content) for d, _m, _s in ordered}
-    added: list[tuple[Document, str, float | None]] = []
-    added_keys: set = set()
+    docs_by_source: dict[str, list[Document]] = {}
+    index_by_key_by_source: dict[str, dict] = {}
     for doc, _m, _s in ordered:
         src = doc.metadata.get("source")
-        if not src:
+        if not src or src in docs_by_source:
             continue
         try:
             got = document_vector_store.get(where={"source": src})
@@ -134,21 +180,39 @@ def _attach_context_chunks(
             Document(page_content=c or "", metadata=m or {})
             for c, m in zip(got.get("documents") or [], got.get("metadatas") or [])
         ]
-        index_by_key = {doc_key(d.metadata, d.page_content): i for i, d in enumerate(docs)}
-        key = doc_key(doc.metadata, doc.page_content)
-        i = index_by_key.get(key)
+        docs_by_source[src] = docs
+        index_by_key_by_source[src] = {doc_key(d.metadata, d.page_content): i for i, d in enumerate(docs)}
+
+    added: list[tuple[Document, str, float | None]] = []
+    added_keys: set = set()
+
+    def try_add(doc: Document, offset: int) -> None:
+        if len(added) >= cap:
+            return
+        src = doc.metadata.get("source")
+        docs = docs_by_source.get(src)
+        if not docs:
+            return
+        i = index_by_key_by_source[src].get(doc_key(doc.metadata, doc.page_content))
         if i is None:
-            continue
-        for j in (i - 1, i + 1):
-            if not (0 <= j < len(docs)):
-                continue
-            nk = doc_key(docs[j].metadata, docs[j].page_content)
-            if nk in have or nk in added_keys:
-                continue
-            added.append((docs[j], "context", None))
-            added_keys.add(nk)
+            return
+        j = i + offset
+        if not (0 <= j < len(docs)):
+            return
+        nk = doc_key(docs[j].metadata, docs[j].page_content)
+        if nk in have or nk in added_keys:
+            return
+        added.append((docs[j], "context", None))
+        added_keys.add(nk)
+
+    # 第一轮：每个命中一个续块；第二轮：名额有剩再补前块。
+    for offset in (1, -1):
+        for doc, _m, _s in ordered:
+            try_add(doc, offset)
             if len(added) >= cap:
-                return ordered + added
+                break
+        if len(added) >= cap:
+            break
     return ordered + added
 
 
@@ -162,7 +226,9 @@ def retrieve(
 
     阀门刻意放在重排**之前**：既然要拒答了，就没必要再花 0.5s 跑一次重排。
     """
-    hits, vector_top1 = hybrid_search(query, allowed_sources=allowed_sources, top_n=candidates)
+    hits, vector_top1 = hybrid_search(query, allowed_sources=allowed_sources,
+                                      top_n=candidates * CANDIDATE_OVERFETCH)
+    hits = _dedupe_hits(hits, candidates)
 
     if vector_top1 < RELEVANCE_THRESHOLD or not hits:
         return Outcome(query=query, hits=[], vector_top1=vector_top1,

@@ -1,0 +1,302 @@
+{
+  "summary": {
+    "total": 1,
+    "judged": 1,
+    "not_judged": 0,
+    "parse_warnings": 0,
+    "metric_reliable": true,
+    "B": {
+      "count": 1,
+      "verdict_accuracy": 1.0,
+      "over_claim_rate": 0.0,
+      "scope_qualified_rate": 1.0
+    },
+    "process": {
+      "avg_tool_calls": 4.0,
+      "avg_context_chars": 37416,
+      "avg_seconds": 7.5
+    },
+    "agent": "react-assistant",
+    "model": "deepseek-chat",
+    "corpus": {
+      "papers": 80,
+      "chunks": 7406
+    },
+    "fixture": {
+      "stale": true,
+      "verified_on": {
+        "papers": 81,
+        "chunks": 7406
+      },
+      "scoped_items": [
+        "B03",
+        "B04",
+        "B05",
+        "B06",
+        "B07",
+        "B08"
+      ],
+      "b_probe_alarms": {
+        "B03": {
+          "AIS": 16,
+          "automatic identification system": 1
+        },
+        "B04": {
+          "LiDAR": 11,
+          "point cloud": 8,
+          "sonar": 5
+        },
+        "B05": {
+          "GAN": 154
+        },
+        "B06": {
+          "reinforcement learning": 14
+        },
+        "B07": {
+          "federated": 5
+        }
+      }
+    }
+  },
+  "records": [
+    {
+      "id": "B05",
+      "type": "B",
+      "question": "当前知识库中的 DPEFormer 是否用 GAN（生成对抗网络）生成遮挡训练图像？",
+      "seconds": 7.5,
+      "tool_calls": 4,
+      "queries": [
+        "search_documents({\"query\": \"DPEFormer occluded training image generation GAN\", \"paper\": \"DPEFormer\"})",
+        "list_papers({})",
+        "search_documents({\"paper\": \"Dynamic Patch-aware Enrichment Transformer\", \"query\": \"occluded training image generation GAN generative adversarial network\"})",
+        "search_documents({\"paper\": \"Dynamic Patch-aware Enrichment Transformer\", \"query\": \"occlusion augmentation training data synthesis method\"})"
+      ],
+      "retrieved": [
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "8",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "7",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "12",
+          "score": 0.43
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.42
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "11",
+          "score": 0.41
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "11",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "9",
+          "score": 0.42
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "11",
+          "score": 0.44
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "12",
+          "score": 0.44
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "11",
+          "score": 0.44
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "8",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "12",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "12",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "11",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "10",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.38
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "7",
+          "score": 0.5
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "6",
+          "score": 0.43
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "6",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "9",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "7",
+          "score": 0.51
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "6",
+          "score": 0.45
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.41
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "9",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "9",
+          "score": 0.5
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "7",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "6",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "6",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "7",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "6",
+          "score": null
+        }
+      ],
+      "parse_warnings": 0,
+      "context_chars": 37416,
+      "answer": "**不是。** DPEFormer 生成遮挡训练图像用的是 **SAM（Segment Anything Model）**，而不是 GAN。\n\n具体来说，DPEFormer 提出的遮挡增强策略叫 **Realistic Occlusion Augmentation (ROA)**：\n\n- ROA 的掩码集（mask set）是由 **SAM** 在自然图像（SA-1B 数据集）上生成的，训练时从中随机选取掩码来合成遮挡（\"Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification\", p.6；Algorithm 1, p.6）。\n- 论文明确把 ROA 与已有的 Random Erasing、Cut&Paste（以及 FED 的 NPO 策略）对比，指出这些方法合成图像\"粗糙、不真实\"，而 ROA 借助 SAM 生成更真实、轮廓细节更丰富的遮挡图像（p.6, p.9）。\n- ROA 只作为辅助训练策略，不参与推理阶段（p.2）。\n\n关于 GAN：论文中确实出现过 \"GAN\"，但只是在**相关工作/参考文献**里提到的对比方法，例如 FD-GAN（NIPS 18）、Adver Occluded（CVPR 18，即用对抗方式生成遮挡样本），以及引用 [46] \"Unlabeled samples generated by GAN improve the person re-identification baseline\"（p.8 表 I、p.12 参考文献）。这些是别人的方法，不是 DPEFormer 自己用来生成遮挡图像的手段。\n\n补充说明：知识库中并没有标题恰为 \"DPEFormer\" 的论文，最匹配的是 **\"Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification\"**（其缩写即 DPEFormer）。以上结论基于该论文。",
+      "retrieval_hit": null,
+      "retrieval_rank": null,
+      "evidence_required": [],
+      "evidence_found": [],
+      "evidence_missing": [],
+      "evidence_hit": null,
+      "judge_raw": "{\n  \"verdict\": \"NOT_FOUND_IN_CORPUS\",\n  \"verdict_reason\": \"The answer's core conclusion is that the corpus contains no evidence DPEFormer uses GAN for occlusion generation, instead attributing it to SAM/ROA, and it limits the claim to the provided corpus.\",\n  \"concepts_covered\": [\n    \"限于当前知识库，报告未找到 GAN 生成遮挡的证据\",\n    \"不从 ROA 反推绝对否定\"\n  ],\n  \"concepts_missing\": [],\n  \"forbidden_violations\": [],\n  \"citation_ok\": true,\n  \"citation_evidence\": \"\\\"Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification\\\", p.6；Algorithm 1, p.6\",\n  \"scope_qualified\": true,\n  \"scope_reason\": \"Th",
+      "judge": {
+        "verdict": "NOT_FOUND_IN_CORPUS",
+        "verdict_reason": "The answer's core conclusion is that the corpus contains no evidence DPEFormer uses GAN for occlusion generation, instead attributing it to SAM/ROA, and it limits the claim to the provided corpus.",
+        "concepts_covered": [
+          "限于当前知识库，报告未找到 GAN 生成遮挡的证据",
+          "不从 ROA 反推绝对否定"
+        ],
+        "concepts_missing": [],
+        "forbidden_violations": [],
+        "citation_ok": true,
+        "citation_evidence": "\"Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification\", p.6；Algorithm 1, p.6",
+        "scope_qualified": true,
+        "scope_reason": "The answer explicitly limits its conclusion to the provided corpus: '知识库中并没有标题恰为 \"DPEFormer\" 的论文...以上结论基于该论文。'"
+      },
+      "verdict": "NOT_FOUND_IN_CORPUS",
+      "verdict_correct": true,
+      "concepts_covered": 2,
+      "concepts_total": null,
+      "forbidden_violations": [],
+      "citation_ok": true,
+      "scope_qualified": true,
+      "expected_verdict": "NOT_FOUND_IN_CORPUS"
+    }
+  ]
+}

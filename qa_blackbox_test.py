@@ -8,7 +8,7 @@
     python qa_blackbox_test.py cleanup   # 清理本脚本创建的所有测试产物
     python qa_blackbox_test.py verify    # 核实数字与基线一致
 
-只在 127.0.0.1:8001 上跑；绝不改动/删除基线已存在的资源。
+只在 127.0.0.1:8002 上跑；绝不改动/删除基线已存在的资源。
 状态记录在 .qa_state.json。
 """
 import io
@@ -20,7 +20,7 @@ import uuid
 
 import httpx
 
-BASE = "http://127.0.0.1:8001"
+BASE = "http://127.0.0.1:8002"
 STATE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".qa_state.json")
 NOEXIST = "qa-noexist-%s" % uuid.uuid4().hex[:12]
 

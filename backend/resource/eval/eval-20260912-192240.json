@@ -1,0 +1,315 @@
+{
+  "summary": {
+    "total": 1,
+    "judged": 1,
+    "not_judged": 0,
+    "parse_warnings": 0,
+    "metric_reliable": true,
+    "A": {
+      "count": 1,
+      "retrieval_recall": 1.0,
+      "evidence_recall": 1.0,
+      "verdict_accuracy": 1.0,
+      "avg_concept_coverage": 1.0,
+      "citation_ok_rate": 1.0
+    },
+    "process": {
+      "avg_tool_calls": 2.0,
+      "avg_context_chars": 29887,
+      "avg_seconds": 5.7
+    },
+    "agent": "react-assistant",
+    "model": "deepseek-chat",
+    "corpus": {
+      "papers": 80,
+      "chunks": 7406
+    },
+    "fixture": {
+      "stale": true,
+      "verified_on": {
+        "papers": 81,
+        "chunks": 7406
+      },
+      "scoped_items": [
+        "B03",
+        "B04",
+        "B05",
+        "B06",
+        "B07",
+        "B08"
+      ],
+      "b_probe_alarms": {
+        "B03": {
+          "AIS": 16,
+          "automatic identification system": 1
+        },
+        "B04": {
+          "LiDAR": 11,
+          "point cloud": 8,
+          "sonar": 5
+        },
+        "B05": {
+          "GAN": 154
+        },
+        "B06": {
+          "reinforcement learning": 14
+        },
+        "B07": {
+          "federated": 5
+        }
+      }
+    }
+  },
+  "records": [
+    {
+      "id": "A08",
+      "type": "A",
+      "question": "A²RNet 的 SAP 模块推断的三类语义属性是什么？",
+      "seconds": 5.7,
+      "tool_calls": 2,
+      "queries": [
+        "search_documents({\"query\": \"A²RNet SAP module semantic attributes\"})",
+        "search_documents({\"query\": \"SAP 语义属性 三类 推断\"})"
+      ],
+      "retrieved": [
+        {
+          "title": "A RNet Association Aware Feature Reinforcement Network for Long Term Ship Re Identification(3)",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.43
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "9",
+          "score": 0.5
+        },
+        {
+          "title": "A RNet Association Aware Feature Reinforcement Network for Long Term Ship Re Identification(3)",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.47
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.41
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "8",
+          "score": 0.45
+        },
+        {
+          "title": "A RNet Association Aware Feature Reinforcement Network for Long Term Ship Re Identification(3)",
+          "prefix": "p",
+          "page": "7",
+          "score": 0.4
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.41
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.36
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.41
+        },
+        {
+          "title": "A RNet Association Aware Feature Reinforcement Network for Long Term Ship Re Identification(3)",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "9",
+          "score": null
+        },
+        {
+          "title": "A RNet Association Aware Feature Reinforcement Network for Long Term Ship Re Identification(3)",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "8",
+          "score": null
+        },
+        {
+          "title": "A RNet Association Aware Feature Reinforcement Network for Long Term Ship Re Identification(3)",
+          "prefix": "p",
+          "page": "7",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.35
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.35
+        },
+        {
+          "title": "Revisiting Fine-grained Image Analysis by Semantic-Part Alignment",
+          "prefix": "p",
+          "page": "8",
+          "score": 0.36
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "9",
+          "score": 0.34
+        },
+        {
+          "title": "Identity Clue Refinement and Enhancement for Visible-Infrared Person Re-Identification 的全文翻译",
+          "prefix": "p",
+          "page": "5",
+          "score": null
+        },
+        {
+          "title": "Identity Clue Refinement and Enhancement for Visible-Infrared Person Re-Identification 的全文翻译",
+          "prefix": "p",
+          "page": "4",
+          "score": null
+        },
+        {
+          "title": "Identity Clue Refinement and Enhancement for Visible-Infrared Person Re-Identification 的全文翻译",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "Identity Clue Refinement and Enhancement for Visible-Infrared Person Re-Identification 的全文翻译",
+          "prefix": "p",
+          "page": "11",
+          "score": null
+        },
+        {
+          "title": "Identity Clue Refinement and Enhancement for Visible-Infrared Person Re-Identification 的全文翻译",
+          "prefix": "p",
+          "page": "11",
+          "score": null
+        },
+        {
+          "title": "Identity Clue Refinement and Enhancement for Visible-Infrared Person Re-Identification 的全文翻译",
+          "prefix": "p",
+          "page": "8",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "Revisiting Fine-grained Image Analysis by Semantic-Part Alignment",
+          "prefix": "p",
+          "page": "8",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "9",
+          "score": null
+        },
+        {
+          "title": "Identity Clue Refinement and Enhancement for Visible-Infrared Person Re-Identification 的全文翻译",
+          "prefix": "p",
+          "page": "5",
+          "score": null
+        },
+        {
+          "title": "Identity Clue Refinement and Enhancement for Visible-Infrared Person Re-Identification 的全文翻译",
+          "prefix": "p",
+          "page": "4",
+          "score": null
+        }
+      ],
+      "parse_warnings": 0,
+      "context_chars": 29887,
+      "answer": "A²RNet 的 SAP（Semantic Association Perception，语义关联感知）模块从全局特征向量推断的三类语义属性是：\n\n1. **船舶类型（ship type）** —— 提供稳定的身份相关信息\n2. **成像视角（imaging perspective / viewpoint）** —— 反映几何变化\n3. **装载与设备配置（loading and equipment configuration）** —— 建模动态外观变化\n\n出处：*A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification*，第 3 页（\"three attributes are inferred from the global feature vector: (i) ship type, (ii) imaging perspective, and (iii) loading and equipment configuration\"）。同一段落还说明这三者构成后续关联学习的多层级语义先验（multi-level semantic prior）。\n\n补充一点上下文：这些属性是通过**多层级比较推断策略**（multi-level comparative inference）生成的——先用主分类器得到初始概率分布，再迭代剔除置信度最低的类别、用辅助分类器精化预测，共迭代 N−2 次（同文第 3 页）。",
+      "expected_paper": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+      "expected_pages": [
+        "3"
+      ],
+      "retrieval_hit": true,
+      "retrieval_rank": 4,
+      "evidence_required": [
+        "ship type",
+        "imaging perspective",
+        "loading and equipment configuration"
+      ],
+      "evidence_found": [
+        "ship type",
+        "imaging perspective",
+        "loading and equipment configuration"
+      ],
+      "evidence_missing": [],
+      "evidence_hit": true,
+      "judge_raw": "{\n  \"verdict\": \"GROUNDED\",\n  \"verdict_reason\": \"The answer explicitly states the three semantic attributes (ship type, imaging perspective/viewpoint, loading and equipment configuration) inferred by A²RNet's SAP module, citing page 3.\",\n  \"concepts_covered\": [\n    \"ship type\",\n    \"viewpoint\",\n    \"loading/equipment configuration\"\n  ],\n  \"concepts_missing\": [],\n  \"forbidden_violations\": [],\n  \"citation_ok\": true,\n  \"citation_evidence\": \"A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification*，第 3 页\",\n  \"scope_qualified\": null,\n  \"scope_reason\": \"\"\n}",
+      "judge": {
+        "verdict": "GROUNDED",
+        "verdict_reason": "The answer explicitly states the three semantic attributes (ship type, imaging perspective/viewpoint, loading and equipment configuration) inferred by A²RNet's SAP module, citing page 3.",
+        "concepts_covered": [
+          "ship type",
+          "viewpoint",
+          "loading/equipment configuration"
+        ],
+        "concepts_missing": [],
+        "forbidden_violations": [],
+        "citation_ok": true,
+        "citation_evidence": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification*，第 3 页",
+        "scope_qualified": null,
+        "scope_reason": ""
+      },
+      "verdict": "GROUNDED",
+      "verdict_correct": true,
+      "concepts_covered": 3,
+      "concepts_total": 3,
+      "forbidden_violations": [],
+      "citation_ok": true,
+      "scope_qualified": null,
+      "expected_verdict": "GROUNDED"
+    }
+  ]
+}
