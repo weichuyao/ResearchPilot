@@ -1,14 +1,18 @@
-from datetime import datetime
-from typing import cast, Literal
+"""ReAct 自由循环 agent（注册名 `react-assistant`）。
 
-from langchain.prompts import SystemMessagePromptTemplate
+与 research_workflow（Corrective-RAG）并存，共用同一套工具与检索管线 ——
+它是改造 #3 评估里的对照组：检索轮数由模型自由裁量，没有预算与三态判定。
+原文件名 oa_assistant.py 是 OA 时期的遗留，随 OA 残留清理（改造 #1）改名。
+"""
+
+from typing import Literal
+
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig, RunnableLambda, RunnableSerializable
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, MessagesState, StateGraph
-from langgraph.prebuilt import ToolNode, tools_condition
-from pydantic import BaseModel, Field
+from langgraph.prebuilt import ToolNode
 
 from ai.llm import get_model, settings
 from ai.tools.research_tools import list_papers, search_documents
@@ -18,8 +22,6 @@ import logging
 
 from langchain.globals import set_debug
 from langchain.globals import set_verbose
-
-from core.config import settings
 
 # LangChain 的结构化调试输出（每次模型调用的完整 prompt / tool schema）。
 # 开关交给 .env 的 DEBUG，别写死。
@@ -112,13 +114,13 @@ agent.add_edge("tools", "model")
 agent.add_conditional_edges("model", pending_tool_calls, {"tools": "tools", "done": END})
 
 
-oa_assistant = agent.compile(
+react_assistant = agent.compile(
     checkpointer=MemorySaver(),
 )
-oa_assistant.name = "oa_assistant"
+react_assistant.name = "react_assistant"
 
 # Save the graph as a PNG
-# graph_png = oa_assistant.get_graph().draw_mermaid_png()
+# graph_png = react_assistant.get_graph().draw_mermaid_png()
 
 # with open("graph.png", "wb") as f:
 #     f.write(graph_png)

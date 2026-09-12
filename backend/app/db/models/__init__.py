@@ -7,14 +7,10 @@ SQLModel 的 create_all 只会为「已经被 import 过」的模型建表 —�
 
 from db.models.base import DBBaseModel
 from db.models.collection import Collection
-from db.models.department import Department
-from db.models.employee import Employee
 from db.models.paper import Paper
 
 __all__ = [
     "DBBaseModel",
     "Collection",
-    "Department",
-    "Employee",
     "Paper",
 ]

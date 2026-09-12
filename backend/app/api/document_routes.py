@@ -427,7 +427,7 @@ async def get_document(paper_id: int) -> DocumentOut:
 #
 #     AssertionError: Status code 204 must not have a response body
 #
-# 项目里 `DELETE /employee/delete/{employee_id}` 也是这么写的（不写注解），保持一致。
+# 所以这里也不写返回注解（注解写 `-> None` 都会触发那个断言）。
 @document_router.delete("/{paper_id}", status_code=http.HTTP_204_NO_CONTENT)
 async def delete_document(paper_id: int, force: bool = False):
     """删除一个文档：向量块、上传的文件、paper 记录，三样都要删。
@@ -458,7 +458,7 @@ async def delete_document(paper_id: int, force: bool = False):
 
     ## 为什么返回 204 而不是 200 + body
 
-    项目里 `DELETE /employee/delete/{id}` 已经是 204，保持一致。
+    删除是幂等且无副作用的查询语义之外的操作，204 足够，不需要回显 body。
     「删掉了几个向量块」这类细节进日志；要看聚合效果有 `/health` 的 `index`。
     """
     async with async_session_maker() as session:

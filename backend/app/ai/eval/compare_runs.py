@@ -13,7 +13,7 @@ Chroma 的 top-k 本身跨进程不可复现（实测两次运行前 20 条只�
 
     python app/ai/eval/compare_runs.py                    # 汇总 resource/eval 下全部报告
     python app/ai/eval/compare_runs.py --last 6           # 只看最近 6 份
-    python app/ai/eval/compare_runs.py --agent oa-assistant
+    python app/ai/eval/compare_runs.py --agent react-assistant
 
 只统计带 `summary.agent` 字段的报告 —— 那个字段是后来才加的，早期报告没跑过哪个
 agent 的记录，混进来只会误导。

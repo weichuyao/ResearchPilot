@@ -205,7 +205,7 @@ def harvest(result: dict) -> tuple[list[str], list[str], str]:
 
     两种 agent 的形状不同，但指标必须能对齐比较：
 
-      · ReAct（oa-assistant）              —— AIMessage.tool_calls + ToolMessage
+      · ReAct（react-assistant）              —— AIMessage.tool_calls + ToolMessage
       · Corrective RAG（research-workflow）—— state 里的 plan[*].formatted / queries
 
     所以统一在这里归一化。research-workflow 把每次检索的结果**按工具同款的格式**
@@ -341,7 +341,7 @@ async def run_item(item: dict, model, agent, model_name: str) -> dict:
     # 答案）全被丢弃换成空壳，事后完全没法诊断。
     try:
         judge_prompt = build_judge_prompt(item, answer, sources)
-        # oa_assistant 模块在导入时打开了全局 set_debug(True)，会让 LangChain
+        # react_assistant 模块在导入时打开了全局 set_debug(True)，会让 LangChain
         # 把每次模型调用的完整 debug 结构打到 stdout。评委会被淹掉，所以这里也包一层。
         with contextlib.redirect_stdout(io.StringIO()):
             judged = await model.ainvoke([SystemMessage(content=JUDGE_SYSTEM), HumanMessage(content=judge_prompt)])
@@ -567,7 +567,7 @@ async def _main() -> None:
     parser.add_argument("--limit", type=int, default=None, help="只跑前 N 题")
     parser.add_argument("--only", type=str, default=None, help="只跑指定题号，逗号分隔，如 A01,B01")
     parser.add_argument("--eval-set", type=str, default=None)
-    parser.add_argument("--agent", type=str, default="oa-assistant",
+    parser.add_argument("--agent", type=str, default="react-assistant",
                         help="要评估哪个 agent（见 ai/agent/agents.py 的注册表）")
     parser.add_argument("--mark-verified", action="store_true",
                         help="核对完 B 类题之后，把 verified_on 更新成当前语料（人工确认的动作）")
@@ -629,7 +629,7 @@ async def _main() -> None:
         return
     agent = get_agent(args.agent)
 
-    # oa_assistant 在导入时执行了 logging.basicConfig(level=DEBUG)，把根日志记录器
+    # react_assistant 在导入时执行了 logging.basicConfig(level=DEBUG)，把根日志记录器
     # 设成 DEBUG，于是 httpx / httpcore / openai 的每一次 HTTP 调用（含完整请求体）
     # 都会打到 stderr，把评估报告淹掉。这里统一压掉 INFO 及以下。
     import logging

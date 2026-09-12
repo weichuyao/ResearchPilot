@@ -36,16 +36,11 @@ embeddings = OllamaEmbeddings(
     base_url=settings.OLLAMA_BASE_URL or None,
 )
 
-# 原始 baseline 的员工手册 collection。保留不动，让 tests/rag/ 下的旧脚本还能跑。
-hand_book_vector_store = Chroma(
-    collection_name="handbook",
-    persist_directory=CHROMA_PATH,
-    embedding_function=embeddings,
-    client=client,
-    create_collection_if_not_exists=True,
-)
-
 # ResearchPilot 的论文知识库。检索工具用的是这一个。
+# （原 baseline 的 "handbook" collection 句柄已随 OA 残留清理删除 —— 它唯一的
+# 消费者 tests/rag/queryChroma.py 已删；句柄上的 create_collection_if_not_exists
+# 还会让每次启动把废弃的空 collection 重建出来。磁盘上遗留的旧 collection 数据
+# 不受影响，想彻底清掉就删 CHROMA_PATH 下的 chroma.sqlite3 对应记录或整个目录重建。）
 document_vector_store = Chroma(
     collection_name="papers",
     persist_directory=CHROMA_PATH,
