@@ -29,9 +29,18 @@ const AgentSelector: React.FC<AgentSelectorProps> = ({ value, onChange }) => {
       })
       .then((list) =>
         setOptions(
-          list.map((agent: { key: string }) => ({
+          list.map((agent: { key: string; description: string }) => ({
             value: agent.key,
-            label: agent.key.toUpperCase(),
+            label: (
+              <div style={{ lineHeight: 1.4, padding: "2px 0" }}>
+                <div style={{ fontWeight: 500 }}>
+                  {agent.description.split("：")[0]}
+                </div>
+                <div style={{ fontSize: 12, color: "#6e6e73" }}>
+                  {agent.description.split("：")[1] ?? agent.key}
+                </div>
+              </div>
+            ),
           }))
         )
       )

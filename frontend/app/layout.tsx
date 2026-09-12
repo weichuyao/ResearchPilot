@@ -154,7 +154,7 @@ export default function RootLayout({ children }: { children: any }) {
                   className="ml-4 text-xl"
                 />
                 <div className="flex items-center ml-8 flex-none shrink-0">
-                  <span className="text-base">AI-Agent:</span>
+                  <span className="text-base" style={{ color: "#1d1d1f" }}>智能体模式</span>
                   <AgentSelector value={agentId} onChange={selectAgent} />
                 </div>
                 <div className="flex items-center ml-4 flex-none shrink-0">

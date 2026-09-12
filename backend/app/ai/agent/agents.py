@@ -43,11 +43,11 @@ class Agent:
 
 agents: dict[str, Agent] = {
     "react-assistant": Agent(
-        description="ReAct free-loop baseline over the research tools (no budget, no evidence assessment).",
+        description="快速问答：自由检索本地文献库，可联网搜 arXiv",
         graph_factory=build_react_assistant,
     ),
     "research-workflow": Agent(
-        description="Corrective-RAG research workflow: analyze, retrieve, assess evidence, refine, synthesize.",
+        description="深度研究：先分析问题再检索、判断证据是否充分、不够就换角度补查（仅本地文献库）",
         graph_factory=build_research_workflow,
     ),
 }
