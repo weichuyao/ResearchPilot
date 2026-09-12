@@ -1,0 +1,218 @@
+{
+  "summary": {
+    "total": 1,
+    "judged": 1,
+    "not_judged": 0,
+    "parse_warnings": 0,
+    "metric_reliable": true,
+    "A": {
+      "count": 1,
+      "retrieval_recall": 1.0,
+      "evidence_recall": 1.0,
+      "verdict_accuracy": 1.0,
+      "avg_concept_coverage": 1.0,
+      "citation_ok_rate": 1.0
+    },
+    "process": {
+      "avg_tool_calls": 2.0,
+      "avg_context_chars": 20282,
+      "avg_seconds": 7.5
+    },
+    "agent": "react-assistant",
+    "model": "deepseek-chat",
+    "corpus": {
+      "papers": 73,
+      "chunks": 6818
+    },
+    "fixture": {
+      "stale": true,
+      "verified_on": {
+        "papers": 81,
+        "chunks": 7406
+      },
+      "scoped_items": [
+        "B03",
+        "B04",
+        "B05",
+        "B06",
+        "B07",
+        "B08"
+      ],
+      "b_probe_alarms": {
+        "B03": {
+          "AIS": 16,
+          "automatic identification system": 1
+        },
+        "B04": {
+          "LiDAR": 11,
+          "point cloud": 8,
+          "sonar": 5
+        },
+        "B05": {
+          "GAN": 151
+        },
+        "B06": {
+          "reinforcement learning": 13
+        },
+        "B07": {
+          "federated": 3
+        }
+      }
+    }
+  },
+  "records": [
+    {
+      "id": "A05",
+      "type": "A",
+      "question": "DPSM 如何决定保留多少个 patch token？",
+      "seconds": 7.5,
+      "tool_calls": 2,
+      "queries": [
+        "search_documents({\"query\": \"DPSM how many patch tokens to keep token selection\"})",
+        "list_papers({})"
+      ],
+      "retrieved": [
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "4",
+          "score": 0.47
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "8",
+          "score": 0.5
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "4",
+          "score": 0.37
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.42
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "4",
+          "score": 0.39
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.44
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.39
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.35
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.33
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "8",
+          "score": 0.4
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "4",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "4",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "9",
+          "score": null
+        }
+      ],
+      "parse_warnings": 0,
+      "context_chars": 20282,
+      "answer": "DPSM 出现在论文 **Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification**（DPEFormer）中。根据检索到的内容，它决定保留多少个 patch token 的机制如下：\n\n## 核心机制：基于相似度排序 + 最大梯度切分点\n\n1. **计算相似度**：DPSM 先用一个 label-guided 的代理 token `fproxy`，与所有 patch token 计算相似度分数（内积，因为 ViT 后特征已归一化）。`fproxy` 是全局 class token `fg` 最相似的那个 patch token（公式 1）。\n\n2. **排序并求差分**：把这些相似度分数按降序排列，然后计算相邻分数之间的差分 `Diff = {D[1], D[2], ..., D[N-1]}`，其中 N 是 patch token 总数。\n\n3. **选择切分点 k**：DPSM 假设行人身体信息与背景/遮挡信息在特征空间中属于两个不同的簇，于是选择**梯度幅值最大**的位置作为切分点：\n\n   k = arg max_i (Diff)\n\n   排在前 k 个分数的 token 被选为身体特征 token，其余被丢弃。（来源：论文 p.4，公式 5–6）\n\n   本质上，DPSM 可视为一个硬注意力机制（二值权重 {0,1}），通过把 token 二分成\"身体\"和\"背景/遮挡\"两类来实现动态选择（p.2、p.4）。\n\n## 关键补充：最小保留数量 kmin\n\n纯靠最大梯度切分存在失败情况——当行人外观与遮挡物/背景相似时，会误判并**选出过少的 patch token**，损害模型捕捉完整行人信息的能力（p.4）。为此作者设置了一个初始最小值 **kmin**，作为松弛条件：\n\nk ← max(k, kmin)\n\nkmin 由实验经验确定（p.4）。在 Occluded-DukeMTMC 上的参数分析（Table V）显示，kmin = 48 时效果最佳（Rank-1 69.9、mAP 86.6），优于 kmin = 0（即不设下限）以及其他取值（p.9）。\n\n## 相关实验佐证\n\n作者还做了固定选择数量的对照实验（FPSM，Table IV）：选择数量从 12 增加到 48 时 mAP 和 Rank-1 提升，但超过 48 后性能逐渐下降——说明过多 patch token 会引入遮挡/背景信息而损害特征表示，过少则信息不足（p.8、p.9）。\n\n**总结**：DPSM 通过\"相似度排序 + 最大梯度切分点\"动态决定保留的 token 数 k，再用经验设定的下限 kmin（=48）兜底，即最终保留 max(k, kmin) 个 patch token，然后对选中的 k 个 token 做自适应平均池化得到 P 个 part 特征。",
+      "expected_paper": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+      "expected_pages": [
+        "4"
+      ],
+      "retrieval_hit": true,
+      "retrieval_rank": 1,
+      "evidence_required": [
+        "maximal gradient magnitude",
+        "kmin"
+      ],
+      "evidence_found": [
+        "maximal gradient magnitude",
+        "kmin"
+      ],
+      "evidence_missing": [],
+      "evidence_hit": true,
+      "judge_raw": "{\n  \"verdict\": \"GROUNDED\",\n  \"verdict_reason\": \"The answer states that DPSM sorts similarity scores, computes first-order differences, selects the maximum gradient as the split point k, and applies a minimum kmin, matching the rubric's required mechanism.\",\n  \"concepts_covered\": [\n    \"sort\",\n    \"first-order difference\",\n    \"maximum\",\n    \"kmin\"\n  ],\n  \"concepts_missing\": [],\n  \"forbidden_violations\": [],\n  \"citation_ok\": true,\n  \"citation_evidence\": \"（来源：论文 p.4，公式 5–6）\",\n  \"scope_qualified\": null,\n  \"scope_reason\": \"\"\n}",
+      "judge": {
+        "verdict": "GROUNDED",
+        "verdict_reason": "The answer states that DPSM sorts similarity scores, computes first-order differences, selects the maximum gradient as the split point k, and applies a minimum kmin, matching the rubric's required mechanism.",
+        "concepts_covered": [
+          "sort",
+          "first-order difference",
+          "maximum",
+          "kmin"
+        ],
+        "concepts_missing": [],
+        "forbidden_violations": [],
+        "citation_ok": true,
+        "citation_evidence": "（来源：论文 p.4，公式 5–6）",
+        "scope_qualified": null,
+        "scope_reason": ""
+      },
+      "verdict": "GROUNDED",
+      "verdict_correct": true,
+      "concepts_covered": 4,
+      "concepts_total": 4,
+      "forbidden_violations": [],
+      "citation_ok": true,
+      "scope_qualified": null,
+      "expected_verdict": "GROUNDED"
+    }
+  ]
+}

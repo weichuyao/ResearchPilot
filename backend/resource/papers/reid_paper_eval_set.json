@@ -133,7 +133,7 @@
       "question": "DPSM 如何决定保留多少个 patch token？",
       "type": "A",
       "required_evidence": [
-        "first-order difference",
+        "maximal gradient magnitude",
         "kmin"
       ],
       "expected_behavior": "相似度排序后以最大一阶差分确定 k，并以 kmin 限制最小保留数量。",

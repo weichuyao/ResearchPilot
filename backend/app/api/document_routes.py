@@ -33,7 +33,7 @@ import shutil
 from fastapi import APIRouter, BackgroundTasks, File, Form, HTTPException, UploadFile
 from fastapi import status as http
 
-from ai.rag.ingest import index_pdf
+from ai.rag.ingest import DuplicatePaperError, index_pdf
 from ai.rag.parsers import describe_formats, parser_for, supported_extensions
 from api.schema.documentSchema import (
     DocumentList,
@@ -312,6 +312,12 @@ async def _ingest_in_background(paper_id: int, pdf_path: str, source_file: str, 
     await mark(STATUS_INDEXING)
     try:
         row = await asyncio.to_thread(index_pdf, pdf_path, source_file, title)
+    except DuplicatePaperError as exc:
+        # 重复入库是**预期中的拒绝**，不是故障：不打 traceback（会淹掉真错误），
+        # 只把原因落进记录，用户在文档列表里看得到。
+        logger.info("upload: 拒绝重复入库 id=%s：%s", paper_id, exc)
+        await mark(STATUS_FAILED, error=str(exc))
+        return
     except Exception as exc:
         reason = "%s: %s" % (type(exc).__name__, str(exc)[:300])
         logger.exception("upload: 索引失败 id=%s", paper_id)

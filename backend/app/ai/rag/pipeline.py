@@ -21,14 +21,13 @@
 
 from __future__ import annotations
 
-import hashlib
 from dataclasses import dataclass
 
 from langchain_core.documents import Document
 
 from ai.rag.hybrid import doc_key, hybrid_search
 from ai.rag.rerank import rerank_hits, score_pairs
-from ai.rag.textnorm import norm_for_match
+from ai.rag.textnorm import content_key
 
 
 # 检索相关性阈值。校准过程见 design-decisions.md 决策一。
@@ -119,10 +118,10 @@ def _content_key(doc: Document) -> str:
     """块的**跨副本**内容标识。
 
     doc_key 绑定 source（哪个文件），区分不了同一 PDF 的两份副本；
-    这里对归一化后的文本取哈希 —— 归一化用评估锚点匹配的同一个函数
-    （ai/rag/textnorm.py），保证「评估说缺的锚点」和「去重说重的块」是同一种文本观。
+    这里对归一化后的文本取哈希 —— 实现在 ai/rag/textnorm.py 的 content_key，
+    与导入查重共用同一份（「一份归一化，多个使用方」）。
     """
-    return hashlib.sha1(norm_for_match(doc.page_content).encode("utf-8")).hexdigest()
+    return content_key(doc.page_content)
 
 
 def _dedupe_hits(

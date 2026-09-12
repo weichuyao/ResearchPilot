@@ -261,12 +261,24 @@ def chunk_document(path: str, source_file: str, title: str,
     }
 
 
-def load_folder_chunks(folder: str, manifest: dict) -> tuple[list[Document], list[dict]]:
-    """读取目录下所有**受支持格式**的文件，返回 (切好的块, 每篇的处理报告)。"""
+def load_folder_chunks(folder: str, manifest: dict, check_library: bool = False
+                       ) -> tuple[list[Document], list[dict]]:
+    """读取目录下所有**受支持格式**的文件，返回 (切好的块, 每篇的处理报告)。
+
+    查重两层（见 find_duplicate_owner / DUPLICATE_RATIO 的说明）：
+      · **批内**：同一目录里放了两份一样的 PDF —— 总是查，reset 与否都成立；
+      · **对库**：check_library=True（即 --no-reset 增量导入）时再和现有库比。
+        reset=True 的整库重建**不能**开这一层 —— 开了的话，重导现有语料会把
+        每一篇都判成「和旧库里的自己重复」。
+    重复的文件：块不写入、报告行带 duplicate_of、paper 表不建记录。
+    """
+    from ai.rag.textnorm import content_key
+
     splitter = build_splitter()
 
     chunks: list[Document] = []
     report: list[dict] = []
+    seen: dict[str, set[str]] = {}  # 已收下的文件 -> 块指纹集合
 
     for path in sorted(_iter_supported_files(folder)):
         name = os.path.basename(path)
@@ -278,6 +290,27 @@ def load_folder_chunks(folder: str, manifest: dict) -> tuple[list[Document], lis
         title_source = "manual" if manual_title else auto_source
 
         file_chunks, row = chunk_document(path, name, title, splitter)
+
+        duplicate_of: str | None = None
+        keys = {content_key(c.page_content) for c in file_chunks}
+        for other, other_keys in seen.items():
+            if len(keys & other_keys) / max(len(keys), 1) >= DUPLICATE_RATIO:
+                duplicate_of = other
+                break
+        if duplicate_of is None and check_library:
+            owner = find_duplicate_owner(file_chunks, exclude_source=name)
+            if owner is not None:
+                duplicate_of = owner[0]
+        if duplicate_of is not None:
+            logger.warning("跳过重复文件 %s —— 与《%s》内容重复", name, duplicate_of)
+            row["duplicate_of"] = duplicate_of
+            row["title_source"] = title_source
+            row["auto_title"] = auto_title
+            row["auto_source"] = auto_source
+            report.append(row)
+            continue
+
+        seen[name] = keys
         chunks.extend(file_chunks)
         row["title_source"] = title_source
         row["auto_title"] = auto_title
@@ -291,6 +324,84 @@ def load_folder_chunks(folder: str, manifest: dict) -> tuple[list[Document], lis
         report.append(row)
 
     return chunks, report
+
+
+# 「整篇重复」的块匹配比例下限。两篇**不同**的论文也可能共享个别块
+# （实测：Sparse VMamba 与 MACHANet 有一段相同的参考文献文字，1 块重合），
+# 不能见块重合就拒绝；而同一篇 PDF 的副本是逐块全同（实测清理前的 7 对全部
+# 100% 重合）。0.5 落在两者之间，离误伤线足够远。
+DUPLICATE_RATIO = 0.5
+
+
+class DuplicatePaperError(RuntimeError):
+    """新论文的内容与库里已有一篇高度重合（同一篇论文的另一个副本）。
+
+    由 index_pdf 在**写向量库之前**抛出，上传后台任务会把它落进
+    paper.error（status=failed），用户在文档列表里能看到原因。
+    """
+
+    def __init__(self, owner_title: str, owner_source: str, ratio: float):
+        self.owner_title = owner_title
+        self.owner_source = owner_source
+        self.ratio = ratio
+        super().__init__(
+            "内容重复：与已入库的《%s》有 %d%% 的块完全相同 —— 同一篇论文无需重复入库。"
+            % (owner_title, round(ratio * 100))
+        )
+
+
+def find_duplicate_owner(
+    chunks: list[Document],
+    exclude_source: str | None = None,
+    min_ratio: float = DUPLICATE_RATIO,
+) -> tuple[str, str, float] | None:
+    """新论文的块指纹与库中现有块比对，返回 (标题, source, 匹配比例) 或 None。
+
+    比例按**块数**算：新论文有多少比例的块已经存在于同一个已有来源下。
+    判「同一篇」必须把重合认到**单篇来源头上** —— 只看「库里有这个块」会把
+    两篇不同论文共用的参考文献误判成重复。
+
+    为什么导入层要做这一步（检索层已经有跨副本去重）：
+    检索层去重只是**容忍**重复（每次查询都白付重排和相邻块名额的代价），
+    导入层拒绝才是**不产生**重复。而且上传时的字节哈希拦不住「重新下载的同一篇」
+    —— 字节不同（下载批次不同）、抽取文本相同，只有内容指纹能对上。
+    2026-09-12 清理掉的 7 对重复就是这么进来的。
+
+    代价是每次导入做一次全库读（约 7k 块 / 数 MB）—— 与紧随其后的 BM25
+    索引重建同量级，而导入本身以分钟计，不构成瓶颈。
+    """
+    if not chunks:
+        return None
+    from ai.rag.chromaClient import document_vector_store
+    from ai.rag.textnorm import content_key
+
+    new_keys = {content_key(c.page_content) for c in chunks}
+    got = document_vector_store.get(include=["documents", "metadatas"])
+    texts = got.get("documents") or []
+    metas = got.get("metadatas") or []
+
+    matched: dict[str, set[str]] = {}  # 已有 source -> 命中的新块指纹集合
+    for text, meta in zip(texts, metas):
+        meta = meta or {}
+        source = str(meta.get("source") or "")
+        if not source or source == exclude_source:
+            continue
+        key = content_key(text or "")
+        if key in new_keys:
+            matched.setdefault(source, set()).add(key)
+
+    if not matched:
+        return None
+    owner_source, keys = max(matched.items(), key=lambda kv: len(kv[1]))
+    ratio = len(keys) / len(new_keys)
+    if ratio < min_ratio:
+        return None
+    owner_title = ""
+    for meta in metas:
+        if (meta or {}).get("source") == owner_source:
+            owner_title = str(meta.get("paper_title") or "")
+            break
+    return owner_title or owner_source, owner_source, ratio
 
 
 def index_pdf(pdf_path: str, source_file: str, title: str) -> dict:
@@ -339,6 +450,13 @@ def index_pdf(pdf_path: str, source_file: str, title: str) -> dict:
             deleted = len(ids)
     except Exception as exc:
         logger.warning("清理旧块失败（%s），继续索引：%s", type(exc).__name__, source_file)
+
+    # ---- 查重：整篇内容已经在库里就不写入（在 embedding 之前，省掉白干的几分钟）----
+    # 排除自己的旧块（上面已删；万一删除失败也不能把自己误判成重复）。
+    # 重索引能走到这里说明旧块已清，天然不会触发。
+    owner = find_duplicate_owner(chunks, exclude_source=source_file)
+    if owner is not None:
+        raise DuplicatePaperError(owner[0], owner[1], owner[2])
 
     batch = 64
     for start in range(0, len(chunks), batch):
@@ -421,13 +539,6 @@ def _parse_year(value) -> int | None:
         return None
 
 
-def ingest(folder: str, reset: bool = True) -> tuple[int, list[dict], str]:
-    """把目录下的 PDF 导入 papers collection。reset=True 时先清空。"""
-    from ai.rag.chromaClient import document_vector_store
-
-    if not os.path.isdir(folder):
-        raise SystemExit("找不到论文目录: %s" % folder)
-
 def ingest(folder: str, reset: bool = True, collection_name: str = "reid-papers") -> tuple[int, list[dict], str]:
     """把目录下的 PDF 导入 papers collection，并把论文元数据写进 paper 表。
 
@@ -442,9 +553,12 @@ def ingest(folder: str, reset: bool = True, collection_name: str = "reid-papers"
         raise SystemExit("找不到论文目录: %s" % folder)
 
     manifest = load_manifest(folder)
-    chunks, report = load_folder_chunks(folder, manifest)
+    chunks, report = load_folder_chunks(folder, manifest, check_library=not reset)
     if not chunks:
         raise SystemExit("没有解析出任何内容，检查一下 PDF 是不是扫描件")
+    skipped = [row for row in report if row.get("duplicate_of")]
+    for row in skipped:
+        print("  [跳过] %s 与《%s》内容重复，不导入" % (row["file"], row["duplicate_of"]))
 
     if reset:
         existing = document_vector_store.get()
@@ -488,15 +602,19 @@ def _sync_paper_table(report: list[dict], folder: str, collection_name: str,
                 # path_prefix 是**必须的护栏**：不加的话会把上传目录里的文档
                 # 也当成"已删除的论文"清掉（实测踩过，用户上传的 3 篇消失了）。
                 # 详见 PaperRepository.delete_not_in 的说明。
+                # keep 清单不含 duplicate_of 的行 —— 重复文件的块没进库，
+                # 它的旧记录（如果有）应当被清掉，而不是留一条空记录。
                 removed = await PaperRepository.delete_not_in(
                     session=session,
                     collection_id=collection.id or 0,
-                    keep_source_files=[row["file"] for row in report],
+                    keep_source_files=[row["file"] for row in report if not row.get("duplicate_of")],
                     path_prefix=folder,
                 )
                 for name in removed:
                     print("  已清理 paper 表中不再存在的记录: %s" % name)
             for row in report:
+                if row.get("duplicate_of"):
+                    continue
                 meta = row.get("meta") or {}
                 paper = Paper(
                     source_file=row["file"],
@@ -544,8 +662,9 @@ def main() -> None:
     print("%-50s %6s %6s %9s %8s" % ("标题", "片段数", "块数", "位置类型", "标题来源"))
     print("-" * 88)
     for row in report:
+        mark = ("[重复→%s] " % row["duplicate_of"][:26]) if row.get("duplicate_of") else ""
         print("%-50s %6d %6d %9s %8s" % (
-            row["title"][:48], row["sections"], row["chunks"],
+            (mark + row["title"])[:48], row["sections"], row["chunks"],
             row.get("locator_kind", "?"), row["title_source"]
         ))
     print("-" * 88)

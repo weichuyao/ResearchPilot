@@ -67,3 +67,17 @@ def norm_for_match(value) -> str:
     text = re.sub(r"(?<=\d)[,\s]+(?=\d)", "", text)   # 30, 587 -> 30587
     text = re.sub(r"[\s\u00a0]+", " ", text)
     return text.strip()
+
+
+def content_key(text: str) -> str:
+    """块级**内容指纹**：归一化文本的 sha1。
+
+    使用方（必须共用这一个实现，否则「这里说不重、那里说重」）：
+      · ai/rag/pipeline.py   检索层的跨副本去重（同一 PDF 上传两次，标题归一化
+        都拦不住 `A²RNet / A RNet` 这种差异，只有内容指纹可信）
+      · ai/rag/ingest.py     导入查重：新论文的块指纹与库中现有块比对，
+        单篇来源匹配过半就拒绝入库（见 find_duplicate_owner）
+    """
+    import hashlib
+
+    return hashlib.sha1(norm_for_match(text).encode("utf-8")).hexdigest()
