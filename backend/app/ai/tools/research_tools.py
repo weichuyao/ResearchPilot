@@ -133,7 +133,20 @@ async def search_documents(query: str, paper: Optional[str] = None) -> str:
     outcome = retrieve(query, allowed_sources=allowed_sources)
     if outcome.rejected:
         return NO_HITS_MESSAGE
-    return format_hits(outcome.hits)
+    hits_text = format_hits(outcome.hits)
+    if outcome.ambiguous:
+        # 模糊带告警：分数只够到「相关」，保证不了「答得了」——域内偏题和弱相关
+        # 查询在这个分数区间天然重叠（校准 2026-09-12），阀值分不开。
+        # 这段话和 NO_HITS_MESSAGE 一样是给模型看的：在它最可能把「域内沾边」
+        # 当「有答案」的时刻，显式要求它核对材料是否真的覆盖问题本身。
+        hits_text = (
+            "[relevance note] These passages are only borderline-related to the query "
+            "(relevance %.2f is in the ambiguous band). Check carefully whether they "
+            "actually address what was asked. If they do not, say that the documents "
+            "do not contain the requested information instead of stretching them.\n\n"
+            "%s" % (outcome.vector_top1, hits_text)
+        )
+    return hits_text
 
 
 async def all_titles() -> str:

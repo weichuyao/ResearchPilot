@@ -38,6 +38,12 @@ from ai.rag.rerank import rerank_hits, score_pairs
 # ⚠️ 当时是 15 个查询的小样本。之后补了 20 题评估集，但阈值没有重新校准 ——
 #    换 embedding 模型或换语料都必须重测。
 RELEVANCE_THRESHOLD = 0.35
+# 模糊带：vector_top1 落在 [THRESHOLD, THRESHOLD+BAND) 的查询，材料「相关但不一定
+# 答得了」——域内偏题（如"知识蒸馏 ImageNet 分类"0.39）与弱相关应返回查询（0.37）
+# 在这个区间天然重叠（见 calibration 2026-09-12），单一阀值原理上分不开。
+# 处理不是拒答，而是给工具输出附加显式告警文案，让 LLM 综合层谨慎措辞
+# —— 与「未找到」的长文案同一个思路：在最容易犯错的时刻给模型划边界。
+AMBIGUOUS_BAND = 0.15
 
 # 二段式检索的两个数字。
 #
@@ -71,6 +77,8 @@ class Outcome:
     vector_top1: float
     rejected: bool
     allowed_sources: list[str] | None = None
+    # True = 分数落在模糊带内（相关但不一定答得了）。工作流/工具层据此附加告警。
+    ambiguous: bool = False
 
     @property
     def papers(self) -> list[str]:
@@ -115,8 +123,9 @@ def retrieve(
                        rejected=True, allowed_sources=allowed_sources)
 
     ordered = rerank_hits(query, hits, top_n=top_n)
+    ambiguous = vector_top1 < RELEVANCE_THRESHOLD + AMBIGUOUS_BAND
     return Outcome(query=query, hits=ordered, vector_top1=vector_top1,
-                   rejected=False, allowed_sources=allowed_sources)
+                   rejected=False, allowed_sources=allowed_sources, ambiguous=ambiguous)
 
 
 def evidence_score(question: str, hits: list[tuple[Document, str, float | None]]) -> float | None:

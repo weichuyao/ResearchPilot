@@ -7,7 +7,7 @@
     "papers": 80,
     "chunks": 7406,
     "date": "2026-09-12",
-    "note": "2026-09-12 人工复核：B01 因语料含《Sparse VMamba》失效已删，改由 A13 覆盖（GROUNDED）；新增 B07/B08 经检索证据核验为『库中无』。"
+    "note": "2026-09-12 人工复核：B01（Mamba，语料含 VMamba）与 B02（LLM/文本prompt，语料含 STMI）均失效删除，分别由 A13/A22 接管；B07/B08 经检索核验保留。探针机制（absence_probes + run_eval 告警）由此轮建立。"
   },
   "answer_contract": {
     "fields": [
@@ -349,21 +349,6 @@
       }
     },
     {
-      "id": "B02",
-      "question": "当前知识库中的方法是否用大语言模型（LLM）或文本 prompt 来生成 ReID 的语义特征？",
-      "type": "B",
-      "expected_behavior": "限于当前知识库，报告未找到证据，不作绝对否定。",
-      "expected_source": null,
-      "judge": {
-        "verdict": "NOT_FOUND_IN_CORPUS",
-        "required_scope": "current corpus",
-        "forbidden_claims": [
-          "没有使用 LLM",
-          "不存在 LLM"
-        ]
-      }
-    },
-    {
       "id": "B03",
       "question": "当前知识库中的船舶 ReID 方法是否融合 AIS（船舶自动识别系统）信号作为输入特征？",
       "type": "B",
@@ -376,7 +361,11 @@
           "没有使用 AIS",
           "不存在 AIS"
         ]
-      }
+      },
+      "absence_probes": [
+        "AIS",
+        "automatic identification system"
+      ]
     },
     {
       "id": "B04",
@@ -391,7 +380,12 @@
           "完全没有使用",
           "不存在声呐"
         ]
-      }
+      },
+      "absence_probes": [
+        "LiDAR",
+        "point cloud",
+        "sonar"
+      ]
     },
     {
       "id": "B05",
@@ -406,7 +400,10 @@
           "DPEFormer 没有使用 GAN",
           "肯定未使用 GAN"
         ]
-      }
+      },
+      "absence_probes": [
+        "GAN"
+      ]
     },
     {
       "id": "B06",
@@ -421,7 +418,11 @@
           "没有使用强化学习",
           "DPSM 是强化学习"
         ]
-      }
+      },
+      "absence_probes": [
+        "reinforcement learning",
+        "reward signal"
+      ]
     },
     {
       "id": "C01",
@@ -692,7 +693,10 @@
           "没有使用联邦学习",
           "不存在联邦学习"
         ]
-      }
+      },
+      "absence_probes": [
+        "federated"
+      ]
     },
     {
       "id": "B08",
@@ -707,6 +711,37 @@
           "没有使用 DeepSpeed",
           "不存在分布式框架"
         ]
+      },
+      "absence_probes": [
+        "DeepSpeed",
+        "Horovod"
+      ]
+    },
+    {
+      "id": "A22",
+      "question": "STMI 的 Segmentation-Guided Feature Modulation 模块用什么来引导注意力学习？",
+      "type": "A",
+      "required_evidence": [
+        "Segmentation-Guided Feature Modulation",
+        "SAM segmentation model",
+        "foreground masks"
+      ],
+      "expected_behavior": "回答 SFM 利用 SAM 分割模型生成的前景掩码来引导注意力学习。",
+      "expected_source": {
+        "paper": "STMI Segmentation-Guided Token Modulation with Cross-Modal Hypergraph",
+        "pdf_page": 2
+      },
+      "judge": {
+        "verdict": "GROUNDED",
+        "required_concepts": [
+          "SFM module",
+          "SAM generated foreground masks",
+          "guide attention"
+        ],
+        "required_citation": {
+          "paper_short": "STMI",
+          "pdf_page": 2
+        }
       }
     }
   ]

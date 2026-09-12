@@ -513,7 +513,35 @@ def check_fixture(eval_set: dict, corpus: dict) -> dict:
         "verified_on": {"papers": want_papers, "chunks": want_chunks},
         "current": {"papers": now_papers, "chunks": now_chunks},
         "scoped_items": scoped,
+        "b_probe_alarms": probe_b_absence(eval_set),
     }
+
+
+def probe_b_absence(eval_set: dict) -> dict:
+    """B 类缺席探针：把「语料里不该有的话题」变成可机检的字面串。
+
+    每道 B 题带 absence_probes（话题的标志性词）。探针在语料文本中出现
+    ≠ 期望值一定失效（可能是 related work 里顺带提到），但**必须人工看一眼** ——
+    B01 的教训（语料扩容后真混进了 Mamba 论文）当初只能靠人想起来复核，
+    现在机制会自己喊。探针大小写敏感（缩写词 GAN/LiDAR 靠大小写区分
+    "organ"/"lidar" 这类误报）。
+    """
+    from ai.rag.chromaClient import document_vector_store
+
+    got = document_vector_store.get(include=["documents"])
+    texts = got.get("documents") or []
+    report: dict = {}
+    for item in eval_set.get("items", []):
+        if item.get("type") != "B":
+            continue
+        hits = {}
+        for probe in item.get("absence_probes") or []:
+            n = sum(1 for t in texts if probe in t)
+            if n:
+                hits[probe] = n
+        if hits:
+            report[item["id"]] = hits
+    return report
 
 
 def update_verified_on(eval_path: str, corpus: dict) -> None:
@@ -626,6 +654,9 @@ async def _main() -> None:
         print("!!   当前语料：      %s 篇 / %s 块" % (now["papers"], now["chunks"]))
         print("!!")
         print("!! %d 道 B 类题问的是「当前知识库里有没有 X」，加文档可能让" % len(fixture["scoped_items"]))
+    alarms = fixture.get("b_probe_alarms") or {}
+    for bid, hits in alarms.items():
+        print("!! B 类缺席探针告警 %s：探针 %s 在语料中出现 —— 期望值可能失效，需人工复核" % (bid, hits))
         print("!! 「期望 NOT_FOUND_IN_CORPUS」变成假的：%s" % ", ".join(fixture["scoped_items"]))
         print("!! 跑完之后请核对它们的 verdict 是否仍然合理。")
         print("!! 核对无误：--mark-verified    确认有问题：改评估集的期望值")
@@ -696,6 +727,7 @@ async def _main() -> None:
         "stale": fixture["stale"],
         "verified_on": fixture["verified_on"],
         "scoped_items": fixture["scoped_items"],
+        "b_probe_alarms": fixture.get("b_probe_alarms", {}),
     }
     out_dir = os.path.join(backend_root, "resource", "eval")
     os.makedirs(out_dir, exist_ok=True)
