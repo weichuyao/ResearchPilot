@@ -42,6 +42,20 @@ MCP_ARXIV_ALLOWLIST = (
 )
 
 
+async def _mount(command: list[str]) -> list | None:
+    """尝试挂载；任何失败返回 None（不抛），由调用方决定降级路径。"""
+    from langchain_mcp_adapters.client import MultiServerMCPClient
+
+    client = MultiServerMCPClient(
+        {"arxiv": {"transport": "stdio", "command": command[0], "args": command[1:]}}
+    )
+    try:
+        return await client.get_tools()
+    except Exception as exc:
+        logger.info("MCP: 挂载命令 %s 失败 —— %s: %s", command, type(exc).__name__, str(exc)[:120])
+        return None
+
+
 async def get_mcp_tools() -> list:
     """返回经 MCP 挂载的外部工具；失败时返回空列表（不抛异常）。"""
     if not settings.MCP_ARXIV_ENABLED:
@@ -50,16 +64,13 @@ async def get_mcp_tools() -> list:
         from langchain_mcp_adapters.client import MultiServerMCPClient
 
         command = settings.MCP_ARXIV_COMMAND.split()
-        client = MultiServerMCPClient(
-            {
-                "arxiv": {
-                    "transport": "stdio",
-                    "command": command[0],
-                    "args": command[1:],
-                }
-            }
-        )
-        all_tools = await client.get_tools()
+        all_tools = await _mount(command)
+        if all_tools is None and command[0] == "uvx":
+            # uvx 默认联网校验包版本，pypi 不可达（代理没开/被墙）就整体失败。
+            # 包已在 uv 缓存时 --offline 可以完全离线挂载 —— 自动降级重试。
+            all_tools = await _mount(["uvx", "--offline"] + command[1:])
+            if all_tools is not None:
+                logger.info("MCP: 在线挂载失败，已用 uvx --offline 从缓存挂载")
         tools = [t for t in all_tools if t.name in MCP_ARXIV_ALLOWLIST]
         dropped = sorted(set(t.name for t in all_tools) - set(t.name for t in tools))
         logger.info(
