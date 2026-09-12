@@ -30,6 +30,8 @@ dependencies = [
     # langgraph-checkpoint 4.x 与本项目 langchain-core 0.3 的 Reviver 不兼容（实测）
     "langgraph-checkpoint-postgres>=2.0.24,<3",
     "psycopg[binary]>=3.3.5",
+    # 向量库对比（改造 #6 之二）：默认仍是 Chroma，qdrant 由 VECTOR_STORE 切换
+    "qdrant-client>=1.19.0",
     "mysql-connector-python>=9.3.0",
     "pydantic-settings>=2.9.1",
     "pdfminer.six>=20231228",

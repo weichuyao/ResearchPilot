@@ -143,5 +143,18 @@ services:
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
 
+  # Qdrant（改造 #6 之二）：向量库对比实验用，不是默认链路的依赖。
+  # 不进 default 组的启动命令：docker compose up -d qdrant
+  # 切换后端用 backend/.env 的 VECTOR_STORE=qdrant + QDRANT_URL。
+  qdrant:
+    image: ${QDRANT_IMAGE:-qdrant/qdrant:v1.12.4}
+    container_name: researchpilot-qdrant
+    restart: unless-stopped
+    ports:
+      - "${QDRANT_PORT:-6333}:6333"
+    volumes:
+      - qdrant:/qdrant/storage
+
 volumes:
   pgdata:
+  qdrant:

@@ -37,14 +37,35 @@ embeddings = OllamaEmbeddings(
 )
 
 # ResearchPilot 的论文知识库。检索工具用的是这一个。
-# （原 baseline 的 "handbook" collection 句柄已随 OA 残留清理删除 —— 它唯一的
-# 消费者 tests/rag/queryChroma.py 已删；句柄上的 create_collection_if_not_exists
-# 还会让每次启动把废弃的空 collection 重建出来。磁盘上遗留的旧 collection 数据
-# 不受影响，想彻底清掉就删 CHROMA_PATH 下的 chroma.sqlite3 对应记录或整个目录重建。）
-document_vector_store = Chroma(
-    collection_name="papers",
-    persist_directory=CHROMA_PATH,
-    embedding_function=embeddings,
-    client=client,
-    create_collection_if_not_exists=True,
-)
+#
+# 后端由 settings.VECTOR_STORE 选择（改造 #6 之二）：
+#   chroma（默认）—— 嵌入式文件，行为与历史一致；
+#   qdrant        —— 独立服务（compose 的 qdrant），对比/切换用。
+# 两个后端实现同一个五方法接口（get / similarity_search_with_relevance_scores /
+# add_documents / delete / count），hybrid / ingest / rank_bench 一行不改。
+# 对比口径与结论见 reference/transformation-06-qdrant-design.md。
+if settings.VECTOR_STORE == "qdrant":
+    from ai.rag.qdrantClient import QdrantVectorStore
+
+    document_vector_store: object = QdrantVectorStore(
+        url=settings.QDRANT_URL,
+        collection_name="papers",
+        embeddings=embeddings,
+        exact=settings.QDRANT_EXACT,
+    )
+else:
+    class _PaperChroma(Chroma):
+        """补一个 count()：hybrid 的自检原来直接摸 client.get_collection，
+        那是 Chroma 专有的。计数走统一接口之后，/health 的语义才不依赖后端。"""
+
+        def count(self) -> int:
+            return self._collection.count()
+
+    document_vector_store: object = _PaperChroma(
+        collection_name="papers",
+        persist_directory=CHROMA_PATH,
+        embedding_function=embeddings,
+        client=client,
+        create_collection_if_not_exists=True,
+    )
+

@@ -74,7 +74,7 @@ import numpy as np
 
 from langchain_core.documents import Document
 
-from ai.rag.chromaClient import client, document_vector_store
+from ai.rag.chromaClient import document_vector_store
 
 
 # ---- 检索参数 ---------------------------------------------------------------
@@ -217,7 +217,7 @@ def _load_corpus() -> tuple[list[Document], list[str], int]:
         for content, metadata in zip(contents, metadatas)
     ]
     keys = [doc_key(doc.metadata, doc.page_content) for doc in documents]
-    count = client.get_collection("papers").count()
+    count = document_vector_store.count()
     return documents, keys, count
 
 
@@ -225,7 +225,7 @@ def get_index() -> tuple[Bm25Index, list[Document], list[str]]:
     with _index_lock:
         if _index_cache["index"] is not None:
             try:
-                current = client.get_collection("papers").count()
+                current = document_vector_store.count()
             except Exception:
                 current = None
             if current == _index_cache["signature"]:

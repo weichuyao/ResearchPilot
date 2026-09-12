@@ -40,8 +40,17 @@ class Settings(BaseSettings):
     DEFAULT_MODEL: str | None = None
     
     EMBEDDING_MODEL: str | None = None
-    
+
     CHROMA_PATH: str | None = None
+
+    # --- 向量库后端（改造 #6 之二）---
+    # "chroma"（默认，嵌入式文件，行为不变）| "qdrant"（独立服务，对比/切换用）。
+    # 对比实验的口径见 reference/transformation-06-qdrant-design.md。
+    VECTOR_STORE: str = "chroma"
+    QDRANT_URL: str = "http://127.0.0.1:6333"
+    # True 时 Qdrant 放弃 HNSW 近似做全量比对 —— 名次确定性的对照开关。
+    # 636 块的语料上代价可忽略；Chroma 没有这个能力，这正是对比的痛点之一。
+    QDRANT_EXACT: bool = False
 
     # 当前代码的 git 提交号，给 /health 用。
     #
