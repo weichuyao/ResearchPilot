@@ -23,6 +23,7 @@ search_documents 支持把检索限制在**单篇论文**内（paper 参数）�
 """
 
 from typing import Optional
+import re
 
 from langchain_core.tools import tool
 
@@ -32,10 +33,49 @@ from db.models.paper import Paper
 from db.repository.paper_repo import PaperRepository
 
 
+_ARXIV_ID_RE = re.compile(r"(?<!\d)(\d{2})(0[1-9]|1[0-2])\.\d{4,5}(?:v\d+)?(?!\d)")
+
+
+def arxiv_submission_date(text: str) -> tuple[int, int] | None:
+    """从文本里解出 arXiv 编号对应的投稿年月。
+
+    arXiv 编号 YYMM.NNNNN 的前四位**就是**投稿的年月（2510 → 2025-10、
+    2602 → 2026-02）——这是 arXiv 的编号规则，不是启发式猜测，可以直接
+    用于「找某年发表/投稿的论文」这类筛选。上传文件的 source_file 和
+    title 里经常带着原始编号，这里是唯一负责解码的地方。
+    """
+    m = _ARXIV_ID_RE.search(text or "")
+    if not m:
+        return None
+    yy, mm = int(m.group(1)), int(m.group(2))
+    year = 1900 + yy if yy >= 90 else 2000 + yy
+    return year, mm
+
+
+_YEAR_RE = re.compile(r"(?<!\d)(19|20)\d{2}(?!\d)")
+
+
+def submission_year(paper: Paper) -> int | None:
+    """论文的投稿/发表年份，三级回退：arXiv 编号解码 -> year 字段 -> 标题年份。
+
+    上传的论文很多没有结构化 year 字段；文件名带 arXiv 编号的用编号解码，
+    其余的从标题里的引用式年份（如「Zhang 等 - 2026 - ...」）兜底。
+    list_papers 的年份筛选和展示统一走这里，避免三处各算各的。
+    """
+    date = arxiv_submission_date(paper.source_file or "") or arxiv_submission_date(paper.title or "")
+    if date:
+        return date[0]
+    if paper.year:
+        return paper.year
+    m = _YEAR_RE.search(paper.title or "")
+    return int(m.group(0)) if m else None
+
+
 def _format_paper(paper: Paper) -> str:
     parts = [paper.title]
-    if paper.year:
-        parts.append("(%s)" % paper.year)
+    year = submission_year(paper)
+    if year:
+        parts.append("(%d)" % year)
     if paper.venue:
         parts.append("| %s" % paper.venue)
     if paper.authors:
@@ -70,13 +110,17 @@ async def list_papers(
 
     Args:
         collection: optional knowledge base name to restrict to.
-        year_from: optional, only papers published in this year or later.
+        year_from: optional, only papers submitted this year or later.
+            年份既看结构化字段，也看 arXiv 编号解码（2510.22268 = 2025-10 投稿）——
+            上传的论文经常没有 year 字段，但有原始编号。
         author: optional, matches part of an author name.
     """
     async with async_session_maker() as session:
-        papers = await PaperRepository.list_papers(
-            session=session, year_from=year_from, author=author
-        )
+        # year_from 不下推到 SQL：论文可能没有 year 字段但带 arXiv 编号，
+        # 先全量取出再在解码层过滤（语料量级下开销可忽略）。
+        papers = await PaperRepository.list_papers(session=session, author=author)
+        if year_from:
+            papers = [p for p in papers if (submission_year(p) or 0) >= year_from]
 
     if collection:
         async with async_session_maker() as session:

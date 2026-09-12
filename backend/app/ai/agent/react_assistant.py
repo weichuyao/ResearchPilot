@@ -72,6 +72,13 @@ instructions = """
        thing is false.
 
     5. Answer the question the user actually asked, and keep the answer focused.
+
+    6. arXiv IDs encode the submission date: YYMM.NNNNN means year 20YY, month MM
+       (2510.22268 = submitted 2025-10; 2602.05785 = 2026-02). When the user asks
+       for papers from a given year, decode the IDs from filenames, list output and
+       search results and filter directly — do not dump unfiltered candidates and
+       let the user figure out the dates. `list_papers` already annotates each paper
+       with its submission/publication year and supports year_from.
 """
 
 
