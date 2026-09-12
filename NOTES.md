@@ -76,6 +76,7 @@
   cd D:\Code\agent\ai-chatkit-master\backend
   $env:NO_PROXY = '127.0.0.1,localhost,::1'
   .\.venv-py311\Scripts\python.exe -m uvicorn main:app --app-dir app --host 127.0.0.1 --port 8001 --reload
+    ⚠️ **--reload 不可信**：实测多次改了后端代码（agents.py、conversation_routes.py）页面行为不变 —— reload 看漏变更。改完后端后**手动重启**验证，别信热加载。（判别：/health 的 started_at 没变 = 没重启成功。）
   ```
 - 数据库基线（动手改代码前请记住，改完要核对没被破坏）：
   - PostgreSQL（compose 的 researchpilot-pg，端口 5433）；`department` / `employee` 等 OA 表已随 OA 清理退役
