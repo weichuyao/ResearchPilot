@@ -161,7 +161,7 @@ async def list_papers(
 
 
 @tool
-async def search_documents(query: str, paper: Optional[str] = None) -> str:
+async def search_documents(query: str, paper: Optional[str] = None, year_from: Optional[int] = None) -> str:
     """Search the research paper knowledge base and return the most relevant passages.
 
     The search is two-stage. It first recalls candidates in two ways at once —
@@ -187,6 +187,14 @@ async def search_documents(query: str, paper: Optional[str] = None) -> str:
                 "No paper in the knowledge base has a title matching %r, so the search was "
                 "not restricted. Known titles:\n%s" % (paper, await all_titles())
             )
+
+    if year_from:
+        year_sources = papers_for_year(int(year_from))
+        allowed_sources = (
+            [x for x in (allowed_sources or year_sources or []) if x in set(year_sources or [])]
+            if year_sources
+            else []
+        )
 
     outcome = retrieve(query, allowed_sources=allowed_sources)
     if outcome.rejected:

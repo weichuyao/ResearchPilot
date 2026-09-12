@@ -232,9 +232,14 @@ async def upload_document(
         # ---- 6) 先建记录再排后台任务 ----
         # 顺序不能反：如果先排任务再建记录，后台可能跑完了却找不到要更新的行。
         # 先落记录（status=待处理），后台任务只负责推进状态。
+        from ai.rag.ingest import _decode_arxiv_date
+
+        _date = _decode_arxiv_date(source_file, _derive_title(original, title))
         paper = Paper(
             source_file=source_file,
             title=_derive_title(original, title),
+            year=(_date[0] if _date else None),
+            external_id=(_date[2] if _date else ""),
             pdf_path=os.path.relpath(pdf_path, os.getcwd()),
             status=STATUS_PENDING,
         )

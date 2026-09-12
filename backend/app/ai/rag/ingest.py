@@ -344,6 +344,18 @@ def index_pdf(pdf_path: str, source_file: str, title: str) -> dict:
     return row
 
 
+def _decode_arxiv_date(file: str, title: str):
+    """从文件名/标题解出 arXiv 编号信息：(year, month, "arXiv:原始编号") 或 None。"""
+    from ai.tools.research_tools import _ARXIV_ID_RE, arxiv_submission_date
+
+    for text in (file or "", title or ""):
+        m = _ARXIV_ID_RE.search(text)
+        if m:
+            d = arxiv_submission_date(text)
+            return d[0], d[1], "arXiv:" + m.group(0)
+    return None
+
+
 async def record_paper(
     row: dict,
     pdf_path: str,
@@ -377,8 +389,11 @@ async def record_paper(
             title=row["title"],
             authors=str(meta.get("authors") or ""),
             venue=str(meta.get("venue") or ""),
-            year=_parse_year(meta.get("year")),
-            external_id=str(meta.get("external_id") or ""),
+            # meta 清单没有的，从 arXiv 编号解码兜底（上传件基本没有清单）
+            year=_parse_year(meta.get("year"))
+            or (lambda d: d[0] if d else None)(_decode_arxiv_date(row["file"], row["title"])),
+            external_id=str(meta.get("external_id") or "")
+            or (lambda d: d[2] if d else "")(_decode_arxiv_date(row["file"], row["title"])),
             pdf_path=os.path.relpath(pdf_path, os.getcwd()),
             collection_id=collection.id or 0,
             status=STATUS_INDEXED if status is None else status,
@@ -481,8 +496,10 @@ def _sync_paper_table(report: list[dict], folder: str, collection_name: str,
                     title=row["title"],
                     authors=meta.get("authors") or "",
                     venue=meta.get("venue") or "",
-                    year=meta.get("year"),
-                    external_id=meta.get("external_id") or "",
+                    year=meta.get("year")
+                    or (lambda d: d[0] if d else None)(_decode_arxiv_date(row["file"], row["title"])),
+                    external_id=meta.get("external_id") or ""
+                    or (lambda d: d[2] if d else "")(_decode_arxiv_date(row["file"], row["title"])),
                     pdf_path=os.path.relpath(os.path.join(folder, row["file"]), os.getcwd()),
                     collection_id=collection.id or 0,
                     status=STATUS_INDEXED,
