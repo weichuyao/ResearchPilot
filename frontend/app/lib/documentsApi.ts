@@ -122,3 +122,39 @@ export async function fetchFormats(): Promise<string[] | undefined> {
     return undefined;
   }
 }
+
+
+/** 文档简表（引用定位用）。模块级缓存：论文列表变化不频繁，失败不弹错误。 */
+let docIndexCache: { id: number; title: string }[] | null = null;
+
+export async function ensureDocIndex(): Promise<{ id: number; title: string }[]> {
+  if (docIndexCache) return docIndexCache;
+  try {
+    const response = await fetch(`${BASE}/documents?limit=200`);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const data = await response.json();
+    docIndexCache = (data.items ?? []).map((d: DocumentOut) => ({ id: d.id, title: d.title }));
+  } catch (err) {
+    console.error("加载文档索引失败", err);
+    docIndexCache = [];
+  }
+  return docIndexCache;
+}
+
+export interface PassageLookup {
+  title: string;
+  page: number;
+  passages: string[];
+  known_pages: string[];
+}
+
+/** 引用定位：论文提示 + 页码 -> 原文段落。resolve 404 会原样抛出给调用方提示。 */
+export async function lookupPassages(titleHint: string, page: number): Promise<PassageLookup> {
+  const resolved = await fetch(`${BASE}/documents/resolve?title=${encodeURIComponent(titleHint)}`);
+  if (!resolved.ok) throw new Error(await resolved.json().then((b) => b?.detail).catch(() => `HTTP ${resolved.status}`));
+  const doc = await resolved.json();
+  const r2 = await fetch(`${BASE}/documents/${doc.id}/passages?page=${page}`);
+  if (!r2.ok) throw new Error(`HTTP ${r2.status}`);
+  const data = await r2.json();
+  return { title: data.title, page: data.page, passages: data.passages, known_pages: data.known_pages };
+}

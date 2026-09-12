@@ -422,6 +422,51 @@ async def get_formats() -> dict:
     return {"formats": list(supported_extensions()), "note": describe_formats()}
 
 
+@document_router.get("/resolve")
+async def resolve_document(title: str) -> dict:
+    """标题模糊匹配 -> 文档记录（引用定位的第一步：从回答里的论文提示找到资源）。"""
+    async with async_session_maker() as session:
+        papers = await PaperRepository.list_papers(session=session, limit=200)
+    t = title.strip().lower()
+    best = None
+    best_score = 0
+    for p in papers:
+        title_l = p.title.lower()
+        # 简单重合度：标题提示里的词在论文标题里命中的比例
+        words = [w for w in __import__("re").split(r"\W+", t) if len(w) > 2]
+        if not words:
+            continue
+        score = sum(1 for w in words if w in title_l) / len(words)
+        if score > best_score:
+            best, best_score = p, score
+    if best is None or best_score < 0.3:
+        raise HTTPException(status_code=404, detail="没有匹配的论文")
+    return {"id": best.id, "title": best.title, "score": round(best_score, 2)}
+
+
+@document_router.get("/{paper_id}/passages")
+async def get_passages(paper_id: int, page: int) -> dict:
+    """按论文 + 页码取原文块 —— 回答里的引用可以点开直接核对原文。"""
+    from ai.rag.chromaClient import document_vector_store
+
+    async with async_session_maker() as session:
+        paper = await PaperRepository.get_by_id(session, paper_id=paper_id)
+    if paper is None:
+        raise HTTPException(status_code=404, detail="论文不存在")
+
+    got = document_vector_store.get(where={"source": paper.source_file})
+    by_page: dict[str, list[str]] = {}
+    for text, meta in zip(got["documents"], got["metadatas"]):
+        by_page.setdefault(str(meta.get("page_label") or "?"), []).append(text)
+    return {
+        "paper_id": paper.id,
+        "title": paper.title,
+        "page": page,
+        "passages": by_page.get(str(page), []),
+        "known_pages": sorted(by_page),
+    }
+
+
 @document_router.get("/{paper_id}", response_model=DocumentOut)
 async def get_document(paper_id: int) -> DocumentOut:
     async with async_session_maker() as session:

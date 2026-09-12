@@ -1,5 +1,6 @@
 import React from 'react';
 import { Collapse, Spin } from 'antd';
+import CitationChips from './CitationChips';
 import ReactMarkdown from 'react-markdown';
 import { Message } from '../types/chat.types';
 
@@ -36,6 +37,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreaming }) =
                 </Collapse>
               )}
               <ReactMarkdown>{content}</ReactMarkdown>
+              {type === 'ai' && content && <CitationChips content={content} />}
             </>
           )}
         </div>

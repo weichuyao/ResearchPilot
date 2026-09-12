@@ -95,7 +95,17 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
           <div className="flex flex-col justify-center items-center min-h-full text-gray-600 space-y-2">
             <div className="text-2xl font-medium">欢迎使用科研领航</div>
             <div className="text-base">
-            在下方输入问题，我会基于文献库为你检索和解答          </div>
+            在下方输入问题，我会基于文献库为你检索和解答
+            </div>
+            <button
+              className="mt-3 px-4 py-1.5 rounded-full border border-black/10 bg-white text-sm text-[#1d1d1f] hover:border-[#0071e3] hover:text-[#0071e3] transition-colors"
+              onClick={() => setInput(
+                "请围绕【在这里填写主题】系统梳理本地文献库中的相关方法：按技术路线分类，" +
+                "每类给出代表论文与页码引用、核心机制对比，最后总结研究趋势与空白。仅基于本地文献库。"
+              )}
+            >
+              📝 生成文献综述（填入模板，改成你的主题后发送，建议用深度研究模式）
+            </button>
           </div>
         )}
         {messages.map((msg) => (

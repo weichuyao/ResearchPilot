@@ -35,7 +35,11 @@ logger = logging.getLogger(__name__)
 # 2. download/read/latex 系列管理的是 MCP server 自己的存储 —— 本项目有
 #    自己的入库链路（ingest.py），两套语料并存只会制造混乱；
 # 3. 19 个工具 schema 全绑给模型，会稀释工具选择。
-MCP_ARXIV_ALLOWLIST = ("search_papers", "get_abstract", "citation_graph")
+MCP_ARXIV_ALLOWLIST = (
+    "search_papers", "get_abstract", "citation_graph",
+    # 研究主题订阅：server 原生能力（自带存储与检查），挂上即可用
+    "watch_topic", "check_alerts", "list_watches", "unwatch_topic",
+)
 
 
 async def get_mcp_tools() -> list:
