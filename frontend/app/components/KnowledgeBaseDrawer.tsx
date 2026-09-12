@@ -138,6 +138,7 @@ const KnowledgeBaseDrawer: React.FC<Props> = ({ open, onClose }) => {
           </Button>
           <Upload
             accept={formats?.join(",")}
+            multiple
             showUploadList={false}
             beforeUpload={handleUpload}
           >
