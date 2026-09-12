@@ -4,6 +4,9 @@ import { Select } from 'antd';
 interface AgentSelectorProps {
   value: string;
   onChange: (value: string) => void;
+  // 列表加载后的自动补默认值走这个 —— 它不该触发「选 agent 即新开对话」
+  // 的用户路径（否则直接打开会话链接时历史会被清空、URL 被劫持到 /chat）。
+  onBootstrap: (value: string) => void;
 }
 
 interface AgentOption {
@@ -18,7 +21,7 @@ interface AgentOption {
 // 拿不到列表时不兜底造假数据：下拉为空 + placeholder 说明原因。
 // 此时用户仍能发消息 —— 请求里省略 agent_id，后端用 DEFAULT_AGENT（见
 // useStreamChat.ts）。宁可空着，也不要一份会漂移的副本。
-const AgentSelector: React.FC<AgentSelectorProps> = ({ value, onChange }) => {
+const AgentSelector: React.FC<AgentSelectorProps> = ({ value, onChange, onBootstrap }) => {
   const [options, setOptions] = useState<AgentOption[]>([]);
 
   useEffect(() => {
@@ -51,7 +54,7 @@ const AgentSelector: React.FC<AgentSelectorProps> = ({ value, onChange }) => {
   // 这样「默认用哪个 agent」也由后端注册表的顺序决定，前端不再硬编码。
   useEffect(() => {
     if (options.length > 0 && !options.some((option) => option.value === value)) {
-      onChange(options[0].value);
+      onBootstrap(options[0].value);
     }
   }, [options, value, onChange]);
 

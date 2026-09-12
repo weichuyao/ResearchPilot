@@ -112,7 +112,8 @@ class PaperRepository:
             statement = statement.where(Paper.year >= year_from)
         if author:
             statement = statement.where(Paper.authors.ilike("%" + author + "%"))
-        statement = statement.order_by(Paper.year.desc(), Paper.id).limit(limit)
+        # id desc：新上传的排前面（前端上传后要在列表头部找到它）
+        statement = statement.order_by(Paper.id.desc()).limit(limit)
         result = await session.execute(statement)
         return list(result.scalars().all())
 

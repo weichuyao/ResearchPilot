@@ -16,12 +16,19 @@ const MessageInput: React.FC<MessageInputProps> = ({ input, setInput, handleSend
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="输入你的问题…"
-          onKeyPress={(e) => e.key === "Enter" && handleSend()}
-          //ctrl + enter 换行
           onKeyDown={(e) => {
-            if (e.key === "Enter" && e.ctrlKey) {
+            // keyPress 不区分修饰键也不感知输入法：Shift+Enter 会被当发送、
+            // 中文 IME 确认候选词也会被当发送 —— 对中文用户是高频事故。
+            if (
+              e.key === "Enter" &&
+              !(e.nativeEvent as any).isComposing
+            ) {
               e.preventDefault();
-              setInput(input + "\n");
+              if (e.shiftKey || e.ctrlKey) {
+                setInput(input + "\n"); // shift/ctrl + enter 换行
+              } else {
+                handleSend();
+              }
             }
           }}
           disabled={isStreaming}

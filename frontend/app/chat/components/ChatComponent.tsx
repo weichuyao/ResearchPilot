@@ -17,20 +17,23 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
   const messagesEndRef = useRef(null);
   const { agentId, setAgentId, currentThreadId, setCurrentThreadId } = useLayoutContext()
 
+  // URL 参数 -> 会话状态。必须依赖 [threadId]：无依赖数组时每次渲染都执行，
+  // 会把「新建对话」刚置空的 currentThreadId 又改回旧值（新建对话因此失效）。
   useEffect(() => {
-    if(threadId){
-      setCurrentThreadId(threadId)
+    if (threadId) {
+      setCurrentThreadId(threadId);
+    } else {
+      setCurrentThreadId(null); // URL 是 /chat 时显式清空，保持 URL 与状态一致
     }
-  });
-  
-  console.log("chat agentId", agentId)
-  console.log("chat threadId", currentThreadId)
-  
+  }, [threadId]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  useEffect(() => scrollToBottom(), [messages]);
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const { handleNewChat } = useChatActions({ setMessages, setInput, isStreaming, setIsStreaming });
 
@@ -38,7 +41,7 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
   // 之前读 localStorage：后端重启后界面还显示历史、后端却已失忆（缺陷 B4）。
   // 现在消息的 source of truth 是后端 checkpointer；拉取失败就空着并报错。
   useEffect(() => {
-    if(!currentThreadId || currentThreadId === "") {
+    if (!currentThreadId || currentThreadId === "") {
       handleNewChat();
       return;
     }
@@ -52,21 +55,32 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
     return () => { cancelled = true; };
   }, [currentThreadId]);
 
-  const { handleStream } = useStreamChat({ currentThreadId, agentId, setMessages, isStreaming, setIsStreaming });
+  const { handleStream, abort } = useStreamChat({ currentThreadId, agentId, setMessages, isStreaming, setIsStreaming });
+
+  // 切换会话时掐掉还在跑的旧流：不 abort 的话，旧流的 token 会继续写进
+  // 新会话的消息列表（两个会话共用同一个 messages state，竞态实测存在）。
+  useEffect(() => {
+    abort();
+  }, [currentThreadId]);
 
   const handleSend = async () => {
+    const text = input;
     setInput("");
 
-    setIsStreaming(true);
+    // 关键：threadId 必须先落局部变量。setCurrentThreadId 是异步的，
+    // 闭包里的 currentThreadId 此时还是旧值（新建会话时是 null）——
+    // 之前 add-session 事件和 handleStream 拿到的 id 跟实际写入后端的
+    // thread_id 三处各不相同，会话与回答永远对不上。
+    const newThreadId = currentThreadId || uuidv4();
     if (!currentThreadId) {
-      setCurrentThreadId(uuidv4());
+      setCurrentThreadId(newThreadId);
       window.dispatchEvent(
         new CustomEvent("add-session", {
-          detail: { threadId: currentThreadId, msg: input },
+          detail: { threadId: newThreadId, msg: text },
         })
       );
     }
-    await handleStream(input);
+    await handleStream(text, newThreadId);
   };
 
   return (

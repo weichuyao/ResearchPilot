@@ -29,6 +29,7 @@ const SiderComponent: React.FC<SiderComponentProps> = ({
 
   return (
     <Sider
+      theme="light"
       collapsible
       collapsed={collapsed}
       onCollapse={onCollapse}

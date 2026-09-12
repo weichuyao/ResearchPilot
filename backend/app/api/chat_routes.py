@@ -78,8 +78,11 @@ async def invoke(user_input: UserInput) -> ChatMessage:
 async def stream(user_input: StreamInput) -> StreamingResponse:
     """
     流式传输代理的响应。
-    
     """
+    # 404 必须在这里判：StreamingResponse 一旦开始迭代 generator，
+    # 200 + text/event-stream 头就已经发出，之后任何异常只能表现为断流。
+    if user_input.agent_id not in agents:
+        raise HTTPException(status_code=404, detail=f"未知的 agent: {user_input.agent_id}")
 
     return StreamingResponse(
         message_generator(user_input),
@@ -158,9 +161,9 @@ async def message_generator(
     """
     An asynchronous generator for generating messages, used for the responses of streaming agents.
     """
-    if user_input.agent_id not in agents:
-        # SSE 响应头一旦发出状态码就锁死了，所以这个检查必须在流开始之前做。
-        raise HTTPException(status_code=404, detail=f"未知的 agent: {user_input.agent_id}")
+    # 注意：agent 合法性检查在路由函数里做（见 stream()）—— 在 generator 里
+    # raise 的话 StreamingResponse 已经把 200 + SSE 头发出去了，状态码改不了，
+    # 客户端只会看到"连接被硬切"（黑盒测试 BUG-1 实测）。
     agent: CompiledStateGraph = await get_agent(user_input.agent_id)
     kwargs, run_id, thread_id = await _handle_input(user_input, agent)
 

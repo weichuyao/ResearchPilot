@@ -24,6 +24,26 @@ export default function RootLayout({ children }: { children: any }) {
   // 现在后端是唯一事实源；拉取失败就空着并报错，不造本地假数据。
   const [sessions, setSessions] = useState<any[]>([]);
 
+  // 窗口重新聚焦时再拉一次列表：其它标签页里的增删改名本页感知不到，
+  // 乐观插入的标题也要和后端计算的真实标题对齐。
+  useEffect(() => {
+    const onFocus = () => {
+      fetchConversations()
+        .then((list: ConversationInfo[]) =>
+          setSessions(
+            list.map((row) => ({
+              threadId: row.thread_id,
+              name: row.title,
+              lastUpdated: Date.parse(row.last_message_at) || 0,
+            }))
+          )
+        )
+        .catch(() => {});
+    };
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, []);
+
   useEffect(() => {
     fetchConversations()
       .then((list: ConversationInfo[]) =>
@@ -94,17 +114,20 @@ export default function RootLayout({ children }: { children: any }) {
       antdMessage.error("删除会话失败" + (err?.message ? `：${err.message}` : ""));
       return;
     }
-    const newSessions = sessions.filter(
-      (session) => session.threadId !== delThreadId
-    );
-    setSessions(newSessions);
-    if(newSessions.length > 0){
-      setCurrentThreadId([...newSessions].reverse()[0]?.threadId || "");
-      window.history.pushState({}, "", `/chat/${currentThreadId}`);
-    }else{
-      setCurrentThreadId(null);
-      window.history.pushState({}, "", "/chat");
-    }
+    // 函数式更新 + 显式计算下一个选中项：闭包里的 sessions/currentThreadId
+    // 是旧值，连续快速删除或删掉非当前会话时，三处状态（列表/选中/URL）会对不上。
+    setSessions((prev: any[]) => {
+      const newSessions = prev.filter(
+        (session) => session.threadId !== delThreadId
+      );
+      const nextId =
+        delThreadId === currentThreadId
+          ? [...newSessions].reverse()[0]?.threadId ?? ""
+          : currentThreadId;
+      setCurrentThreadId(nextId);
+      window.history.pushState({}, "", nextId ? `/chat/${nextId}` : "/chat");
+      return newSessions;
+    });
   };
 
   const handlerNewChat = () => {
@@ -165,7 +188,7 @@ export default function RootLayout({ children }: { children: any }) {
                 />
                 <div className="flex items-center ml-8 flex-none shrink-0">
                   <span className="text-base" style={{ color: "#1d1d1f" }}>智能体模式</span>
-                  <AgentSelector value={agentId} onChange={selectAgent} />
+                  <AgentSelector value={agentId} onChange={selectAgent} onBootstrap={setAgentId} />
                 </div>
                 <div className="flex items-center ml-4 flex-none shrink-0">
                   {/* 知识库入口。放在 Header 而不是侧边栏：它和"选哪个 agent"一样，

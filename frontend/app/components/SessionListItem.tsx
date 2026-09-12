@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dropdown, Menu as AntMenu, Button, Input, Modal, message } from 'antd';
+import { Dropdown, Menu as AntMenu, Button, Input, Modal, Popconfirm, message } from 'antd';
 import { EllipsisOutlined } from '@ant-design/icons';
 import { renameConversation } from '../lib/conversationsApi';
 
@@ -16,7 +16,10 @@ const SessionListItem: React.FC<SessionListItemProps> = ({ session, onDelete, on
 
   const save = async () => {
     const title = draft.trim();
-    if (!title) return;
+    if (!title) {
+      message.warning("标题不能为空");
+      return;
+    }
     setSaving(true);
     try {
       await renameConversation(session.threadId, title);
@@ -41,8 +44,16 @@ const SessionListItem: React.FC<SessionListItemProps> = ({ session, onDelete, on
             <AntMenu.Item key="rename" onClick={() => { setDraft(session.name); setEditing(true); }}>
               重命名
             </AntMenu.Item>
-            <AntMenu.Item key="delete" danger onClick={() => onDelete(session.threadId)}>
-              删除会话
+            <AntMenu.Item key="delete" danger>
+              <Popconfirm
+                title="删除这个会话？"
+                description="删除后无法恢复"
+                okText="删除"
+                cancelText="取消"
+                onConfirm={() => onDelete(session.threadId)}
+              >
+                删除会话
+              </Popconfirm>
             </AntMenu.Item>
           </AntMenu>
         }

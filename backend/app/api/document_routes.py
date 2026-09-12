@@ -178,7 +178,7 @@ async def upload_document(
     if magic and not payload.startswith(magic):
         raise HTTPException(
             status_code=http.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            detail="文件内容不是 %s（缺少%s）。改个扩展名是没用的。"
+            detail="文件内容不是 %s（缺少 %s）。改个扩展名是没用的。"
                    % (ext, parser.info.magic_note),
         )
     if magic is None and b"\x00" in payload[:4096]:
