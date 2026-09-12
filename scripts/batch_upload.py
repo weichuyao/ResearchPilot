@@ -18,7 +18,8 @@ import time
 
 import httpx
 
-BASE = os.environ.get("NEXT_PUBLIC_API_BASE_URL", "http://127.0.0.1:8001")
+# 环境变量可能存在但为空 —— or 兜底，不能用 get 的默认值参数
+BASE = os.environ.get("NEXT_PUBLIC_API_BASE_URL") or "http://127.0.0.1:8001"
 SUPPORTED = {".pdf", ".docx", ".md", ".markdown", ".txt", ".text"}
 
 
@@ -39,7 +40,7 @@ def main() -> None:
 
     ids: list[tuple[str, int]] = []
     failed = 0
-    with httpx.Client(timeout=300) as c:
+    with httpx.Client(timeout=300, base_url=BASE) as c:
         for name in files:
             path = os.path.join(args.folder, name)
             with open(path, "rb") as fh:
