@@ -1,6 +1,5 @@
 import React from 'react';
-import { Avatar, Collapse, Spin } from 'antd';
-import { UserOutlined, RobotOutlined } from '@ant-design/icons';
+import { Collapse, Spin } from 'antd';
 import ReactMarkdown from 'react-markdown';
 import { Message } from '../types/chat.types';
 
@@ -14,15 +13,14 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreaming }) =
   const { type, content, toolCall } = message;
 
   return (
-    <div className={`mb-4 ${type === 'user' ? 'text-right flex justify-end' : 'text-left'}`}>
-      <div className={`flex ${type === 'user' ? 'flex-row-reverse' : 'flex-row'} items-start gap-3 max-w-2xl`}>
-        <Avatar
-          size={40}
-          className={`${type === 'user' ? 'bg-blue-500' : 'bg-gray-500'} text-white`}
-        >
-          {type === 'user' ? <UserOutlined /> : <RobotOutlined />}
-        </Avatar>
-        <div className={`p-3 rounded-lg ${type === 'user' ? 'bg-blue-50' : 'bg-gray-50'} flex-1`}>
+    <div className={`mb-5 flex ${type === 'user' ? 'justify-end' : 'justify-start'}`}>
+      <div
+        className={`px-4 py-3 text-[15px] leading-relaxed ${
+          type === 'user'
+            ? 'bg-[#0071e3] text-white rounded-[18px] rounded-br-md max-w-[75%]'
+            : 'bg-white text-[#1d1d1f] rounded-[18px] rounded-tl-md shadow-[0_1px_3px_rgba(0,0,0,0.06)] border border-black/5 max-w-[85%]'
+        } message-body`}
+      >
           {type === 'ai' && isStreaming && content === '' ? (
             toolCall ? <div><Spin size="small" /> invoking tool...</div> : <Spin size="small" />
           ) : (
@@ -41,7 +39,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, isStreaming }) =
             </>
           )}
         </div>
-      </div>
     </div>
   );
 };
