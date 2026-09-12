@@ -50,7 +50,11 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
       .then((history) => { if (!cancelled) setMessages(history as Message[]); })
       .catch((err) => {
         console.error("加载会话历史失败", err);
-        if (!cancelled) setMessages([]);
+        if (!cancelled) {
+          // 404 = 刚新建、后端还没有记录的会话（索引行在首条回答结束后才写入）：
+          // 此时屏幕上正是用户刚发的内容，清空就是"闪退"——保留本地消息。
+          if (!String(err?.message || "").includes("404")) setMessages([]);
+        }
       });
     return () => { cancelled = true; };
   }, [currentThreadId]);
@@ -60,7 +64,8 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
   // 切换会话时掐掉还在跑的旧流：不 abort 的话，旧流的 token 会继续写进
   // 新会话的消息列表（两个会话共用同一个 messages state，竞态实测存在）。
   useEffect(() => {
-    abort();
+    // 传入 currentThreadId：属于当前会话的流不能被自己的 effect 掐死
+    abort(currentThreadId);
   }, [currentThreadId]);
 
   const handleSend = async () => {

@@ -20,8 +20,12 @@ export const useStreamChat = ({
   // 流式请求的中止控制：切换会话 / 新建对话时把还在跑的旧流掐掉，
   // 否则旧流的 setState 会写进新会话的消息列表（竞态实测存在）。
   const abortRef = useRef<AbortController | null>(null);
+  // 当前流属于哪个会话。切换会话的 abort 守卫要用：
+  // 新建会话时 setCurrentThreadId 会触发 effect，不能把刚为新会话发出的流掐死。
+  const streamThreadRef = useRef<string | null>(null);
 
-  const abort = () => {
+  const abort = (activeThread?: string) => {
+    if (activeThread && streamThreadRef.current === activeThread) return;
     abortRef.current?.abort();
     abortRef.current = null;
   };
@@ -43,6 +47,8 @@ export const useStreamChat = ({
     };
     setMessages((prev: Message[]) => [...prev, newUserMessage, newAiMessage]);
 
+    const thread = threadIdOverride ?? currentThreadId;
+    streamThreadRef.current = thread;
     const controller = new AbortController();
     abortRef.current = controller;
 
@@ -50,7 +56,7 @@ export const useStreamChat = ({
       // agentId 为空（/agents 列表还没回来）时省略 agent_id，
       // 让后端的 DEFAULT_AGENT 决定 —— 不能发空字符串过去，后端 get_agent("") 会 500。
       const requestMsg = {
-        thread_id: threadIdOverride ?? currentThreadId,
+        thread_id: thread,
         role: "user",
         message: input,
         ...(agentId ? { agent_id: agentId } : {}),
