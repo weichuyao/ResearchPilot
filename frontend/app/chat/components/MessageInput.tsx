@@ -30,11 +30,11 @@ const MessageInput: React.FC<MessageInputProps> = ({ input, setInput, handleSend
         />
         <Button
           type="primary"
-          className="bg-blue-500 hover:bg-blue-600 text-white h-24 px-6 rounded-lg transition-colors font-semibold shadow-md"
+          className="h-10 px-6 rounded-lg font-medium shadow-sm"
           onClick={handleSend}
           disabled={!input.trim() || isStreaming}
         >
-          {isStreaming ? "generating..." : "send"}
+          {isStreaming ? "回答中…" : "发送"}
         </Button>
       </div>
     </div>

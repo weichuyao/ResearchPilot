@@ -74,9 +74,9 @@ const ChatComponent: React.FC<ChatComponentProps> = ({
       <div className="chat-messages overflow-y-auto p-4 h-[calc(100vh-280px)]">
         {messages.length === 0 && (
           <div className="flex flex-col justify-center items-center min-h-full text-gray-600 space-y-2">
-            <div className="text-2xl font-medium">欢迎使用 ResearchPilot</div>
+            <div className="text-2xl font-medium">欢迎使用科研领航</div>
             <div className="text-base">
-            You can start typing your questions now and I'll be here to help you!            </div>
+            在下方输入问题，我会基于文献库为你检索和解答          </div>
           </div>
         )}
         {messages.map((msg) => (

@@ -18,7 +18,7 @@ class Settings(BaseSettings):
         validate_default=False,
     )
     
-    APP_NAME: str = "ResearchPilot"
+    APP_NAME: str = "科研领航"
     DEBUG: bool = True
     DATABASE_URL: str | None = None
     HOST: str = "127.0.0.1"
