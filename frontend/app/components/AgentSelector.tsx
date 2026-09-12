@@ -29,19 +29,19 @@ const AgentSelector: React.FC<AgentSelectorProps> = ({ value, onChange }) => {
       })
       .then((list) =>
         setOptions(
-          list.map((agent: { key: string; description: string }) => ({
-            value: agent.key,
-            label: (
-              <div style={{ lineHeight: 1.4, padding: "2px 0" }}>
-                <div style={{ fontWeight: 500 }}>
-                  {agent.description.split("：")[0]}
+          list.map((agent: { key: string; description: string }) => {
+            const [name, desc = ""] = agent.description.split("：");
+            return {
+              value: agent.key,
+              title: name,
+              label: (
+                <div style={{ lineHeight: 1.4, padding: "2px 0" }}>
+                  <div style={{ fontWeight: 500 }}>{name}</div>
+                  {desc && <div style={{ fontSize: 12, color: "#6e6e73" }}>{desc}</div>}
                 </div>
-                <div style={{ fontSize: 12, color: "#6e6e73" }}>
-                  {agent.description.split("：")[1] ?? agent.key}
-                </div>
-              </div>
-            ),
-          }))
+              ),
+            };
+          })
         )
       )
       .catch((err) => console.error("加载 agent 列表失败", err));
@@ -61,6 +61,7 @@ const AgentSelector: React.FC<AgentSelectorProps> = ({ value, onChange }) => {
       className="ml-2 mr-5 w-44"
       onChange={onChange}
       options={options}
+      optionLabelProp="title"   // 选中态只显示短名（如「快速问答」），全说明留在下拉里
       placeholder={options.length === 0 ? "列表加载中…" : undefined}
       notFoundContent="后端 agent 列表不可用"
     />

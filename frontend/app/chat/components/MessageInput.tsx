@@ -15,7 +15,7 @@ const MessageInput: React.FC<MessageInputProps> = ({ input, setInput, handleSend
         <Input.TextArea
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Send a message..."
+          placeholder="输入你的问题…"
           onKeyPress={(e) => e.key === "Enter" && handleSend()}
           //ctrl + enter 换行
           onKeyDown={(e) => {
