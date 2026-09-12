@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Select } from 'antd';
 
 interface AgentSelectorProps {
@@ -6,28 +6,54 @@ interface AgentSelectorProps {
   onChange: (value: string) => void;
 }
 
-// 可选的 agent。
-//
-// ⚠️ 这是后端 ai/agent/agents.py 里那张注册表的**手工镜像** —— 两边必须同时改，
-// 否则会出现「下拉里能选、后端不认识」或者反过来「后端有、选不到」。
-// 改造 #10 会把这个列表改成从后端 get_all_agent_info() 动态取。
-//
-// research-workflow 是改造 #3 的产物（Corrective RAG：分析 → 检索 → 判证据充分性
-// → 补充检索 → 综合），和 oa-assistant（ReAct 自由循环）共用同一套工具与检索管线，
-// 并存就是为了能直接对比。
-const AGENTS = [
-  { value: "research-workflow", label: "RESEARCH-WORKFLOW" },
-  { value: "oa-assistant", label: "OA-ASSISTANT" },
-  { value: "multi-agent-supervisor", label: "MULTI-AGENT-SUPERVISOR" },
-];
+interface AgentOption {
+  value: string;
+  label: string;
+}
 
+// 可选的 agent 从后端注册表动态取（GET /agents，见 ai/agent/agents.py 的
+// get_all_agent_info）。之前这里是注册表的**手工镜像** —— 两边必须同时改，
+// 否则会出现「下拉里能选、后端不认识」或反过来；agent 改名时这个缺口真咬过人。
+//
+// 拿不到列表时不兜底造假数据：下拉为空 + placeholder 说明原因。
+// 此时用户仍能发消息 —— 请求里省略 agent_id，后端用 DEFAULT_AGENT（见
+// useStreamChat.ts）。宁可空着，也不要一份会漂移的副本。
 const AgentSelector: React.FC<AgentSelectorProps> = ({ value, onChange }) => {
+  const [options, setOptions] = useState<AgentOption[]>([]);
+
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/agents`)
+      .then((response) => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      })
+      .then((list) =>
+        setOptions(
+          list.map((agent: { key: string }) => ({
+            value: agent.key,
+            label: agent.key.toUpperCase(),
+          }))
+        )
+      )
+      .catch((err) => console.error("加载 agent 列表失败", err));
+  }, []);
+
+  // 列表到达时，如果当前值不在列表里（包括初始的空值），自动选第一个。
+  // 这样「默认用哪个 agent」也由后端注册表的顺序决定，前端不再硬编码。
+  useEffect(() => {
+    if (options.length > 0 && !options.some((option) => option.value === value)) {
+      onChange(options[0].value);
+    }
+  }, [options, value, onChange]);
+
   return (
     <Select
-      value={value}
+      value={value || undefined}
       className="ml-2 mr-5 w-44"
       onChange={onChange}
-      options={AGENTS}
+      options={options}
+      placeholder={options.length === 0 ? "列表加载中…" : undefined}
+      notFoundContent="后端 agent 列表不可用"
     />
   );
 };

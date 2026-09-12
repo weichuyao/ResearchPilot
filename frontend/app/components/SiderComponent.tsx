@@ -36,7 +36,7 @@ const SiderComponent: React.FC<SiderComponentProps> = ({
     >
       {!collapsed && (
         <div className="logo flex items-center justify-center h-16 text-white text-lg">
-          AI-CHATKIT
+          RESEARCHPILOT
         </div>
       )}
       <NewChatButton collapsed={collapsed} onClick={handlerNewChat} />

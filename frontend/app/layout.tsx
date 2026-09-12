@@ -30,9 +30,11 @@ export default function RootLayout({ children }: { children: any }) {
   const [currentThreadId, setCurrentThreadId] = useState(null);
 
   // 打开页面时默认用哪个 agent。
-  // 这个值会随每次请求发给后端（useStreamChat.ts 的 agent_id），所以它是**真正生效**
-  // 的默认值 —— 后端 agents.py 里的 DEFAULT_AGENT 只在客户端完全不传 agent_id 时起作用。
-  const [agentId, setAgentId] = useState("research-workflow");
+  // 初始为空：AgentSelector 挂载后从 GET /agents 拉取列表，并把第一个选项
+  // 回填进来 —— 「默认是哪个」由后端注册表的顺序决定，前端不再硬编码 key。
+  // 列表到达前用户就发消息的话，请求里省略 agent_id，后端用 DEFAULT_AGENT 兜底
+  // （见 useStreamChat.ts 与 agents.py）。
+  const [agentId, setAgentId] = useState("");
 
   // 知识库抽屉的开合。state 放在 layout 层而不是抽屉内部，
   // 这样以后想从别处（比如"没有相关文档"的提示里）打开它也有地方挂。

@@ -31,6 +31,7 @@ from datetime import datetime
 from fastapi import APIRouter
 
 from api.schema.documentSchema import HealthOut, status_text
+from ai.agent.agents import AgentInfo, get_all_agent_info
 from core.config import settings
 from db.database import async_session_maker
 from db.models.paper import STATUS_FAILED, STATUS_INDEXED, STATUS_INDEXING, STATUS_PENDING
@@ -42,6 +43,20 @@ system_router = APIRouter(tags=["system"])
 
 # 进程启动时刻。放在模块级：模块只被导入一次，所以它就是"这个进程是什么时候起来的"。
 _STARTED_AT = datetime.now()
+
+
+@system_router.get("/agents", response_model=list[AgentInfo])
+async def list_agents() -> list[AgentInfo]:
+    """可用的 agent 列表（注册表的只读视图）。
+
+    之前前端 `AgentSelector.tsx` 里维护着这张注册表的**手工镜像** —— 两边必须
+    同时改，否则就会出现「下拉里能选、后端不认识」或反过来。改名 react-assistant
+    和删除 multi-agent-supervisor 的时候，这个缺口第一次真正咬了人。
+
+    规则和上传接口的格式清单一样：**列表只在一个地方定义**（ai/agent/agents.py），
+    其它所有消费方都从这里取。
+    """
+    return get_all_agent_info()
 
 
 def _git_rev() -> str | None:

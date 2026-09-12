@@ -35,11 +35,13 @@ export const useStreamChat = ({
     setMessages((prev: Message[]) => [...prev, newUserMessage, newAiMessage]);
 
     try {
+      // agentId 为空（/agents 列表还没回来）时省略 agent_id，
+      // 让后端的 DEFAULT_AGENT 决定 —— 不能发空字符串过去，后端 get_agent("") 会 500。
       const requestMsg = {
         thread_id: currentThreadId,
         role: "user",
         message: input,
-        agent_id: agentId,
+        ...(agentId ? { agent_id: agentId } : {}),
       };
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/chat/stream`, {
