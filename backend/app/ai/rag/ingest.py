@@ -481,6 +481,68 @@ def _decode_arxiv_date(file: str, title: str):
     return None
 
 
+# 标题里的引用式年份（「Zhang 等 - 2026 - …」「ICCV 2025」「PR2026」）。
+# 与 research_tools.submission_year 的标题回退**同一套正则** ——
+# 入库沉淀和查询时解码必须同口径，否则「存进去的」和「筛出来的」对不上。
+_YEAR_RE = re.compile(r"(?<!\d)(19|20)\d{2}(?!\d)")
+
+
+def derive_year(file: str, title: str) -> int | None:
+    """入库时能确定的年份：arXiv 编号解码 → 标题年份。
+
+    这是 submission_year 三级回退里能在入库时确定的两级（paper.year 那级
+    正是本函数要写入的）。没有 arXiv 编号、标题也没年份的论文返回 None ——
+    查询时它对 year_from 不可见，这是诚实的：猜一个年份比不猜更糟。
+    """
+    d = _decode_arxiv_date(file, title)
+    if d:
+        return d[0]
+    m = _YEAR_RE.search(title or "")
+    return int(m.group(0)) if m else None
+
+
+async def refresh_paper_metadata(paper_id: int, file: str, title: str) -> None:
+    """索引完成后把入库时能确定的 year / external_id 回填进 paper 行。
+
+    ## 为什么放在索引后台任务里
+
+    _ingest_in_background 是上传和**重索引**共用的唯一收口 —— 重索引不重建
+    paper 行（upsert 不会跑到），项 1 的元数据沉淀若只挂在上传建记录时，
+    老语料重索引一遍之后 year/external_id 依然是空的。挂在任务成功之后，
+    两条路径天然一致。
+
+    只补空、不覆写：人工在 titles.json 或清单里填过的值不碰。
+    """
+    import db.database as database
+    from sqlalchemy import select
+
+    from db.models.paper import Paper
+
+    d = _decode_arxiv_date(file, title)
+    external_id = d[2] if d else ""
+    year = derive_year(file, title)
+    if year is None and not external_id:
+        return
+
+    async with database.async_session_maker() as session:
+        row = (await session.execute(
+            select(Paper).where(Paper.id == paper_id)
+        )).scalar_one_or_none()
+        if row is None:
+            return
+        changed = False
+        if year is not None and row.year is None:
+            row.year = year
+            changed = True
+        if external_id and not row.external_id:
+            row.external_id = external_id
+            changed = True
+        if changed:
+            await session.commit()
+            logger.info("metadata: 回填 id=%s《%s》 year=%s external_id=%s",
+                        paper_id, (title or "")[:40], year, external_id)
+
+
 async def record_paper(
     row: dict,
     pdf_path: str,

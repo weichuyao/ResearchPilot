@@ -69,18 +69,21 @@
 ## 环境事实
 
 - 后端必须**手动启动**才能看到日志（一键脚本用隐藏窗口启动，日志不可见）。
-  改造 #5 之二起会话记忆走 psycopg，Windows 下必须带 `--reload`
-  （uvicorn 0.34 只在该模式用 SelectorEventLoop，否则 psycopg 异步连接全部失败）；
-  且要先有 PostgreSQL（`docker compose up -d postgres`）：
+  Windows 下 psycopg 异步只支持 SelectorEventLoop，而 uvicorn 0.34 只在
+  `--reload` 子进程路径自带 Selector —— **裸 `python -m uvicorn` 会以
+  `psycopg_pool.PoolTimeout` 告终（30 秒全部连接失败）**。用 run_server.py
+  （在 uvicorn.run 之前设策略，无 --reload 依赖）：
   ```powershell
   cd D:\Code\agent\ai-chatkit-master\backend
   $env:NO_PROXY = '127.0.0.1,localhost,::1'
-  .\.venv-py311\Scripts\python.exe -m uvicorn main:app --app-dir app --host 127.0.0.1 --port 8001 --reload
-    ⚠️ **--reload 不可信**：实测多次改了后端代码（agents.py、conversation_routes.py）页面行为不变 —— reload 看漏变更。改完后端后**手动重启**验证，别信热加载。（判别：/health 的 started_at 没变 = 没重启成功。）
+  .\.venv-py311\Scripts\python.exe run_server.py
+    ⚠️ 旧结论「必须带 --reload」已修正：--reload 只是碰巧自带 Selector 所以能起，
+    但它的热加载不可信（实测多次看漏代码变更）。run_server.py 不依赖 --reload，
+    改完后端**重启进程**验证（判别：/health 的 started_at 没变 = 没重启成功）。
   ```
 - 数据库基线（动手改代码前请记住，改完要核对没被破坏）：
   - PostgreSQL（compose 的 researchpilot-pg，端口 5433）；`department` / `employee` 等 OA 表已随 OA 清理退役
-  - `paper`：7 篇 / 636 块（4 篇种子语料 + 3 篇上传）
+  - `paper`：73 篇 / 6818 块（2026-09-12 清理 7 对重复入库并全量重索引后；21 篇有 year、10 篇有 arXiv 编号，1 篇 MACHANet 因 PDF 文件损坏长期 failed）
   - `conversation`：会话索引（消息本体在 LangGraph 的 checkpoint 表里）
 - LangGraph checkpointer：**PostgreSQL 版已接入**（AsyncPostgresSaver，改造 #5 之二）；
   `DATABASE_URL` 不是 postgres 时降级 MemorySaver 并打 WARNING。

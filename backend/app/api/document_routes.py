@@ -324,6 +324,11 @@ async def _ingest_in_background(paper_id: int, pdf_path: str, source_file: str, 
         await mark(STATUS_FAILED, error=reason)
         return
     await mark(STATUS_INDEXED, chunk_count=row.get("chunks") or 0)
+    # 项 1 的元数据沉淀：上传和重索引共用这个收口，所以挂在这里而不是
+    # 上传建记录时 —— 否则老语料重索引一遍之后 year/external_id 还是空的。
+    from ai.rag.ingest import refresh_paper_metadata
+
+    await refresh_paper_metadata(paper_id, source_file, title)
     logger.info("upload: 索引完成 id=%s，%d 块", paper_id, row.get("chunks") or 0)
 
 

@@ -332,8 +332,13 @@ def format_hits(hits: list[tuple[Document, str, float | None]]) -> str:
             how = "relevance %.2f + exact terms" % score
         else:
             how = "relevance %.2f" % score
+        # 表格前缀拼进**正文首行**而不是 how 字段：how 会被评估脚本的
+        # _SOURCE_RE 以 [^\]]+ 整体吞掉，前缀里的方括号会把解析弄坏
+        # （历史教训：改输出格式没同步解析正则，recall 静默掉 0.25）。
+        # 前缀加在正文前则正文原样保留，锚点匹配不受影响。
+        body = table + doc.page_content
         blocks.append(
             "[source %d | %s | %s.%s | %s]\n%s"
-            % (index, title, prefix, label, how, doc.page_content)
+            % (index, title, prefix, label, how, body)
         )
     return "\n\n".join(blocks)
