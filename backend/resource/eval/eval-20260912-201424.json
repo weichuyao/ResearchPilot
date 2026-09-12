@@ -1,0 +1,314 @@
+{
+  "summary": {
+    "total": 1,
+    "judged": 1,
+    "not_judged": 0,
+    "parse_warnings": 0,
+    "metric_reliable": true,
+    "A": {
+      "count": 1,
+      "retrieval_recall": 1.0,
+      "evidence_recall": 1.0,
+      "verdict_accuracy": 1.0,
+      "avg_concept_coverage": 1.0,
+      "citation_ok_rate": 1.0
+    },
+    "process": {
+      "avg_tool_calls": 2.0,
+      "avg_context_chars": 29214,
+      "avg_seconds": 6.6
+    },
+    "agent": "react-assistant",
+    "model": "deepseek-chat",
+    "corpus": {
+      "papers": 73,
+      "chunks": 6818
+    },
+    "fixture": {
+      "stale": false,
+      "verified_on": {
+        "papers": 73,
+        "chunks": 6818
+      },
+      "scoped_items": [
+        "B03",
+        "B04",
+        "B05",
+        "B06",
+        "B07",
+        "B08"
+      ],
+      "b_probe_alarms": {
+        "B03": {
+          "AIS": 16,
+          "automatic identification system": 1
+        },
+        "B04": {
+          "LiDAR": 11,
+          "point cloud": 8,
+          "sonar": 5
+        },
+        "B05": {
+          "GAN": 151
+        },
+        "B06": {
+          "reinforcement learning": 13
+        },
+        "B07": {
+          "federated": 3
+        }
+      }
+    }
+  },
+  "records": [
+    {
+      "id": "A05",
+      "type": "A",
+      "question": "DPSM 如何决定保留多少个 patch token？",
+      "seconds": 6.6,
+      "tool_calls": 2,
+      "queries": [
+        "search_documents({\"query\": \"DPSM how many patch tokens to keep token selection budget\"})",
+        "search_documents({\"query\": \"DPSM patch token pruning keep ratio\"})"
+      ],
+      "retrieved": [
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "4",
+          "score": 0.45
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "8",
+          "score": 0.45
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "4",
+          "score": 0.34
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.39
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "4",
+          "score": 0.36
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "8",
+          "score": 0.34
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.33
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.39
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.3
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "8",
+          "score": 0.36
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "4",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "4",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "9",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "9",
+          "score": 0.34
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "4",
+          "score": 0.35
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "8",
+          "score": 0.43
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "8",
+          "score": 0.35
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.35
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.32
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.39
+        },
+        {
+          "title": "Person re-identification transformer with patch attention and pruning",
+          "prefix": "p",
+          "page": "6",
+          "score": 0.36
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "5",
+          "score": 0.36
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "9",
+          "score": 0.34
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "4",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "8",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "Person re-identification transformer with patch attention and pruning",
+          "prefix": "p",
+          "page": "6",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "5",
+          "score": null
+        }
+      ],
+      "parse_warnings": 0,
+      "context_chars": 29214,
+      "answer": "DPSM 决定保留多少 patch token 的方式是**动态的、数据驱动的**，而不是预先设定一个固定数量。具体机制如下（均出自 *Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification*）：\n\n**1. 计算相似度分数**\nViT 输出 `f = {fg, f1, ..., fN}`（fg 为 class token）。由于所有 token 特征已归一化，直接用内积衡量 fg 与每个 patch token 的相似度，得到分数 Sp（p.3）。\n\n**2. 选出 proxy token**\n取与 class token 相似度最高的 patch token 作为 proxy token fproxy（p.3，式(1)）。论文指出用 patch token 而非 global token 作 proxy 效果更好（Rank-1 69.9 vs 68.4，p.9 表 VII）。\n\n**3. 排序并求一阶差分**\n将分数降序排列 `So = Sort(Sp)`，再计算一阶梯度 `D[i] = So[i] − So[i+1]`（p.3，式(3)(4)），得到 `Diff = {D[1], ..., D[N−1]}`（p.4，式(5)）。\n\n**4. 以最大梯度点作为切分点 k**\n```\nk = arg max_i (Diff)   (p.4, 式(6))\n```\n即把 token 分成两类（人体 vs 背景/遮挡），前 k 个分数对应的 token 被保留为 body feature token，其余丢弃（p.4）。本质上是一种硬注意力机制，给 token 赋二值权重 {0,1}（p.2）。\n\n**5. 施加最小数量下限 kmin**\n由于存在失败案例（行人外观与遮挡物/背景相似时，可能被误判为干扰，导致保留的 token 过少），论文设置最小保留数 kmin 作为松弛条件（p.4）：\n```\nk ← max(k, kmin)\n```\nkmin 由实验确定。在 Occluded-DukeMTMC 上，kmin = 48（论文采用值）取得最佳 Rank-1 69.9 / mAP 58.9，优于 kmin = 0（69.3）以及其他取值（p.9 表 V）。\n\n**6. 池化输出**\n对选中的 k 个 patch token 做自适应平均池化，得到 P 个 part 特征 fpart_i，与 fg 一起作为 DPSM 的输出（p.4）。\n\n**补充证据**：论文用固定数量的 FPSM 作对照，发现性能在 48 处达到峰值后随数量增加而下降（p.8 表 IV），说明\"保留多少\"需要动态平衡——过多会引入遮挡/背景信息，过少则信息不足。",
+      "expected_paper": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+      "expected_pages": [
+        "4"
+      ],
+      "retrieval_hit": true,
+      "retrieval_rank": 1,
+      "evidence_required": [
+        "maximal gradient magnitude",
+        "kmin"
+      ],
+      "evidence_found": [
+        "maximal gradient magnitude",
+        "kmin"
+      ],
+      "evidence_missing": [],
+      "evidence_hit": true,
+      "judge_raw": "{\n  \"verdict\": \"GROUNDED\",\n  \"verdict_reason\": \"The answer explicitly describes sorting similarity scores, computing first-order differences, taking the maximum to determine k, and applying a kmin lower bound, matching the rubric's expected behavior.\",\n  \"concepts_covered\": [\n    \"sort\",\n    \"first-order difference\",\n    \"maximum\",\n    \"kmin\"\n  ],\n  \"concepts_missing\": [],\n  \"forbidden_violations\": [],\n  \"citation_ok\": true,\n  \"citation_evidence\": \"Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification\",\n  \"scope_qualified\": null,\n  \"scope_reason\": \"\"\n}",
+      "judge": {
+        "verdict": "GROUNDED",
+        "verdict_reason": "The answer explicitly describes sorting similarity scores, computing first-order differences, taking the maximum to determine k, and applying a kmin lower bound, matching the rubric's expected behavior.",
+        "concepts_covered": [
+          "sort",
+          "first-order difference",
+          "maximum",
+          "kmin"
+        ],
+        "concepts_missing": [],
+        "forbidden_violations": [],
+        "citation_ok": true,
+        "citation_evidence": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+        "scope_qualified": null,
+        "scope_reason": ""
+      },
+      "verdict": "GROUNDED",
+      "verdict_correct": true,
+      "concepts_covered": 4,
+      "concepts_total": 4,
+      "forbidden_violations": [],
+      "citation_ok": true,
+      "scope_qualified": null,
+      "expected_verdict": "GROUNDED"
+    }
+  ]
+}

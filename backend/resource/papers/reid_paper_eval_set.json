@@ -4,8 +4,8 @@
   "source_scope": "当前知识库中的全部文档（backend/resource/papers 的种子语料 + 通过 POST /documents 上传的文档）",
   "page_convention": "pdf_physical_page_1_indexed",
   "verified_on": {
-    "papers": 81,
-    "chunks": 7406,
+    "papers": 73,
+    "chunks": 6818,
     "_说明": ""
   },
   "answer_contract": {
