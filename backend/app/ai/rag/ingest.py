@@ -240,6 +240,13 @@ def chunk_document(path: str, source_file: str, title: str,
                 "page_label": section.label,
                 "locator_prefix": info.prefix,
                 "locator_kind": info.kind,
+                # 数字密度高的段标注为实验表格（决策五：表格行会污染排序，
+                # 单独标注让 LLM 知道这是数据不是叙述；不改变检索行为）
+                "kind": (
+                    "table"
+                    if sum(ch.isdigit() for ch in text) / max(len(text), 1) > 0.25
+                    else "text"
+                ),
             },
         )
         chunks.extend(splitter.split_documents([piece]))

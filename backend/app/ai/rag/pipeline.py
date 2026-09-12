@@ -25,7 +25,7 @@ from dataclasses import dataclass
 
 from langchain_core.documents import Document
 
-from ai.rag.hybrid import hybrid_search
+from ai.rag.hybrid import doc_key, hybrid_search
 from ai.rag.rerank import rerank_hits, score_pairs
 
 
@@ -106,6 +106,52 @@ class Outcome:
         return max(scores) if scores else None
 
 
+def _attach_context_chunks(
+    ordered: list[tuple[Document, str, float | None]], cap: int = 6
+) -> list[tuple[Document, str, float | None]]:
+    """给最终命中块补**同论文的相邻块**（origin 标记为 "context"）。
+
+    根治决策七诚实清单里的遗留：枚举跨 931 字符 > chunk_size 800 时答案被
+    切块边界切断（A08 的 (iii) 在下一个块里）。相邻块不参与重排与阀门
+    （分数记 None），只作为上下文进入 LLM 的材料 —— 锚点能对上即可。
+    """
+    if not ordered:
+        return ordered
+    from ai.rag.chromaClient import document_vector_store
+
+    have = {doc_key(d.metadata, d.page_content) for d, _m, _s in ordered}
+    added: list[tuple[Document, str, float | None]] = []
+    added_keys: set = set()
+    for doc, _m, _s in ordered:
+        src = doc.metadata.get("source")
+        if not src:
+            continue
+        try:
+            got = document_vector_store.get(where={"source": src})
+        except Exception:
+            continue
+        docs = [
+            Document(page_content=c or "", metadata=m or {})
+            for c, m in zip(got.get("documents") or [], got.get("metadatas") or [])
+        ]
+        index_by_key = {doc_key(d.metadata, d.page_content): i for i, d in enumerate(docs)}
+        key = doc_key(doc.metadata, doc.page_content)
+        i = index_by_key.get(key)
+        if i is None:
+            continue
+        for j in (i - 1, i + 1):
+            if not (0 <= j < len(docs)):
+                continue
+            nk = doc_key(docs[j].metadata, docs[j].page_content)
+            if nk in have or nk in added_keys:
+                continue
+            added.append((docs[j], "context", None))
+            added_keys.add(nk)
+            if len(added) >= cap:
+                return ordered + added
+    return ordered + added
+
+
 def retrieve(
     query: str,
     allowed_sources: list[str] | None = None,
@@ -123,6 +169,7 @@ def retrieve(
                        rejected=True, allowed_sources=allowed_sources)
 
     ordered = rerank_hits(query, hits, top_n=top_n)
+    ordered = _attach_context_chunks(ordered)
     ambiguous = vector_top1 < RELEVANCE_THRESHOLD + AMBIGUOUS_BAND
     return Outcome(query=query, hits=ordered, vector_top1=vector_top1,
                    rejected=False, allowed_sources=allowed_sources, ambiguous=ambiguous)
@@ -211,7 +258,10 @@ def format_hits(hits: list[tuple[Document, str, float | None]]) -> str:
         title = meta.get("paper_title") or os.path.basename(str(meta.get("source", "unknown")))
         prefix = meta.get("locator_prefix") or "p"
         label = meta.get("page_label") or meta.get("page", "?")
-        if score is None:
+        table = "[experimental table] " if meta.get("kind") == "table" else ""
+        if origin == "context":
+            how = "adjacent context chunk of the same paper (no independent score)"
+        elif score is None:
             how = "matched on exact terms"
         elif origin == "hybrid":
             how = "relevance %.2f + exact terms" % score

@@ -4,10 +4,9 @@
   "source_scope": "当前知识库中的全部文档（backend/resource/papers 的种子语料 + 通过 POST /documents 上传的文档）",
   "page_convention": "pdf_physical_page_1_indexed",
   "verified_on": {
-    "papers": 80,
+    "papers": 81,
     "chunks": 7406,
-    "date": "2026-09-12",
-    "note": "2026-09-12 人工复核：B01（Mamba，语料含 VMamba）与 B02（LLM/文本prompt，语料含 STMI）均失效删除，分别由 A13/A22 接管；B07/B08 经检索核验保留。探针机制（absence_probes + run_eval 告警）由此轮建立。"
+    "_说明": ""
   },
   "answer_contract": {
     "fields": [

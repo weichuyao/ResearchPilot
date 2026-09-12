@@ -1,0 +1,1009 @@
+{
+  "summary": {
+    "total": 3,
+    "judged": 3,
+    "not_judged": 0,
+    "parse_warnings": 0,
+    "metric_reliable": true,
+    "A": {
+      "count": 2,
+      "retrieval_recall": 1.0,
+      "evidence_recall": 0.0,
+      "verdict_accuracy": 0.5,
+      "avg_concept_coverage": 0.833,
+      "citation_ok_rate": 1.0
+    },
+    "B": {
+      "count": 1,
+      "verdict_accuracy": 0.0,
+      "over_claim_rate": 1.0,
+      "scope_qualified_rate": 1.0
+    },
+    "process": {
+      "avg_tool_calls": 3.33,
+      "avg_context_chars": 41542,
+      "avg_seconds": 6.1
+    },
+    "agent": "react-assistant",
+    "model": "deepseek-chat",
+    "corpus": {
+      "papers": 80,
+      "chunks": 7406
+    },
+    "fixture": {
+      "stale": true,
+      "verified_on": {
+        "papers": 81,
+        "chunks": 7406
+      },
+      "scoped_items": [
+        "B03",
+        "B04",
+        "B05",
+        "B06",
+        "B07",
+        "B08"
+      ],
+      "b_probe_alarms": {
+        "B03": {
+          "AIS": 16,
+          "automatic identification system": 1
+        },
+        "B04": {
+          "LiDAR": 11,
+          "point cloud": 8,
+          "sonar": 5
+        },
+        "B05": {
+          "GAN": 154
+        },
+        "B06": {
+          "reinforcement learning": 14
+        },
+        "B07": {
+          "federated": 5
+        }
+      }
+    }
+  },
+  "records": [
+    {
+      "id": "A05",
+      "type": "A",
+      "question": "DPSM 如何决定保留多少个 patch token？",
+      "seconds": 9.1,
+      "tool_calls": 4,
+      "queries": [
+        "search_documents({\"query\": \"DPSM patch token retention number how many tokens kept\"})",
+        "search_documents({\"query\": \"DPSM token pruning budget selection strategy\"})",
+        "search_documents({\"query\": \"dynamic selection process similarity scores first-order derivative gradient magnitude k number of selected tokens\", \"paper\": \"Dynamic Patch-aware Enrichment Transformer\"})",
+        "search_documents({\"query\": \"kmin value optimal hyperparameter minimum threshold experiments\", \"paper\": \"Dynamic Patch-aware Enrichment Transformer\"})"
+      ],
+      "retrieved": [
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "8",
+          "score": 0.43
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "8",
+          "score": 0.43
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "4",
+          "score": 0.39
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "4",
+          "score": 0.39
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.33
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.33
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.35
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.35
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.32
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.32
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "8",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "8",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "8",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "8",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "4",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "4",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "8",
+          "score": 0.34
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "8",
+          "score": 0.34
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "8",
+          "score": 0.38
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.38
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.38
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "4",
+          "score": 0.44
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "4",
+          "score": 0.44
+        },
+        {
+          "title": "STMI Segmentation-Guided Token Modulation with Cross-Modal Hypergraph",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.34
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "4",
+          "score": 0.41
+        },
+        {
+          "title": "Person re-identification transformer with patch attention and pruning",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.35
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "8",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "8",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "8",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "8",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "3",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "4",
+          "score": 0.47
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "4",
+          "score": 0.47
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.43
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.43
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "4",
+          "score": 0.4
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "4",
+          "score": 0.4
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "4",
+          "score": 0.43
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "4",
+          "score": 0.49
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "4",
+          "score": 0.49
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.44
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "4",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "4",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "4",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "9",
+          "score": 0.42
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "9",
+          "score": 0.42
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "7",
+          "score": 0.26
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "7",
+          "score": 0.26
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "8",
+          "score": 0.27
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "8",
+          "score": 0.27
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "4",
+          "score": 0.36
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "4",
+          "score": 0.36
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "9",
+          "score": 0.31
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "9",
+          "score": 0.31
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "9",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "9",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "7",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "7",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "7",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "7",
+          "score": null
+        }
+      ],
+      "parse_warnings": 0,
+      "context_chars": 58475,
+      "answer": "DPSM（Dynamic Patch Token Selection Module，来自 *Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification*）并不是用一个固定数字来决定保留多少 patch token，而是**按相似度排序后的梯度拐点动态确定**，再叠加一个下限约束。具体流程如下：\n\n**1. 选 proxy token**\nViT 输出记为 f = {f_g, f_1, …, f_N}，其中 f_g 是 class token（全局特征）。先计算 f_g 与每个 patch token 的内积，取相似度最大的那个 patch token 作为 proxy token f_proxy（p.3, Eq.1）。\n\n**2. 计算相似度并排序**\n再用 f_proxy 与所有 patch token 做点积，得到 N 个相似度分数 S_p（此时不排除 f_proxy 自身，最大值等于 1），然后按降序排列为 S_o = Sort(S_p)（p.3–4, Eq.2–3）。\n\n**3. 用一阶梯度找分割点 k**\n对排序后的 S_o 计算一阶梯度 Diff = {D[1], …, D[N−1]}（Eq.5）。论文假设\"人体部位\"与\"背景/遮挡\"在特征空间中属于两个不同类别，因此把 token 二分为两簇。分割点取梯度幅值最大的位置：\n\n> k = arg max_i (Diff)  （Eq.6）\n\n即排序后前 k 个分数对应的 token 被选为 body feature token，其余视为无效 patch 被丢弃（p.4）。\n\n**4. 下限约束 k_min**\n作者发现，当行人外观与遮挡物/背景相似时，上述\"最大梯度\"策略会把相似部位误判为干扰，导致选出的 token 太少，损害性能（p.4）。因此引入最小选择数 k_min 作为松弛条件，最终数量为：\n\n> k ← max(k, k_min)\n\nk_min 由实验经验确定（Section IV-D），论文中设为 **48**（p.4, p.7）。\n\n**5. 实验依据**\n- k_min 消融（Table V，Occluded-DukeMTMC）：k_min = 0 时 Rank-1 69.3 / mAP 58.8；k_min = 48 时达到最佳 69.9 / 58.9；继续增大到 60、72 反而下降，因为引入了更多遮挡和背景噪声 token（p.9）。\n- 固定数量策略 FPSM 对比（Table IV）：固定选择数在 48 时最好（Rank-1 69.0），超过 48 后性能逐渐下降（p.8–9）。论文指出动态选择策略优于固定数量策略，因为它能更好地适应每张图像中特征数量的变化（p.9）。\n\n**小结**：保留数量 k = max(arg max 一阶梯度位置, k_min)，其中 k_min 经验取 48；这本质上是一种硬注意力/二类聚类式的 token 选择（p.2, p.4）。",
+      "expected_paper": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+      "expected_pages": [
+        "4"
+      ],
+      "retrieval_hit": true,
+      "retrieval_rank": 3,
+      "evidence_required": [
+        "first-order difference",
+        "kmin"
+      ],
+      "evidence_found": [
+        "kmin"
+      ],
+      "evidence_missing": [
+        "first-order difference"
+      ],
+      "evidence_hit": false,
+      "judge_raw": "{\n  \"verdict\": \"GROUNDED\",\n  \"verdict_reason\": \"The answer explains that DPSM sorts similarity scores, computes first-order differences, takes the maximum gradient position as k, and applies a k_min lower bound, matching the rubric.\",\n  \"concepts_covered\": [\n    \"sort\",\n    \"first-order difference\",\n    \"maximum\",\n    \"kmin\"\n  ],\n  \"concepts_missing\": [],\n  \"forbidden_violations\": [],\n  \"citation_ok\": true,\n  \"citation_evidence\": \"p.4\",\n  \"scope_qualified\": null,\n  \"scope_reason\": \"\"\n}",
+      "judge": {
+        "verdict": "GROUNDED",
+        "verdict_reason": "The answer explains that DPSM sorts similarity scores, computes first-order differences, takes the maximum gradient position as k, and applies a k_min lower bound, matching the rubric.",
+        "concepts_covered": [
+          "sort",
+          "first-order difference",
+          "maximum",
+          "kmin"
+        ],
+        "concepts_missing": [],
+        "forbidden_violations": [],
+        "citation_ok": true,
+        "citation_evidence": "p.4",
+        "scope_qualified": null,
+        "scope_reason": ""
+      },
+      "verdict": "GROUNDED",
+      "verdict_correct": true,
+      "concepts_covered": 4,
+      "concepts_total": 4,
+      "forbidden_violations": [],
+      "citation_ok": true,
+      "scope_qualified": null,
+      "expected_verdict": "GROUNDED"
+    },
+    {
+      "id": "A08",
+      "type": "A",
+      "question": "A²RNet 的 SAP 模块推断的三类语义属性是什么？",
+      "seconds": 3.5,
+      "tool_calls": 2,
+      "queries": [
+        "search_documents({\"query\": \"A²RNet SAP module semantic attributes\"})",
+        "search_documents({\"query\": \"SAP module infers three types of semantic attributes\"})"
+      ],
+      "retrieved": [
+        {
+          "title": "A RNet Association Aware Feature Reinforcement Network for Long Term Ship Re Identification(3)",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.43
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.43
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "9",
+          "score": 0.5
+        },
+        {
+          "title": "A RNet Association Aware Feature Reinforcement Network for Long Term Ship Re Identification(3)",
+          "prefix": "p",
+          "page": "9",
+          "score": 0.5
+        },
+        {
+          "title": "A RNet Association Aware Feature Reinforcement Network for Long Term Ship Re Identification(3)",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.47
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.47
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.41
+        },
+        {
+          "title": "A RNet Association Aware Feature Reinforcement Network for Long Term Ship Re Identification(3)",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.41
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "8",
+          "score": 0.45
+        },
+        {
+          "title": "A RNet Association Aware Feature Reinforcement Network for Long Term Ship Re Identification(3)",
+          "prefix": "p",
+          "page": "8",
+          "score": 0.45
+        },
+        {
+          "title": "A RNet Association Aware Feature Reinforcement Network for Long Term Ship Re Identification(3)",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "A RNet Association Aware Feature Reinforcement Network for Long Term Ship Re Identification(3)",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "8",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "9",
+          "score": null
+        },
+        {
+          "title": "A RNet Association Aware Feature Reinforcement Network for Long Term Ship Re Identification(3)",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.51
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.51
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.49
+        },
+        {
+          "title": "A RNet Association Aware Feature Reinforcement Network for Long Term Ship Re Identification(3)",
+          "prefix": "p",
+          "page": "1",
+          "score": 0.49
+        },
+        {
+          "title": "A RNet Association Aware Feature Reinforcement Network for Long Term Ship Re Identification(3)",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.39
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.39
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "9",
+          "score": 0.46
+        },
+        {
+          "title": "A RNet Association Aware Feature Reinforcement Network for Long Term Ship Re Identification(3)",
+          "prefix": "p",
+          "page": "9",
+          "score": 0.46
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.48
+        },
+        {
+          "title": "A RNet Association Aware Feature Reinforcement Network for Long Term Ship Re Identification(3)",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.48
+        },
+        {
+          "title": "A RNet Association Aware Feature Reinforcement Network for Long Term Ship Re Identification(3)",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "A RNet Association Aware Feature Reinforcement Network for Long Term Ship Re Identification(3)",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        }
+      ],
+      "parse_warnings": 0,
+      "context_chars": 28169,
+      "answer": "A²RNet 的 SAP（Semantic Association Perception，语义关联感知）模块从全局特征向量中推断出**三类语义属性**：\n\n1. **Ship type（船舶类型）**\n2. **Imaging perspective（成像视角 / 视点）**\n3. 第三类属性在检索到的原文片段中被截断了——该句在列出 \"(i) ship type, (ii) imaging perspective, and\" 之后即被切断，未能显示第三项。\n\n**出处：**《A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification》第 3 页（III. Methodology, A. Semantic Association Perception 部分）。原文表述为：\"Specifically, three attributes are inferred from the global feature vector: (i) ship type, (ii) imaging perspective, and ...\"，随后接的是图 3 的说明文字。\n\n需要说明的是：论文其他位置（第 1、2 页）只以举例方式提到 \"stable attributes (e.g., ship type and viewpoint)\"，因此无法据此补全第三项。若需要确认第三个属性，建议直接查阅该论文第 3 页 SAP 小节的完整段落。",
+      "expected_paper": "A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification",
+      "expected_pages": [
+        "3"
+      ],
+      "retrieval_hit": true,
+      "retrieval_rank": 6,
+      "evidence_required": [
+        "ship type",
+        "imaging perspective",
+        "loading and equipment configuration"
+      ],
+      "evidence_found": [
+        "ship type",
+        "imaging perspective"
+      ],
+      "evidence_missing": [
+        "loading and equipment configuration"
+      ],
+      "evidence_hit": false,
+      "judge_raw": "{\n  \"verdict\": \"NOT_FOUND_IN_CORPUS\",\n  \"verdict_reason\": \"The answer states the third semantic attribute is truncated and not shown in the retrieved corpus, so it concludes the corpus lacks the full three-class list.\",\n  \"concepts_covered\": [\n    \"ship type\",\n    \"viewpoint\"\n  ],\n  \"concepts_missing\": [\n    \"loading/equipment configuration\"\n  ],\n  \"forbidden_violations\": [],\n  \"citation_ok\": true,\n  \"citation_evidence\": \"《A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification》第 3 页\",\n  \"scope_qualified\": true,\n  \"scope_reason\": \"The answer limits the miss",
+      "judge": {
+        "verdict": "NOT_FOUND_IN_CORPUS",
+        "verdict_reason": "The answer states the third semantic attribute is truncated and not shown in the retrieved corpus, so it concludes the corpus lacks the full three-class list.",
+        "concepts_covered": [
+          "ship type",
+          "viewpoint"
+        ],
+        "concepts_missing": [
+          "loading/equipment configuration"
+        ],
+        "forbidden_violations": [],
+        "citation_ok": true,
+        "citation_evidence": "《A²RNet: Association-Aware Feature Reinforcement Network for Long-Term Ship Re-Identification》第 3 页",
+        "scope_qualified": true,
+        "scope_reason": "The answer limits the missing third attribute to the retrieved original text fragments and suggests consulting the full paper section."
+      },
+      "verdict": "NOT_FOUND_IN_CORPUS",
+      "verdict_correct": false,
+      "concepts_covered": 2,
+      "concepts_total": 3,
+      "forbidden_violations": [],
+      "citation_ok": true,
+      "scope_qualified": true,
+      "expected_verdict": "GROUNDED"
+    },
+    {
+      "id": "B05",
+      "type": "B",
+      "question": "当前知识库中的 DPEFormer 是否用 GAN（生成对抗网络）生成遮挡训练图像？",
+      "seconds": 5.7,
+      "tool_calls": 4,
+      "queries": [
+        "list_papers({})",
+        "search_documents({\"query\": \"occluded training image generation GAN\", \"paper\": \"DPEFormer\"})",
+        "search_documents({\"paper\": \"Dynamic Patch-aware Enrichment Transformer\", \"query\": \"occluded training images generation GAN generative adversarial network\"})",
+        "search_documents({\"paper\": \"Dynamic Patch-aware Enrichment Transformer\", \"query\": \"DPEFormer occlusion synthesis training data augmentation\"})"
+      ],
+      "retrieved": [
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "7",
+          "score": 0.38
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "7",
+          "score": 0.38
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "12",
+          "score": 0.43
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "12",
+          "score": 0.43
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.41
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.41
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "1",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "12",
+          "score": 0.44
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "11",
+          "score": 0.44
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "11",
+          "score": 0.44
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "7",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "8",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "7",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "8",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "12",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "12",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "11",
+          "score": 0.5
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "11",
+          "score": 0.5
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "11",
+          "score": 0.5
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "11",
+          "score": 0.5
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.5
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "2",
+          "score": 0.5
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "9",
+          "score": 0.45
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "9",
+          "score": 0.45
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.45
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "3",
+          "score": 0.45
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "11",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "11",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "10",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for",
+          "prefix": "p",
+          "page": "10",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        },
+        {
+          "title": "Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification",
+          "prefix": "p",
+          "page": "2",
+          "score": null
+        }
+      ],
+      "parse_warnings": 0,
+      "context_chars": 37982,
+      "answer": "**不是。** DPEFormer（论文全称 *Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification*）并不使用 GAN 生成遮挡训练图像。\n\n它实际采用的是 **Realistic Occlusion Augmentation (ROA)**，基于 **Segment Anything Model (SAM)** 来合成遮挡数据：\n\n- 论文结论部分明确写道：\"we introduce a Realistic Occlusion Augmentation (ROA) strategy, **grounded in SAM**, which enables the generation of more authentic occluded data.\"（p.11）\n- 方法部分说明 ROA \"takes advantage of recent advancements such as the **Segment Anything Model (SAM) [1]**, allowing us to synthesize diverse and realistic occlusion data\"，包括多行人、多种物体的遮挡场景（p.2）。\n- 消融实验也确认：\"ROA, which **leverages the Segment Anything Model (SAM) [1]** to generate realistic occluded images\"（p.9）。\n- 此外，遮挡掩码是从训练集中随机选取的（\"from which we randomly select masks for occlusion synthesis during training\"，p.7）。\n\n**关于 GAN 的说明：** 论文中确实出现了 GAN 相关的内容，但那是**引用他人工作**，而非 DPEFormer 自身的方法：\n- 参考文献 [46] 是 Zheng 等人的 \"Unlabeled samples generated by **gan** improve the person re-identification baseline in vitro\"（p.12）；\n- 对比表格中列出了 **FD-GAN***（NIPS 18）作为对比方法（p.8）。\n\n也就是说，GAN 只作为相关工作/基线出现在引用和对比中，DPEFormer 自身的遮挡图像生成用的是 SAM 驱动的 ROA，而非 GAN。\n\n（注：知识库中没有标题恰为 \"DPEFormer\" 的条目；以上结论来自标题为 *Dynamic Patch-aware Enrichment Transformer for Occluded Person Re-Identification* 的论文，其正文中自称所提方法为 DPEFormer。若你指的是另一篇同名论文，请告知，我可以再查。）",
+      "retrieval_hit": null,
+      "retrieval_rank": null,
+      "evidence_required": [],
+      "evidence_found": [],
+      "evidence_missing": [],
+      "evidence_hit": null,
+      "judge_raw": "{\n  \"verdict\": \"GROUNDED\",\n  \"verdict_reason\": \"The answer claims the corpus contains evidence that DPEFormer uses ROA/SAM rather than GAN for occlusion generation, directly answering the question with cited paper content.\",\n  \"concepts_covered\": [\n    \"限于当前知识库，报告未找到 GAN 生成遮挡的证据，不从 ROA 反推绝对否定\"\n  ],\n  \"concepts_missing\": [],\n  \"forbidden_violations\": [\n    \"并不使用 GAN 生成遮挡训练图像\"\n  ],\n  \"citation_ok\": true,\n  \"citation_evidence\": \"we introduce a Realistic Occlusion Augmentation (ROA) strategy, grounded in SAM, which enables the generation of more authentic occluded data.\",\n  \"scope_qualified\": true",
+      "judge": {
+        "verdict": "GROUNDED",
+        "verdict_reason": "The answer claims the corpus contains evidence that DPEFormer uses ROA/SAM rather than GAN for occlusion generation, directly answering the question with cited paper content.",
+        "concepts_covered": [
+          "限于当前知识库，报告未找到 GAN 生成遮挡的证据，不从 ROA 反推绝对否定"
+        ],
+        "concepts_missing": [],
+        "forbidden_violations": [
+          "并不使用 GAN 生成遮挡训练图像"
+        ],
+        "citation_ok": true,
+        "citation_evidence": "we introduce a Realistic Occlusion Augmentation (ROA) strategy, grounded in SAM, which enables the generation of more authentic occluded data.",
+        "scope_qualified": true,
+        "scope_reason": "The answer limits its conclusion to the provided corpus and notes the absence of a title-matching DPEFormer entry."
+      },
+      "verdict": "GROUNDED",
+      "verdict_correct": false,
+      "concepts_covered": 1,
+      "concepts_total": null,
+      "forbidden_violations": [
+        "并不使用 GAN 生成遮挡训练图像"
+      ],
+      "citation_ok": true,
+      "scope_qualified": true,
+      "expected_verdict": "NOT_FOUND_IN_CORPUS"
+    }
+  ]
+}
