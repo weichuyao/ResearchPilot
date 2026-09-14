@@ -24,8 +24,9 @@ research workflow, an evaluation harness, and one-command deployment.
 3. **Two agents** - `research-workflow` (Corrective-RAG variant: analyze, retrieve, assess,
    refine, synthesize; hard round budget; three-state evidence verdict) and `react-assistant`
    (ReAct baseline for comparison). Registry served at `GET /agents`.
-4. **Evaluation harness** - 20-item A/B/C eval set with LLM judge (defined verdicts, corpus
-   fingerprint staleness check) plus an LLM-free deterministic rank benchmark (`rank_bench.py`).
+4. **Evaluation harness** - 30-item A/B/C eval set with LLM judge (defined verdicts, corpus
+   fingerprint staleness check, absence probes) plus an LLM-free deterministic rank
+   benchmark (`rank_bench.py`) and a black-box API acceptance script.
 5. **Persistent sessions** - LangGraph checkpointer on PostgreSQL; conversation list & history
    served via `/conversations`, frontend keeps no state of its own.
 6. **Ops** - `/health` (code rev, reranker state, index stats), rotating file logs,
@@ -33,14 +34,23 @@ research workflow, an evaluation harness, and one-command deployment.
 
 ## Quick start
 
+> **The corpus is not bundled.** `backend/resource/papers/` ships empty on purpose - the
+> papers used during development are published work, so they are not redistributed here.
+> Drop your own PDFs into that folder and import them with
+> `python app/ai/rag/ingest.py` (titles come from PDF metadata / filenames; a
+> `titles.json` is generated on first run for manual correction).
+
 ```
 # 1. infrastructure (PostgreSQL is required for sessions & documents)
 docker compose up -d postgres
 
-# 2. backend (needs Ollama with bge-m3 on the host; --reload is required on Windows,
-#    see NOTES.md for why)
+# 2. backend (needs Ollama with bge-m3 on the host).
+#    Use run_server.py rather than `python -m uvicorn`: on Windows the async psycopg
+#    checkpointer only runs on a Selector event loop, which uvicorn installs only in
+#    its --reload subprocess path. run_server.py sets the policy before uvicorn.run()
+#    and needs no --reload (see NOTES.md).
 cd backend
-.venv-py311/Scripts/python.exe -m uvicorn main:app --app-dir app --host 127.0.0.1 --port 8001 --reload
+.venv-py311/Scripts/python.exe run_server.py
 
 # 3. frontend
 cd ../frontend
@@ -49,7 +59,7 @@ pnpm install && pnpm dev
 # or everything at once (Windows): double-click 启动 Docker.cmd
 ```
 
-API docs: `http://127.0.0.1:8001/docs` (FastAPI auto docs).
+API docs: `http://127.0.0.1:8002/docs` (FastAPI auto docs).
 
 ## Learn more
 

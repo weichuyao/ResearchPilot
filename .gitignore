@@ -83,3 +83,6 @@ Thumbs.db
 
 # 临时诊断脚本（探针/一次性验证，不属于项目产物）
 /tmp/
+
+# 论文 PDF 不入库：开发用的都是已发表作品，公开仓库不再分发（语料自备，见 README）
+/backend/resource/papers/*.pdf

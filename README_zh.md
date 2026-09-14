@@ -23,8 +23,9 @@ ResearchPilot 是一个面向科研文献（当前：行人/车辆重识别方�
 3. **两个 agent** —— `research-workflow`（Corrective-RAG 变体：分析 → 检索 → 判
    证据充分性 → 补充检索 → 综合，硬性轮次预算，三态证据判定）和 `react-assistant`
    （ReAct 对照组）。注册表经 `GET /agents` 暴露。
-4. **评估体系** —— 20 题 A/B/C 评估集 + LLM 评委（verdict 有定义、语料指纹过期
-   告警）+ 不走 LLM 的确定性名次基准（`rank_bench.py`）。
+4. **评估体系** —— 30 题 A/B/C 评估集 + LLM 评委（verdict 有定义、语料指纹过期
+   告警、缺席探针）+ 不走 LLM 的确定性名次基准（`rank_bench.py`）与后端黑盒
+   验收脚本。
 5. **会话持久化** —— LangGraph checkpointer 落 PostgreSQL；会话列表与历史经
    `/conversations` 提供，前端不保存任何会话状态。
 6. **工程与部署** —— `/health`（代码版本 / 重排模型状态 / 索引统计）、轮转文件
@@ -32,14 +33,22 @@ ResearchPilot 是一个面向科研文献（当前：行人/车辆重识别方�
 
 ## 快速开始
 
+> **仓库不含语料。** `backend/resource/papers/` 是空的，这是有意的 —— 开发时用的
+> 论文都是已发表作品，不在仓库里再分发。把你自己的 PDF 放进该目录，然后
+> `python app/ai/rag/ingest.py` 导入即可（标题取自 PDF 元数据 / 文件名，首次运行
+> 会生成 `titles.json` 供人工校正）。
+
 ```
 # 1. 基础设施（会话与文档都依赖 PostgreSQL）
 docker compose up -d postgres
 
-# 2. 后端（需要宿主机 Ollama + bge-m3；Windows 下必须带 --reload，
-#    原因见 NOTES.md）
+# 2. 后端（需要宿主机 Ollama + bge-m3）。
+#    用 run_server.py，不要用 `python -m uvicorn`：Windows 上异步 psycopg
+#    checkpointer 只能跑在 Selector 事件循环，而 uvicorn 只在 --reload 子进程
+#    路径里装这个策略。run_server.py 在 uvicorn.run() 之前设好，且不需要 --reload
+#    （原因见 NOTES.md）。
 cd backend
-.venv-py311/Scripts/python.exe -m uvicorn main:app --app-dir app --host 127.0.0.1 --port 8001 --reload
+.venv-py311/Scripts/python.exe run_server.py
 
 # 3. 前端
 cd ../frontend
@@ -48,7 +57,7 @@ pnpm install && pnpm dev
 # 或 Windows 一键：双击 启动 Docker.cmd
 ```
 
-API 文档：`http://127.0.0.1:8001/docs`（FastAPI 自动生成）。
+API 文档：`http://127.0.0.1:8002/docs`（FastAPI 自动生成）。
 
 ## 更多文档
 
