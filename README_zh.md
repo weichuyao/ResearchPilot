@@ -59,6 +59,26 @@ pnpm install && pnpm dev
 
 API 文档：`http://127.0.0.1:8002/docs`（FastAPI 自动生成）。
 
+## 配置
+
+`backend/.env` **不在仓库里**（已 gitignore，所以克隆下来的项目从不携带任何人的密钥）。
+从模板建自己的：
+
+```bash
+cd backend
+cp .env.example .env      # Windows: copy .env.example .env
+```
+
+然后只需要设**两处**：
+
+| 配置项 | 填什么 | 说明 |
+|---|---|---|
+| `DEEPSEEK_API_KEY` | 你自己的密钥 | 任何 OpenAI 兼容服务都行，`.env.example` 里有备选写法。注意这些行是**注释状态**，用了哪个就要把那个取消注释；只填密钥不取消注释是**不生效**的。 |
+| `EMBEDDING_MODEL` | `bge-m3` | 向量化在本地走 Ollama，不需要密钥：`ollama pull bge-m3`。 |
+
+`DATABASE_URL` 默认是 SQLite（零配置即可跑）。要用会话与文档持久化，把模板里的
+PostgreSQL 那一行启用，配合 `docker compose up -d postgres`。
+
 ## 更多文档
 
 | 文档 | 内容 |

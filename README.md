@@ -61,6 +61,27 @@ pnpm install && pnpm dev
 
 API docs: `http://127.0.0.1:8002/docs` (FastAPI auto docs).
 
+## Configuration
+
+`backend/.env` is **not** in the repo (it is git-ignored, so a clone never carries
+anyone else's keys). Create your own from the template:
+
+```bash
+cd backend
+cp .env.example .env      # Windows: copy .env.example .env
+```
+
+Then set **two** things:
+
+| What | Value | Notes |
+|---|---|---|
+| `DEEPSEEK_API_KEY` | your own key | Any OpenAI-compatible provider works - see the alternatives in `.env.example`. The lines are commented out, so **uncomment the provider you use**; filling in a key without uncommenting does nothing. |
+| `EMBEDDING_MODEL` | `bge-m3` | Embeddings run locally through Ollama, no API key: `ollama pull bge-m3`. |
+
+`DATABASE_URL` defaults to SQLite (zero setup). Switch it to the PostgreSQL line
+in the template if you want the session/document features with the docker-compose
+database.
+
 ## Learn more
 
 | Doc | Content |
