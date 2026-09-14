@@ -80,3 +80,6 @@ Thumbs.db
 /_*.log
 /*_build.log
 /_*.txt
+
+# 临时诊断脚本（探针/一次性验证，不属于项目产物）
+/tmp/
