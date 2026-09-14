@@ -86,3 +86,7 @@ Thumbs.db
 
 # 论文 PDF 不入库：开发用的都是已发表作品，公开仓库不再分发（语料自备，见 README）
 /backend/resource/papers/*.pdf
+
+# 个人机器文件与测试运行产物，不属于项目
+/registry-backup/
+/.qa_state.json
