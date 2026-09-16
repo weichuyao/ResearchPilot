@@ -90,3 +90,8 @@ Thumbs.db
 # 个人机器文件与测试运行产物，不属于项目
 /registry-backup/
 /.qa_state.json
+
+# 改造 #11：微调产物（训练数据由受版权保护的论文派生，权重是二进制大文件）
+/finetune/data/
+/finetune/output/
+/finetune/models/
