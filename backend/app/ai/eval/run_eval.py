@@ -721,6 +721,16 @@ async def _main() -> None:
     # 指标长得几乎一样；不记 agent 就没法把多次运行归组，也没法事后对比。
     summary["agent"] = args.agent
     summary["model"] = settings.DEFAULT_MODEL
+    # 改造 #11：规划节点（analyze/refine）可能用的是另一个模型（本地微调过的
+    # 改写器）。不记这一项，微调前后的报告在 compare_runs 里会被混成一组 ——
+    # 而它们**恰恰是要对比的两组**。空值表示与 model 相同（改造前的口径）。
+    summary["analyze_model"] = settings.ANALYZE_MODEL or ""
+    # 规划模型的调用/回落次数：回落率是「本地模型能不能顶替 API」的直接度量，
+    # 必须进报告，否则微调前后只剩延迟差、看不出模型到底用没用上。
+    if settings.ANALYZE_MODEL:
+        from ai.agent.research_workflow import rewrite_model_status
+
+        summary["rewrite_model"] = rewrite_model_status()
     # 语料指纹（见 corpus_fingerprint 的说明）：让"换了语料还拿旧基线对比"变得可见
     summary["corpus"] = corpus_now
     summary["fixture"] = {

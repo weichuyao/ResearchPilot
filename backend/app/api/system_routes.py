@@ -104,6 +104,22 @@ def _reranker_state() -> str:
         return "error"
 
 
+def _rewrite_model_state() -> dict:
+    """规划节点（analyze/refine）的模型状态。
+
+    不触发任何加载 —— 与 _reranker_state 不同，本地改写模型是 HTTP 服务
+    （Ollama），探测它会引入一次可能几秒的等待。这里只报**进程内观测到的**
+    调用与回落计数：回落次数才是真正要看的信号。
+    """
+    try:
+        from ai.agent.research_workflow import rewrite_model_status
+
+        return rewrite_model_status()
+    except Exception as exc:  # 不让一个可选诊断项把 /health 弄挂
+        logger.warning("rewrite_model 状态读取失败：%s", exc)
+        return {"error": str(exc)[:120]}
+
+
 @system_router.get("/health", response_model=HealthOut)
 async def health() -> HealthOut:
     async with async_session_maker() as session:
@@ -124,5 +140,6 @@ async def health() -> HealthOut:
         started_at=_STARTED_AT.strftime("%Y-%m-%d %H:%M:%S"),
         git_rev=_git_rev(),
         reranker=_reranker_state(),
+        rewrite_model=_rewrite_model_state(),
         index={"papers": papers, "chunks": chunks, "by_status": statuses},
     )

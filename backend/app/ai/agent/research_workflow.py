@@ -55,6 +55,7 @@ B05 的 0.794 交叉）。这不是实现问题，是任务本身的性质：「
 from __future__ import annotations
 
 import logging
+import re
 from typing import Annotated, Any, Literal, TypedDict
 
 from langchain_core.messages import AIMessage, AnyMessage, HumanMessage, SystemMessage
@@ -198,7 +199,8 @@ class ResearchState(TypedDict):
 
 
 def _model(config: RunnableConfig, temperature: float | None = None):
-    """取模型。需要确定性时用 model_copy 覆盖温度。
+    """取主力模型（生成、以及未配置本地改写模型时的规划）。需要确定性时用
+    model_copy 覆盖温度。
 
     get_model 是 @cache 的，直接改实例会污染全局 —— run_eval 给评委降温时用的
     也是同一个做法。
@@ -209,6 +211,142 @@ def _model(config: RunnableConfig, temperature: float | None = None):
     return model
 
 
+# ---- 规划节点专用模型 + 回落 ---------------------------------------------------
+#
+# 改造 #11（微调闭环）把 analyze / refine 这两个**窄任务**节点拆出来，允许它们
+# 用另一个（本地、微调过的）模型：中文问题进、固定 JSON schema 的英文检索查询出。
+# synthesize 仍然必须用主力模型 —— 它要读十几个块并产出带页码引用的长回答。
+#
+# 回落计数是**给可见性用的**，不是给指标用的：如果本地模型一直在失败、每次都
+# 悄悄回落 API，系统表现会「完全正常」，只是没省下任何延迟 ——
+# 那种状态必须能从 /health 看出来，否则这次改造等于白做。
+_rewrite_stats = {"calls": 0, "fallbacks": 0, "last_error": ""}
+
+
+def rewrite_model_status() -> dict:
+    """给 /health 用的规划模型运行状态。"""
+    return {
+        "configured": settings.ANALYZE_MODEL or "",
+        "target": settings.OLLAMA_REWRITE_MODEL if settings.ANALYZE_MODEL else "",
+        **dict(_rewrite_stats),
+    }
+
+
+# 本地模型的结构化输出走 Ollama 的**语法约束解码**（json_schema），
+# 而不是把 schema 塞进提示词再解析（json_mode）。实测依据（tmp/probe19.py）：
+#
+#   json_mode + schema 进提示词 → 弱模型会把 schema 片段当答案吐回来，
+#                                 解析直接失败
+#   json_schema（语法约束）      → 结构 100% 合法，1.1 秒返回
+#
+# 结构合法不等于内容可用：实测基座模型返回的 query 是**中文原文**、facets 为空，
+# 而提示词明确要求英文查询与字面英文术语。所以下面还要做语义校验。
+_LOCAL_METHOD = "json_schema"
+
+# 查询里出现 CJK 字符 = 违反「query 必须写成英文」的任务约定。
+# 为什么不靠模型自觉：这条约定在提示词里写得很清楚，弱模型依然违反；
+# 而违反的代价是检索质量（中英跨语检索实测不如直接给英文术语稳）。
+_CJK_RE = re.compile(r"[\u4e00-\u9fff\u3040-\u30ff]")
+
+
+async def _invoke_structured(
+    schema: type[BaseModel],
+    config: RunnableConfig,
+    temperature: float,
+    system: str,
+    human: str,
+):
+    """跑规划类结构化输出：优先本地改写模型，失败回落主力模型。
+
+    ## 什么时候算「失败」
+
+    四层都算，前两层容易想到，后两层才是关键：
+
+    1. 模型不可用（Ollama 没起 / tag 不存在）、调用抛异常
+    2. 结构化输出解析失败
+    3. **语义为空**：返回了语法合法但没有子问题 / 查询为空串的对象
+    4. **违反任务约定**：query 里是中文（提示词要求英文）
+
+    第 3、4 层是这个改造的核心度量点：基座模型（未微调）恰好卡在这里 ——
+    它能产出合法 JSON，但内容是中文原文、没有 facets。不校验的话它会带着
+    中文查询一路走到检索，表现为「答案变差了」，而不是「模型不合格」。
+    校验之后，**回落率本身就是「微调有没有成功」的指标**：
+    微调前接近 100%，微调后应当显著下降。
+
+    ## 为什么回落要打 WARNING 而不只是计数器
+
+    计数器只能事后从 /health 看；WARNING 进日志（改造 #7 落了文件）才能在
+    排查「今天这批回答为什么还是这么慢」时把因果串起来。
+    """
+    messages = [SystemMessage(content=system), HumanMessage(content=human)]
+
+    if settings.ANALYZE_MODEL:
+        _rewrite_stats["calls"] += 1
+        try:
+            planner = _model_for_name(settings.ANALYZE_MODEL, config, temperature)
+            planner = planner.with_structured_output(schema, method=_LOCAL_METHOD)
+            result = await planner.ainvoke(messages)
+            problem = _reject_reason(result)
+            if problem:
+                raise ValueError(problem)
+            return result
+        except Exception as exc:
+            _rewrite_stats["fallbacks"] += 1
+            _rewrite_stats["last_error"] = "%s: %s" % (type(exc).__name__, str(exc)[:160])
+            logger.warning(
+                "规划模型 %s 失败，回落 %s：%s",
+                settings.ANALYZE_MODEL, settings.DEFAULT_MODEL, _rewrite_stats["last_error"],
+            )
+
+    planner = _model(config, temperature).with_structured_output(schema)
+    return await planner.ainvoke(messages)
+
+
+def _model_for_name(name: str, config: RunnableConfig, temperature: float | None):
+    """按名字取模型（用于规划模型），同样用 model_copy 改温度。
+
+    config 参数这里用不到，保留是为了让调用点和 _model() 对称 —— 两者都表示
+    「这一类节点用哪个模型」，将来若要按会话区分模型，缺口只在这一处。
+    """
+    model = get_model(name)
+    if temperature is not None:
+        model = model.model_copy(update={"temperature": temperature})
+    return model
+
+
+def _reject_reason(result) -> str:
+    """返回拒绝理由；空串=通过。按 schema 形状分支。
+
+    必须按形状分支，不能用一套判据套所有节点：analyze 返回 `sub_questions`、
+    refine 返回 `queries`。只检查前者的话，refine 每次都会被判失败、永远回落
+    —— 而现象只是「本地模型一点也没省下调用」，从回答质量上完全看不出来。
+    这类静默失效是本项目反复踩的坑。
+    """
+    subs = getattr(result, "sub_questions", None)
+    if subs is not None:
+        if not subs:
+            return "没有拆出任何子问题"
+        chinese = [s.query for s in subs if _CJK_RE.search(s.query or "")]
+        if chinese:
+            return "query 不是英文（任务约定要求英文查询）：%r" % chinese[0][:40]
+        if any(not (s.query or "").strip() for s in subs):
+            return "存在空的 query"
+        return ""
+
+    queries = getattr(result, "queries", None)
+    if queries is not None:
+        if not queries:
+            return "没有产出任何改写查询"
+        chinese = [q for q in queries if _CJK_RE.search(q or "")]
+        if chinese:
+            return "改写查询不是英文：%r" % chinese[0][:40]
+        if any(not (q or "").strip() for q in queries):
+            return "存在空的改写查询"
+        return ""
+
+    return ""
+
+
 def _last_question(state: ResearchState) -> str:
     for message in reversed(state["messages"]):
         if isinstance(message, HumanMessage):
@@ -217,18 +355,32 @@ def _last_question(state: ResearchState) -> str:
     return ""
 
 
+async def plan_question(question: str, config: RunnableConfig) -> ResearchPlan:
+    """把一个用户问题拆成检索计划 —— **analyze 节点的核心，单独一个函数**。
+
+    抽出来是为了让「改写器名次基准」（ai/eval/rewrite_bench.py）能测**同一个
+    函数**，而不是复制一份规划逻辑。复制的话，基准测的就不是线上跑的东西了 ——
+    这个项目在工具输出格式与解析正则上已经踩过一次同类坑（改了格式没同步解析，
+    指标静默掉到 0.25）。
+
+    规划是**结构性**判断（拆几个子问题、查询怎么写），不需要措辞多样性，
+    反而需要可复现 —— 所以 planning 类节点统统用 temperature=0。
+    只有最后的 synthesize 保留默认温度：那一步是措辞，本来就不该完全确定。
+    """
+    return await _invoke_structured(
+        ResearchPlan, config, temperature=0.0,
+        system=ANALYZE_PROMPT, human=question,
+    )
+
+
 # ---------------------------------------------------------------------------
 # 节点：analyze —— 拆解问题（概率性，1 次 LLM 调用）
 # ---------------------------------------------------------------------------
 async def analyze(state: ResearchState, config: RunnableConfig) -> dict:
     question = _last_question(state)
-    # 规划是**结构性**判断（拆几个子问题、查询怎么写），不需要措辞多样性，
-    # 反而需要可复现 —— 所以 planning 类节点统统用 temperature=0。
-    # 只有最后的 synthesize 保留默认温度：那一步是措辞，本来就不该完全确定。
-    planner = _model(config, temperature=0.0).with_structured_output(ResearchPlan)
-    plan: ResearchPlan = await planner.ainvoke(
-        [SystemMessage(content=ANALYZE_PROMPT), HumanMessage(content=question)]
-    )
+    # 见 plan_question 的说明：它内部走 _invoke_structured，在配置了
+    # ANALYZE_MODEL 时优先用本地改写模型，失败自动回落主力模型并打 WARNING。
+    plan: ResearchPlan = await plan_question(question, config)
 
     sub_questions = []
     for sub in plan.sub_questions:
@@ -479,9 +631,11 @@ async def refine(state: ResearchState, config: RunnableConfig) -> dict:
                sub.get("evidence"), EVIDENCE_RETRY_THRESHOLD)
         )
 
-    result: RefinedQueries = await _model(config, temperature=0.0).with_structured_output(
-        RefinedQueries
-    ).ainvoke([SystemMessage(content=REFINE_PROMPT), HumanMessage(content="\n\n".join(lines))])
+    # 与 analyze 同一个规划模型口径（见 _invoke_structured 的说明）
+    result: RefinedQueries = await _invoke_structured(
+        RefinedQueries, config, temperature=0.0,
+        system=REFINE_PROMPT, human="\n\n".join(lines),
+    )
 
     for sub, query in zip(pending, result.queries):
         if query and query.strip():

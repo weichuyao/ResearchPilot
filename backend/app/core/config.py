@@ -75,6 +75,27 @@ class Settings(BaseSettings):
     # 单个文件大小上限。超了回 413，而且必须**边读边算**，不能先整个读进内存再判。
     MAX_UPLOAD_MB: int = 50
 
+    # --- 规划节点专用的改写模型（改造 #11：微调闭环）---
+    #
+    # ## 为什么规划节点要能和生成节点用不同的模型
+    #
+    # 图上四类节点对模型的要求不同：analyze / refine 是**窄任务**——
+    # 中文问题进、固定 JSON schema 的英文检索查询出，不需要世界知识，
+    # 格式约束强；而 synthesize 要读十几个块、产出带页码引用的长回答。
+    #
+    # 所以「用一个小模型替掉一次 API 调用」是划算的工程决策，
+    # 而「用一个小模型替掉生成环节」是事故。这个字段让前者可配置，
+    # 后者不受影响。
+    #
+    # 取值是 ai/models.py 里的模型名（如 "local-rewriter"）。留空 = 沿用
+    # DEFAULT_MODEL，即完全保持旧行为（改造前的所有评估报告都是这个口径）。
+    ANALYZE_MODEL: str | None = None
+
+    # 本地改写模型在 Ollama 里的 tag（ANALYZE_MODEL=local-rewriter 时使用）。
+    # 微调产物的落地方式见 finetune/README.md：LLaMA-Factory 导出 GGUF →
+    # ollama create。默认值只是占位，实际必须与 ollama create 时起的名字一致。
+    OLLAMA_REWRITE_MODEL: str = "research-rewriter"
+
     def is_dev(self):
         return self.DEV
 

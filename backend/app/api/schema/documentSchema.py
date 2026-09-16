@@ -72,10 +72,22 @@ class HealthOut(BaseModel):
       · 线上跑的是哪份代码（started_at / git_rev）
       · 依赖的模型加载了没（reranker）
       · 索引里到底有什么（papers / chunks / by_status）
+
+    改造 #11 之后多一个问题：**规划节点的本地改写模型是不是真的在干活**。
+    它一直失败、每次都悄悄回落主力模型时，系统表现完全正常、只是没省下延迟 ——
+    与 reranker 静默降级同一类问题，所以同样挂在 /health 上。
     """
 
     app: str
     started_at: str
     git_rev: str | None = Field(default=None, description="当前代码的 git 提交号")
     reranker: str = Field(description="loaded / unavailable（重排模型是否可用）")
+    rewrite_model: dict = Field(
+        default_factory=dict,
+        description=(
+            "规划节点（analyze/refine）的模型状态：configured=配置的模型名"
+            "（空=与主力模型一致）、target=本地 Ollama tag、calls/fallbacks="
+            "调用与回落次数、last_error=最近一次失败原因"
+        ),
+    )
     index: dict
