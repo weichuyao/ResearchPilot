@@ -1,0 +1,340 @@
+{
+  "generated_at": "2026-09-16T22:11:35",
+  "eval_set": "reid_paper_eval_set.json",
+  "top_k": 10,
+  "graded_items": 22,
+  "hybrid": {
+    "hit": 17,
+    "recall@1": 0.22727272727272727,
+    "recall@3": 0.36363636363636365,
+    "recall@5": 0.6363636363636364,
+    "mrr": 0.3744949494949495,
+    "mean_rank": 3.6470588235294117
+  },
+  "rerank": {
+    "hit": 17,
+    "recall@1": 0.5454545454545454,
+    "recall@3": 0.6818181818181818,
+    "recall@5": 0.7272727272727273,
+    "mrr": 0.6224747474747475,
+    "mean_rank": 1.8823529411764706
+  },
+  "evidence": {
+    "count": 22,
+    "top_k": 10,
+    "hybrid_complete": 15,
+    "rerank_complete": 15,
+    "per_item": {
+      "A01": {
+        "required": [
+          "hard positive problem",
+          "instance-level"
+        ],
+        "hybrid": "2/2",
+        "rerank": "2/2",
+        "missing": []
+      },
+      "A02": {
+        "required": [
+          "pseudo-label",
+          "cluster-level"
+        ],
+        "hybrid": "2/2",
+        "rerank": "2/2",
+        "missing": []
+      },
+      "A03": {
+        "required": [
+          "30587",
+          "1248"
+        ],
+        "hybrid": "2/2",
+        "rerank": "2/2",
+        "missing": []
+      },
+      "A04": {
+        "required": [
+          "proxy token",
+          "hard attention"
+        ],
+        "hybrid": "1/2",
+        "rerank": "1/2",
+        "missing": [
+          "hard attention"
+        ]
+      },
+      "A05": {
+        "required": [
+          "maximal gradient magnitude",
+          "kmin"
+        ],
+        "hybrid": "1/2",
+        "rerank": "1/2",
+        "missing": [
+          "maximal gradient magnitude"
+        ]
+      },
+      "A06": {
+        "required": [
+          "Segment Anything",
+          "mask set"
+        ],
+        "hybrid": "2/2",
+        "rerank": "2/2",
+        "missing": []
+      },
+      "A07": {
+        "required": [
+          "cargo",
+          "viewpoint",
+          "occlusion"
+        ],
+        "hybrid": "3/3",
+        "rerank": "3/3",
+        "missing": []
+      },
+      "A08": {
+        "required": [
+          "ship type",
+          "imaging perspective",
+          "loading and equipment configuration"
+        ],
+        "hybrid": "2/3",
+        "rerank": "2/3",
+        "missing": [
+          "loading and equipment configuration"
+        ]
+      },
+      "A09": {
+        "required": [
+          "instance bank",
+          "identity-view pair"
+        ],
+        "hybrid": "0/2",
+        "rerank": "0/2",
+        "missing": [
+          "instance bank",
+          "identity-view pair"
+        ]
+      },
+      "A10": {
+        "required": [
+          "480",
+          "7165",
+          "1145469"
+        ],
+        "hybrid": "3/3",
+        "rerank": "3/3",
+        "missing": []
+      },
+      "A11": {
+        "required": [
+          "Grounding DINO",
+          "Deep SORT"
+        ],
+        "hybrid": "0/2",
+        "rerank": "0/2",
+        "missing": [
+          "Grounding DINO",
+          "Deep SORT"
+        ]
+      },
+      "A12": {
+        "required": [
+          "one-fifth",
+          "364"
+        ],
+        "hybrid": "0/2",
+        "rerank": "0/2",
+        "missing": [
+          "one-fifth",
+          "364"
+        ]
+      },
+      "A13": {
+        "required": [
+          "Spatial Patch Embedding",
+          "learnable parameter"
+        ],
+        "hybrid": "2/2",
+        "rerank": "2/2",
+        "missing": []
+      },
+      "A14": {
+        "required": [
+          "SYSU-MM01",
+          "CMC",
+          "mAP"
+        ],
+        "hybrid": "3/3",
+        "rerank": "3/3",
+        "missing": []
+      },
+      "A15": {
+        "required": [
+          "IEEE TRANSACTIONS ON INFORMATION FORENSICS AND SECURITY",
+          "Unsupervised Person Re-Identification"
+        ],
+        "hybrid": "2/2",
+        "rerank": "2/2",
+        "missing": []
+      },
+      "A16": {
+        "required": [
+          "metatraining",
+          "background interference"
+        ],
+        "hybrid": "1/2",
+        "rerank": "1/2",
+        "missing": [
+          "metatraining"
+        ]
+      },
+      "A17": {
+        "required": [
+          "Lightweight Cross-View Vehicle ReID",
+          "Multi-Scale Localization"
+        ],
+        "hybrid": "2/2",
+        "rerank": "2/2",
+        "missing": []
+      },
+      "A18": {
+        "required": [
+          "Aerial-Ground Person Reidentification",
+          "appearance variations"
+        ],
+        "hybrid": "2/2",
+        "rerank": "2/2",
+        "missing": []
+      },
+      "A19": {
+        "required": [
+          "graph neural networks",
+          "ship structural prior"
+        ],
+        "hybrid": "2/2",
+        "rerank": "2/2",
+        "missing": []
+      },
+      "A20": {
+        "required": [
+          "DEcoupled sEmantic Prompt Learning",
+          "MultiSpectral Object ReID"
+        ],
+        "hybrid": "2/2",
+        "rerank": "2/2",
+        "missing": []
+      },
+      "A21": {
+        "required": [
+          "Hybrid Re-Ranking",
+          "de-occlusion module"
+        ],
+        "hybrid": "2/2",
+        "rerank": "2/2",
+        "missing": []
+      },
+      "A22": {
+        "required": [
+          "Segmentation-Guided Feature Modulation",
+          "SAM segmentation model",
+          "foreground masks"
+        ],
+        "hybrid": "3/3",
+        "rerank": "3/3",
+        "missing": []
+      }
+    }
+  },
+  "per_item": {
+    "A01": {
+      "hybrid": 1,
+      "rerank": 1
+    },
+    "A02": {
+      "hybrid": 2,
+      "rerank": 1
+    },
+    "A03": {
+      "hybrid": 2,
+      "rerank": 1
+    },
+    "A04": {
+      "hybrid": 9,
+      "rerank": 3
+    },
+    "A05": {
+      "hybrid": 5,
+      "rerank": 1
+    },
+    "A06": {
+      "hybrid": 6,
+      "rerank": 2
+    },
+    "A07": {
+      "hybrid": 1,
+      "rerank": 1
+    },
+    "A08": {
+      "hybrid": 4,
+      "rerank": 1
+    },
+    "A09": {
+      "hybrid": null,
+      "rerank": null
+    },
+    "A10": {
+      "hybrid": 1,
+      "rerank": 1
+    },
+    "A11": {
+      "hybrid": null,
+      "rerank": null
+    },
+    "A12": {
+      "hybrid": null,
+      "rerank": null
+    },
+    "A13": {
+      "hybrid": 4,
+      "rerank": 1
+    },
+    "A14": {
+      "hybrid": 9,
+      "rerank": 9
+    },
+    "A15": {
+      "hybrid": 2,
+      "rerank": 1
+    },
+    "A16": {
+      "hybrid": null,
+      "rerank": null
+    },
+    "A17": {
+      "hybrid": null,
+      "rerank": null
+    },
+    "A18": {
+      "hybrid": 5,
+      "rerank": 1
+    },
+    "A19": {
+      "hybrid": 1,
+      "rerank": 2
+    },
+    "A20": {
+      "hybrid": 4,
+      "rerank": 1
+    },
+    "A21": {
+      "hybrid": 5,
+      "rerank": 1
+    },
+    "A22": {
+      "hybrid": 1,
+      "rerank": 4
+    }
+  }
+}

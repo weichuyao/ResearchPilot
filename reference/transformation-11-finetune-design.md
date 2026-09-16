@@ -252,9 +252,31 @@ rewrite_bench --baseline raw: hit 17, recall@1 0.2273, recall@5 0.6364,
 | 结构化输出解析成功率 | ≥ 99% | 100%（语法约束解码保证），阶段 4 后复验 |
 | 回落率 | 显著低于基线 83% | 待阶段 5 |
 | `rewrite_bench` 指标 | 不低于未微调同基座；目标接近 DeepSeek | 待阶段 5 |
-| `run_eval` 30 题 | A/B/C verdict 全对不退（基线 22+6+2 全对）、`evidence_recall` ≥ 1.0 | 待 PG 恢复后复跑 |
+| `run_eval` 30 题 | A/B/C verdict 全对不退（基线 22+6+2 全对）、`evidence_recall` ≥ 1.0 | ✅ **阶段 1+2 回归已确认**（见下） |
+| `rank_bench` | 锚点全中不下降 | ✅ 15/22 不变 |
 | `process.avg_seconds` | 相对 API 基线下降（本次改造的主要收益） | 待阶段 5 |
 | 回落机制 | 本地模型挂掉时自动切回 API，WARNING 可见 | ✅ 已实测 |
+
+### 阶段 1+2 的回归确认（2026-09-16）
+
+改动集中在服务接入层与新增基准，理论上不影响默认路径（`ANALYZE_MODEL` 留空
+即改造前口径 —— 这一点也由报告里的 `analyze_model: ""` 记录了）。实测确认：
+
+| 指标 | 改造前 | 改造后 |
+|---|---|---|
+| A.evidence_recall | 1.0 | 1.0 |
+| A.verdict_accuracy | 1.0 | 1.0 |
+| A.citation_ok_rate | 1.0 | 1.0 |
+| A.retrieval_recall | 0.955 | 0.955 |
+| B / C verdict | 全对 | 全对 |
+| `rank_bench` 锚点全中 | 15/22 | 15/22 |
+| 不达标题目 | 无 | 无 |
+
+报告：`resource/eval/eval-20260916-220902.json`、
+`resource/eval/rank-bench-20260916-221135.json`。
+
+（`A.avg_concept_coverage` 在 0.977~1.0 之间随运行波动 —— 历史多次运行都在这个
+区间，属评委噪声，不是回归。）
 
 ---
 

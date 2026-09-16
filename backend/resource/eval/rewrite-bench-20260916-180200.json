@@ -1,0 +1,251 @@
+{
+  "generated_at": "2026-09-16 18:02:00",
+  "mode": "raw",
+  "model": "—",
+  "eval_set": "reid_paper_eval_set.json",
+  "top_k": 10,
+  "graded_items": 22,
+  "metrics": {
+    "hit": 17,
+    "recall@1": 0.2273,
+    "recall@5": 0.6364,
+    "mrr": 0.3745,
+    "mean_rank": 3.647
+  },
+  "anchor": {
+    "complete": 15,
+    "total": 22
+  },
+  "structured_failed": [],
+  "rewrite_seconds_per_item": 0.0,
+  "model_status": {},
+  "per_item": {
+    "A01": {
+      "rank": 1,
+      "missing": [],
+      "queries": [
+        "hard positive problem（HPP）在无监督船舶 ReID 中指什么？"
+      ]
+    },
+    "A02": {
+      "rank": 2,
+      "missing": [],
+      "queries": [
+        "MCL 的训练过程交替进行的两个阶段分别是什么？"
+      ]
+    },
+    "A03": {
+      "rank": 2,
+      "missing": [],
+      "queries": [
+        "VesselReID 数据集最终包含多少张图像、多少个船舶身份？"
+      ]
+    },
+    "A04": {
+      "rank": 9,
+      "missing": [
+        "hard attention"
+      ],
+      "queries": [
+        "DPEFormer 的 DPSM 如何从遮挡图像中选择有用的 patch token？"
+      ]
+    },
+    "A05": {
+      "rank": 5,
+      "missing": [
+        "maximal gradient magnitude"
+      ],
+      "queries": [
+        "DPSM 如何决定保留多少个 patch token？"
+      ]
+    },
+    "A06": {
+      "rank": 6,
+      "missing": [],
+      "queries": [
+        "ROA 使用什么来源生成遮挡掩码？它是否在推理阶段使用？"
+      ]
+    },
+    "A07": {
+      "rank": 1,
+      "missing": [],
+      "queries": [
+        "A²RNet 认为长期船舶 ReID 中外观大幅变化的典型原因有哪些？"
+      ]
+    },
+    "A08": {
+      "rank": 4,
+      "missing": [
+        "loading and equipment configuration"
+      ],
+      "queries": [
+        "A²RNet 的 SAP 模块推断的三类语义属性是什么？"
+      ]
+    },
+    "A09": {
+      "rank": null,
+      "missing": [
+        "instance bank",
+        "identity-view pair"
+      ],
+      "queries": [
+        "A²RNet 的 TAR 如何组织历史特征，以进行跨时间的匹配？"
+      ]
+    },
+    "A10": {
+      "rank": 1,
+      "missing": [],
+      "queries": [
+        "ViV-ReID 数据集的规模是多少？"
+      ]
+    },
+    "A11": {
+      "rank": null,
+      "missing": [
+        "Grounding DINO",
+        "Deep SORT"
+      ],
+      "queries": [
+        "ViV-ReID 数据集标注管线如何同时利用自动化和人工核验？"
+      ]
+    },
+    "A12": {
+      "rank": null,
+      "missing": [
+        "one-fifth",
+        "364"
+      ],
+      "queries": [
+        "ViV-ReID 的 query set 是怎样从 gallery set 形成的，包含多少条 tracklet？"
+      ]
+    },
+    "B03": {
+      "rank": null,
+      "missing": [],
+      "queries": [
+        "当前知识库中的船舶 ReID 方法是否融合 AIS（船舶自动识别系统）信号作为输入特征？"
+      ]
+    },
+    "B04": {
+      "rank": null,
+      "missing": [],
+      "queries": [
+        "当前知识库中的论文是否使用声呐、LiDAR 或其他三维点云来完成 ReID？"
+      ]
+    },
+    "B05": {
+      "rank": null,
+      "missing": [],
+      "queries": [
+        "当前知识库中的 DPEFormer 是否用 GAN（生成对抗网络）生成遮挡训练图像？"
+      ]
+    },
+    "B06": {
+      "rank": null,
+      "missing": [],
+      "queries": [
+        "当前知识库中的论文是否通过强化学习来决定船舶/人体 patch 的选择策略？"
+      ]
+    },
+    "C01": {
+      "rank": null,
+      "missing": [],
+      "queries": [
+        "如何做红烧肉？"
+      ]
+    },
+    "C02": {
+      "rank": null,
+      "missing": [],
+      "queries": [
+        "现在应该买哪只股票，才能在下个月获得最高收益？"
+      ]
+    },
+    "A13": {
+      "rank": 4,
+      "missing": [],
+      "queries": [
+        "Sparse VMamba 的嵌入层 Femb 是怎么由空间与时间特征得到的？"
+      ]
+    },
+    "A14": {
+      "rank": 9,
+      "missing": [],
+      "queries": [
+        "FDNM 在 SYSU-MM01 上用什么评价指标、分哪些模式评估？"
+      ]
+    },
+    "A15": {
+      "rank": 2,
+      "missing": [],
+      "queries": [
+        "Pseudo-Label Noise Prevention 这篇论文发表在哪里、针对什么任务？"
+      ]
+    },
+    "A16": {
+      "rank": null,
+      "missing": [
+        "metatraining"
+      ],
+      "queries": [
+        "SAM-driven MAE 方法的元学习如何构造任务来应对背景干扰？"
+      ]
+    },
+    "A17": {
+      "rank": null,
+      "missing": [],
+      "queries": [
+        "CVNet 的标题体现了哪两个核心设计点？"
+      ]
+    },
+    "A18": {
+      "rank": 5,
+      "missing": [],
+      "queries": [
+        "SeCap 认为 Aerial-Ground Person ReID 的主要挑战是什么？"
+      ]
+    },
+    "A19": {
+      "rank": 1,
+      "missing": [],
+      "queries": [
+        "SPG-GT 用什么组合做船舶关键点检测？"
+      ]
+    },
+    "A20": {
+      "rank": 4,
+      "missing": [],
+      "queries": [
+        "DEEP 框架的全称是什么、针对什么任务、解决什么挑战？"
+      ]
+    },
+    "A21": {
+      "rank": 5,
+      "missing": [],
+      "queries": [
+        "这篇 diffusion 去遮挡论文提出的重排序方案叫什么、起什么作用？"
+      ]
+    },
+    "B07": {
+      "rank": null,
+      "missing": [],
+      "queries": [
+        "当前知识库中的论文，是否使用了联邦学习（federated learning）来保护隐私？"
+      ]
+    },
+    "B08": {
+      "rank": null,
+      "missing": [],
+      "queries": [
+        "这些论文的训练是否依赖 DeepSpeed 或 Horovod 这类分布式训练框架？"
+      ]
+    },
+    "A22": {
+      "rank": 1,
+      "missing": [],
+      "queries": [
+        "STMI 的 Segmentation-Guided Feature Modulation 模块用什么来引导注意力学习？"
+      ]
+    }
+  }
+}
