@@ -1,0 +1,57 @@
+# 改造 #11 阶段 4：QLoRA 微调规划改写器（Qwen2.5-1.5B-Instruct）
+#
+# 为什么是 QLoRA：本机 RTX 5060 Laptop 只有 8GB 显存（实测可用约 6GB）。
+# 这不是"随手选的低配"，而是这个任务在本机唯一的可行解 —— 同基座 bf16 LoRA
+# 在 1.5B 上也会把余量吃光，而 QLoRA 的 4bit 量化把权重压到 ~1GB。
+#
+# 关键参数的理由：
+#   cutoff_len 1024  ANALYZE_PROMPT 约 700 token + 输出约 200 token，1024 够用；
+#                    再大只是浪费显存（8GB 上序列长度是最贵的旋钮）
+#   lora_rank 16     窄任务（固定 schema 的结构化输出），不需要大 rank；
+#                    实测任务只有"输出英文查询 + 字面 facets"这一件事要学
+#   lr 1e-4          LoRA 的常规起点；太小则 3 个 epoch 学不动
+#   epochs 3.0       360 条数据 × 3 轮 ≈ 1000+ 步，窄任务足够收敛
+#   不要 eval 集混入  评估集 30 题在数据构造阶段已被断言排除（build_sft_data.py）
+
+### model
+# 用本地已下载的路径（避免 LLaMA-Factory 再去连 huggingface.co —— 本机直连实测超时）
+model_name_or_path: finetune/models/Qwen2.5-1.5B-Instruct
+trust_remote_code: true
+quantization_bit: 4                # ← QLoRA 的开关
+quantization_method: bnb
+
+### method
+stage: sft
+do_train: true
+finetuning_type: lora
+lora_rank: 16
+lora_alpha: 32
+lora_dropout: 0.05
+lora_target: all                   # 窄任务全挂；只挂 q/v 也能跑，但 rank 小的时候全挂更稳
+
+### dataset
+dataset: rewriter_train
+dataset_dir: finetune/data
+template: qwen
+cutoff_len: 1024
+max_samples: 100000
+overwrite_cache: true
+preprocessing_num_workers: 4
+
+### output
+output_dir: finetune/output/qwen2.5-1.5b-rewriter-qlora
+logging_steps: 10
+save_steps: 200
+plot_loss: true
+overwrite_output_dir: true
+report_to: none
+
+### train
+per_device_train_batch_size: 1
+gradient_accumulation_steps: 8     # 等效 batch 8：显存只够 1，靠累积凑
+learning_rate: 1.0e-4
+num_train_epochs: 3.0
+lr_scheduler_type: cosine
+warmup_ratio: 0.1
+bf16: true
+gradient_checkpointing: true       # 8GB 上必须开，否则激活值就把显存吃满

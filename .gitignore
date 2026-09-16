@@ -92,6 +92,6 @@ Thumbs.db
 /.qa_state.json
 
 # 改造 #11：微调产物（训练数据由受版权保护的论文派生，权重是二进制大文件）
-/finetune/data/
-/finetune/output/
-/finetune/models/
+/backend/finetune/data/
+/backend/finetune/output/
+/backend/finetune/models/

@@ -1,0 +1,61 @@
+{
+  "transformation": "#11 规划节点改写器微调",
+  "date": "2026-09-17",
+  "scope": "中间档（数据构造 + QLoRA 单配置 + 同基座对照 + 确定性基准评测）",
+  "train": {
+    "framework": "LLaMA-Factory 0.9.3",
+    "base_model": "Qwen2.5-1.5B-Instruct",
+    "method": "QLoRA (4bit bnb + LoRA rank16 alpha32 target=all)",
+    "epochs": 3.0,
+    "effective_batch": 8,
+    "lr": 0.0001,
+    "cutoff_len": 1024,
+    "gradient_checkpointing": true,
+    "train_examples": 342,
+    "holdout_examples": 18,
+    "optimizer_steps": 129
+  },
+  "data": {
+    "candidates": 360,
+    "kept": 360,
+    "by_source": {
+      "corpus_distilled": 340,
+      "hard_case": 20
+    },
+    "cleaning_rejected": 0,
+    "eval_isolation": "逐字 + 字符二元组 Jaccard>=0.6，30 道评估题 0 泄漏",
+    "teacher": "deepseek-chat（现有 plan_question）"
+  },
+  "results": {
+    "note": "指标来自 rewrite_bench（确定性、不含 LLM 评委）。未微调那行的指标主要是 DeepSeek 的成绩（93% 回落）。",
+    "raw_no_rewrite": {
+      "recall@1": 0.2273,
+      "recall@5": 0.6364,
+      "mrr": 0.3745,
+      "mean_rank": 3.647,
+      "anchor": "15/22",
+      "fallback_rate": null,
+      "seconds": null
+    },
+    "base_unfinetuned": {
+      "recall@1": 0.5,
+      "recall@5": 0.8636,
+      "mrr": 0.65,
+      "mean_rank": 2.15,
+      "anchor": "20/22",
+      "fallback_rate": 0.93,
+      "seconds": 3.15
+    },
+    "finetuned": {
+      "recall@1": 0.5,
+      "recall@5": 0.6818,
+      "mrr": 0.5723,
+      "mean_rank": 4.789,
+      "anchor": "16/22",
+      "fallback_rate": 0.0,
+      "seconds": 1.28
+    }
+  },
+  "root_cause": "微调蒸馏到了'输出英文查询'这个格式约束（回落率 93%->0%），但没蒸馏到'把字面领域术语塞进查询'这个内容策略 —— 实测 A09：未微调的查询含 'instance bank identity-view pair' 命中第 1 名，微调后的查询把这些罕见术语换成了泛化描述，直接未命中。",
+  "conclusion": "微调解决了'能不能用'（格式合规、零回落）与延迟（2.5x），没有解决'用得好不好'（召回下降）。正确用法是按场景切换模型，而不是无条件替换 —— 这正是按节点分模型那个开关的价值。"
+}

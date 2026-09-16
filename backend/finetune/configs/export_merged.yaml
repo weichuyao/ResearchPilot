@@ -1,0 +1,17 @@
+# 改造 #11 阶段 5：把 LoRA 适配器合并回基座，得到一个可直接服务的完整模型。
+#
+# 为什么不导出 GGUF：LLaMA-Factory 的 GGUF 导出需要 llama.cpp 的转换工具链
+# （要 cmake 编译），本机 Windows 上代价过大。而 Ollama 0.6+ 支持**直接导入
+# Safetensors**，所以这里合并出 HF 格式，交给 ollama create 即可，少一步转换
+# 也就少一处失败点。
+#
+# export_device: cpu 是有意的 —— 训练刚跑完，显存余量最紧张的时候做合并，
+# 走 CPU 更稳（1.5B 的合并量级 CPU 也能接受）。
+model_name_or_path: finetune/models/Qwen2.5-1.5B-Instruct
+adapter_name_or_path: finetune/output/qwen2.5-1.5b-rewriter-qlora
+template: qwen
+finetuning_type: lora
+export_dir: finetune/models/qwen2.5-1.5b-rewriter-merged
+export_size: 2
+export_device: cpu
+export_legacy_format: false

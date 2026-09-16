@@ -1,0 +1,256 @@
+{
+  "generated_at": "2026-09-17 00:59:41",
+  "mode": "rewrite",
+  "model": "local-rewriter",
+  "eval_set": "reid_paper_eval_set.json",
+  "top_k": 10,
+  "graded_items": 22,
+  "metrics": {
+    "hit": 20,
+    "recall@1": 0.5,
+    "recall@5": 0.8636,
+    "mrr": 0.65,
+    "mean_rank": 2.15
+  },
+  "anchor": {
+    "complete": 20,
+    "total": 22
+  },
+  "structured_failed": [],
+  "rewrite_seconds_per_item": 3.155,
+  "model_status": {
+    "configured": "local-rewriter",
+    "target": "qwen2.5-1.5b-base",
+    "calls": 30,
+    "fallbacks": 28,
+    "last_error": "ValueError: query 不是英文（任务约定要求英文查询）：'STMI 的 Segmentation-Guided Feature Modul'"
+  },
+  "per_item": {
+    "A01": {
+      "rank": 2,
+      "missing": [],
+      "queries": [
+        "hard positive problem unsupervised ship re-identification hard positive samples"
+      ]
+    },
+    "A02": {
+      "rank": 1,
+      "missing": [],
+      "queries": [
+        "MCL mutual contrastive learning training alternating two stages"
+      ]
+    },
+    "A03": {
+      "rank": 1,
+      "missing": [],
+      "queries": [
+        "VesselReID dataset images ship identities number of images identities"
+      ]
+    },
+    "A04": {
+      "rank": 2,
+      "missing": [],
+      "queries": [
+        "DPEFormer DPSM dynamic patch selection module occluded image patch token selection"
+      ]
+    },
+    "A05": {
+      "rank": 1,
+      "missing": [],
+      "queries": [
+        "DPSM dynamic patch token selection first-order difference kmin number of retained tokens"
+      ]
+    },
+    "A06": {
+      "rank": 2,
+      "missing": [],
+      "queries": [
+        "ROA occlusion mask generation source random occlusion augmentation",
+        "ROA occlusion mask used at inference stage training only"
+      ]
+    },
+    "A07": {
+      "rank": 1,
+      "missing": [],
+      "queries": [
+        "A2RNet long-term ship re-identification large appearance variations causes"
+      ]
+    },
+    "A08": {
+      "rank": 1,
+      "missing": [],
+      "queries": [
+        "A2RNet SAP semantic attribute prediction module three types of semantic attributes"
+      ]
+    },
+    "A09": {
+      "rank": 1,
+      "missing": [],
+      "queries": [
+        "A2RNet TAR temporal aggregation re-identification instance bank identity-view pair historical features"
+      ]
+    },
+    "A10": {
+      "rank": 2,
+      "missing": [],
+      "queries": [
+        "ViV-ReID dataset scale number of images identities cameras"
+      ]
+    },
+    "A11": {
+      "rank": 10,
+      "missing": [
+        "Grounding DINO",
+        "Deep SORT"
+      ],
+      "queries": [
+        "ViV-ReID dataset annotation pipeline automatic human verification"
+      ]
+    },
+    "A12": {
+      "rank": null,
+      "missing": [
+        "one-fifth",
+        "364"
+      ],
+      "queries": [
+        "how does the query set for ViV-ReID is formed from the gallery set",
+        "how many tracklets are in the query set for ViV-ReID"
+      ]
+    },
+    "B03": {
+      "rank": null,
+      "missing": [],
+      "queries": [
+        "ship re-identification AIS automatic identification system signal fusion input feature",
+        "ship re-identification dataset benchmark survey"
+      ]
+    },
+    "B04": {
+      "rank": null,
+      "missing": [],
+      "queries": [
+        "ship re-identification dataset sensors sonar LiDAR 3D point cloud RGB camera",
+        "3D point cloud LiDAR sonar based ship re-identification multimodal input"
+      ]
+    },
+    "B05": {
+      "rank": null,
+      "missing": [],
+      "queries": [
+        "DPEFormer occlusion generation GAN synthetic occluded training images"
+      ]
+    },
+    "B06": {
+      "rank": null,
+      "missing": [],
+      "queries": [
+        "reinforcement learning policy for patch selection ship person re-identification",
+        "patch selection strategy part-aware cropping for ship and person re-identification"
+      ]
+    },
+    "C01": {
+      "rank": null,
+      "missing": [],
+      "queries": [
+        "braised pork belly recipe cooking"
+      ]
+    },
+    "C02": {
+      "rank": null,
+      "missing": [],
+      "queries": [
+        "what stocks should I buy to maximize returns in the next month?"
+      ]
+    },
+    "A13": {
+      "rank": 1,
+      "missing": [],
+      "queries": [
+        "Sparse VMamba embedding layer Femb spatial feature temporal feature fusion"
+      ]
+    },
+    "A14": {
+      "rank": 3,
+      "missing": [],
+      "queries": [
+        "FDNM SYSU-MM01 evaluation protocol mAP CMC all-search indoor setting"
+      ]
+    },
+    "A15": {
+      "rank": 1,
+      "missing": [],
+      "queries": [
+        "Pseudo-Label Noise Prevention venue conference journal year",
+        "Pseudo-Label Noise Prevention task ship re-identification person re-identification pseudo-label noise"
+      ]
+    },
+    "A16": {
+      "rank": 5,
+      "missing": [],
+      "queries": [
+        "SAM-driven MAE meta-learning task construction background interference episode sampling",
+        "SAM segment anything mask generation foreground prior suppress background MAE reconstruction"
+      ]
+    },
+    "A17": {
+      "rank": null,
+      "missing": [],
+      "queries": [
+        "CVNet title core design points ship re-identification"
+      ]
+    },
+    "A18": {
+      "rank": 3,
+      "missing": [],
+      "queries": [
+        "SeCap aerial-ground person re-identification challenges viewpoint variation"
+      ]
+    },
+    "A19": {
+      "rank": 1,
+      "missing": [],
+      "queries": [
+        "SPG-GT ship keypoint detection combination of modules"
+      ]
+    },
+    "A20": {
+      "rank": 3,
+      "missing": [],
+      "queries": [
+        "DEEP framework full name abbreviation",
+        "DEEP framework task challenge re-identification"
+      ]
+    },
+    "A21": {
+      "rank": 1,
+      "missing": [],
+      "queries": [
+        "diffusion de-occlusion re-ranking scheme name purpose"
+      ]
+    },
+    "B07": {
+      "rank": null,
+      "missing": [],
+      "queries": [
+        "federated learning privacy preservation ship re-identification",
+        "privacy-preserving mechanism anonymization identity information protection"
+      ]
+    },
+    "B08": {
+      "rank": null,
+      "missing": [],
+      "queries": [
+        "distributed training framework DeepSpeed Horovod implementation details",
+        "training on multiple GPUs NVIDIA V100 A100 parallel training setup"
+      ]
+    },
+    "A22": {
+      "rank": 1,
+      "missing": [],
+      "queries": [
+        "STMI Segmentation-Guided Feature Modulation attention guidance segmentation mask"
+      ]
+    }
+  }
+}
