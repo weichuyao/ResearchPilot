@@ -96,6 +96,21 @@ class Settings(BaseSettings):
     # ollama create。默认值只是占位，实际必须与 ollama create 时起的名字一致。
     OLLAMA_REWRITE_MODEL: str = "research-rewriter"
 
+    # --- 语料侧术语补全（改造 #11 第三档）---
+    #
+    # 小模型学会了「输出英文查询」但**背不出论文里的字面术语**（实测：
+    # 它把 A²RNet 的 `instance bank` 换成了泛化描述，还把 TAR 编造成
+    # "Temporal Adaptive Representation"）。那是领域知识缺失，不是改写能力
+    # 缺失 —— 微调补不上，加训练轮数只会加重过拟合与幻觉。
+    #
+    # 所以把术语交给语料：从 BM25 索引里挖出「这篇论文确实在用的稀有词组」
+    # 补进查询。术语有了语料出处，幻觉问题一并消失。
+    # 见 ai/rag/term_expand.py 的模块文档。
+    #
+    # 默认关闭：它是实验性增强，开启前请用 rewrite_bench 对比。
+    TERM_EXPAND_ENABLED: bool = False
+    TERM_EXPAND_MAX_TERMS: int = 4
+
     def is_dev(self):
         return self.DEV
 

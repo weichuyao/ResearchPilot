@@ -106,6 +106,9 @@ async def main() -> None:
     parser.add_argument("--eval-set", type=str, default=None)
     parser.add_argument("--baseline", choices=["raw"], default=None,
                         help="raw = 不调改写器，直接用问题原文检索（给对照用）")
+    parser.add_argument("--rerank", action="store_true",
+                        help="检索后过一遍交叉编码器重排 —— **线上 retrieve() 默认就走重排**，"
+                             "不带这个开关测的是「混合召回」这一半，会低估真实系统")
     parser.add_argument("--json", type=str, default=None, help="写报告路径，- 为自动命名")
     args = parser.parse_args()
 
@@ -176,6 +179,12 @@ async def main() -> None:
             if not query:
                 continue
             hits, _top1 = hybrid_search(query, top_n=args.top_k)
+            if args.rerank:
+                # 线上 retrieve() 在这里还有一步交叉编码器重排。不带重排测出来的
+                # 是「混合召回」的上限，而不是用户实际看到的名次。
+                from ai.rag.rerank import rerank_hits
+
+                hits = rerank_hits(query, hits, top_n=args.top_k)
             pool.extend(hits)
 
         rank = first_match_rank(pool, *spec) if spec else None

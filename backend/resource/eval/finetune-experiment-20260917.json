@@ -57,5 +57,46 @@
     }
   },
   "root_cause": "微调蒸馏到了'输出英文查询'这个格式约束（回落率 93%->0%），但没蒸馏到'把字面领域术语塞进查询'这个内容策略 —— 实测 A09：未微调的查询含 'instance bank identity-view pair' 命中第 1 名，微调后的查询把这些罕见术语换成了泛化描述，直接未命中。",
-  "conclusion": "微调解决了'能不能用'（格式合规、零回落）与延迟（2.5x），没有解决'用得好不好'（召回下降）。正确用法是按场景切换模型，而不是无条件替换 —— 这正是按节点分模型那个开关的价值。"
+  "conclusion": "微调解决了'能不能用'（格式合规、零回落）与延迟（2.5x），没有解决'用得好不好'（召回下降）。正确用法是按场景切换模型，而不是无条件替换 —— 这正是按节点分模型那个开关的价值。",
+  "tier3_term_expansion": {
+    "verdict": "实测无效（默认关闭）",
+    "implementation": "ai/rag/term_expand.py + TERM_EXPAND_ENABLED 开关",
+    "term_mining_quality": "成功：A09 挖到 association perception sap / association forgetting mechanism（A²RNet 真实模块名），A11 挖到 ViV-ReID 标题词",
+    "scoring_fix": "第一版按『出现块数』排序 → 前 12 名全是 of the / person re；改按 IDF 和 + 停用词/数字过滤 + 锚点约束后才可用",
+    "measured_with_rerank": {
+      "finetuned_baseline": {
+        "recall@1": 0.3636,
+        "recall@5": 0.6364,
+        "mrr": 0.4884,
+        "anchor": "16/22"
+      },
+      "expand_1_term": {
+        "recall@1": 0.3182,
+        "recall@5": 0.7273,
+        "mrr": 0.4797,
+        "anchor": "13/22"
+      },
+      "expand_2_terms": {
+        "recall@1": 0.2727,
+        "recall@5": 0.5909,
+        "mrr": 0.4486,
+        "anchor": "14/22"
+      },
+      "expand_4_terms": {
+        "recall@1": 0.2727,
+        "recall@5": 0.6818,
+        "mrr": 0.452,
+        "anchor": "15/22"
+      }
+    },
+    "mechanism": "追加稀有词组让 BM25 主导 RRF 融合，检索被拉向『含这些词组的块』而非『最能回答问题的块』。术语挖对了，但『对论文的术语』≠『这次问题需要的证据』。",
+    "side_finding": "对微调模型的泛化查询，重排会让 recall@1 变差（0.5 → 0.3636）——重排按查询-段落相关性打分，弱查询与目标段落匹配度低，反而被压下去。rewrite_bench 因此补了 --rerank 开关。",
+    "untested_direction": "保留原查询结果 + 扩张结果做并集、再整体重排（而不是把术语拼进原查询）"
+  },
+  "tier_status": {
+    "tier1_tuning": "未做——开工前实测否掉（训练标签本来就带字面术语，失败是容量/样本效率问题，加轮数会过拟合+加重幻觉）",
+    "tier2_bigger_base": "未做",
+    "tier3_corpus_terms": "已做，实测无效（见上）",
+    "final_recommendation": "按场景切换模型（延迟敏感用本地 1.28s，质量敏感用 API）——这正是按节点分模型那个开关的价值"
+  }
 }

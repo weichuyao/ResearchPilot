@@ -366,11 +366,33 @@ async def plan_question(question: str, config: RunnableConfig) -> ResearchPlan:
     规划是**结构性**判断（拆几个子问题、查询怎么写），不需要措辞多样性，
     反而需要可复现 —— 所以 planning 类节点统统用 temperature=0。
     只有最后的 synthesize 保留默认温度：那一步是措辞，本来就不该完全确定。
+
+    末段是**语料侧术语补全**（改造 #11 第三档，默认关闭）：小模型背不出论文里的
+    字面术语，而那是领域知识缺失 —— 改由语料提供。见 ai/rag/term_expand.py。
     """
-    return await _invoke_structured(
+    plan = await _invoke_structured(
         ResearchPlan, config, temperature=0.0,
         system=ANALYZE_PROMPT, human=question,
     )
+    if settings.TERM_EXPAND_ENABLED:
+        _augment_with_corpus_terms(plan)
+    return plan
+
+
+def _augment_with_corpus_terms(plan: ResearchPlan) -> None:
+    """就地把语料里挖到的术语接进每个子问题的查询与 facets。**原地改**，不返回新对象。
+
+    放在规划之后、检索之前，是唯一能起作用的位置：查询在这里定稿，
+    而术语来自语料 —— 如果放到检索之后，就错过了它要改善的那次检索。
+    """
+    from ai.rag.term_expand import augment, mine_terms
+
+    for sub in plan.sub_questions:
+        terms = mine_terms(sub.query, max_terms=settings.TERM_EXPAND_MAX_TERMS)
+        if not terms:
+            continue
+        sub.query, sub.facets = augment(sub.query, list(sub.facets or []), terms)
+        logger.info("术语补全：%s → +%s", (sub.query or "")[:40], terms)
 
 
 # ---------------------------------------------------------------------------
