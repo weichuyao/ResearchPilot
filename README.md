@@ -44,12 +44,17 @@ research workflow, an evaluation harness, and one-command deployment.
 # 1. infrastructure (PostgreSQL is required for sessions & documents)
 docker compose up -d postgres
 
-# 2. backend (needs Ollama with bge-m3 on the host).
-#    Use run_server.py rather than `python -m uvicorn`: on Windows the async psycopg
-#    checkpointer only runs on a Selector event loop, which uvicorn installs only in
-#    its --reload subprocess path. run_server.py sets the policy before uvicorn.run()
-#    and needs no --reload (see NOTES.md).
+# 2. backend (needs Ollama with bge-m3 on the host), Python 3.11.
+#    Create the venv once, from the pinned versions in requirements.lock.
+#    Those pins are 3.11-specific, so do NOT use `uv sync` here - a fresh
+#    resolve would pull langchain 1.x and the app would not run (see pyproject.toml).
 cd backend
+python3.11 -m venv .venv-py311
+.venv-py311/Scripts/python.exe -m pip install -r requirements.lock
+
+#    Start it with run_server.py rather than `python -m uvicorn`: on Windows the
+#    async psycopg checkpointer only runs on a Selector event loop, which uvicorn
+#    installs only in its --reload subprocess path (see NOTES.md).
 .venv-py311/Scripts/python.exe run_server.py
 
 # 3. frontend

@@ -2,10 +2,11 @@
 #
 # ## 为什么是 3.11 而不是 pyproject 里原来写的 3.13
 #
-# `pyproject.toml` 声明 `requires-python = ">=3.13"`，而本机实际跑的是 3.11
+# `pyproject.toml` 当时声明的是 `requires-python = ">=3.13"`，而本机实际跑的是 3.11
 # （`.venv-py311`）。这个不一致拖了很久，Docker 逼着必须定下来。
 # 选 **3.11**，因为它是**已知全部依赖可用的版本** —— 之前所有实测都跑在它上面。
-# pyproject 已同步改成 >=3.11。
+# pyproject 已同步改成 >=3.11（2026-09 又把那个 3.13 的 venv 删掉了，
+# 详见 reference/design-decisions.md 的「环境版本统一（3.11）」一节）。
 #
 # ## 为什么用 requirements.lock 而不是从 pyproject 现解析
 #

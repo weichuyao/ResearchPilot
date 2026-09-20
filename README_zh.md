@@ -42,12 +42,17 @@ ResearchPilot 是一个面向科研文献（当前：行人/车辆重识别方�
 # 1. 基础设施（会话与文档都依赖 PostgreSQL）
 docker compose up -d postgres
 
-# 2. 后端（需要宿主机 Ollama + bge-m3）。
-#    用 run_server.py，不要用 `python -m uvicorn`：Windows 上异步 psycopg
-#    checkpointer 只能跑在 Selector 事件循环，而 uvicorn 只在 --reload 子进程
-#    路径里装这个策略。run_server.py 在 uvicorn.run() 之前设好，且不需要 --reload
-#    （原因见 NOTES.md）。
+# 2. 后端（需要宿主机 Ollama + bge-m3），Python 3.11。
+#    环境建一次即可，用 requirements.lock 里的固定版本 —— 那些固定版本是针对
+#    3.11 的，所以**不要**在这里跑 `uv sync`（重新解析会拉到 langchain 1.x，
+#    应用跑不起来，详见 pyproject.toml 的说明）。
 cd backend
+python3.11 -m venv .venv-py311
+.venv-py311/Scripts/python.exe -m pip install -r requirements.lock
+
+#    启动用 run_server.py，不要用 `python -m uvicorn`：Windows 上异步 psycopg
+#    checkpointer 只能跑在 Selector 事件循环，而 uvicorn 只在 --reload 子进程
+#    路径里装这个策略（原因见 NOTES.md）。
 .venv-py311/Scripts/python.exe run_server.py
 
 # 3. 前端

@@ -7,6 +7,14 @@ readme = "README.md"
 # 这个不一致拖了很久：要么改声明、要么重建环境，二选一。
 # 改造 #9 做 Docker 时被迫定下来 —— 选 3.11，因为它是**已知全部依赖可用的版本**
 # （今天所有实测都跑在它上面）。改动见 reference/transformation-09-docker-design.md。
+#
+# ⚠️ 下面的依赖写的是**宽松下界**（>=x.y），这是有意的：
+# 精确版本记录在 requirements.lock —— 它是从实际在用的 venv freeze 出来的，Docker 用它。
+#
+# **因此不要在本目录执行 `uv lock` / `uv sync`。** 实测过：uv 会按宽松下界解析到
+# 最新主版本 —— langchain 会锁到 1.x、langgraph 到 1.x，而项目代码是按
+# langchain 0.3 / langgraph 0.6 写的，装出来跑不起来。仓库里原本有一个 3.13 时代
+# 的 uv.lock（与这里声明的版本直接矛盾），已删除，理由就是这条。
 requires-python = ">=3.11"
 dependencies = [
     "aiomysql>=0.2.0",
