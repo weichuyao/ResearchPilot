@@ -249,7 +249,22 @@ def chunk_document(path: str, source_file: str, title: str,
                 ),
             },
         )
-        chunks.extend(splitter.split_documents([piece]))
+        section_chunks = splitter.split_documents([piece])
+        # Stable provenance identifiers are metadata-only: retrieval ranking,
+        # formatting and the stored text remain unchanged.  Legacy entries are
+        # handled by research.provenance_ids.chunk_id_from_document().
+        from research.provenance_ids import stable_chunk_id
+
+        for chunk_index, chunk in enumerate(section_chunks):
+            chunk.metadata["chunk_index"] = chunk_index
+            chunk.metadata["chunk_id"] = stable_chunk_id(
+                source=source_file,
+                locator_prefix=info.prefix,
+                locator_label=section.label,
+                content=chunk.page_content,
+                chunk_index=chunk_index,
+            )
+        chunks.extend(section_chunks)
 
     return chunks, {
         "file": source_file,

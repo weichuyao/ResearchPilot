@@ -9,10 +9,48 @@ from db.models.base import DBBaseModel
 from db.models.collection import Collection
 from db.models.conversation import Conversation
 from db.models.paper import Paper
+from db.models.research import (
+    ApprovalRequest,
+    Conclusion,
+    ConclusionEvidence,
+    ConclusionObservation,
+    Evidence,
+    EvidenceRelation,
+    EvidenceSearchAttempt,
+    EvidenceSearchHit,
+    Experiment,
+    ExperimentHypothesis,
+    Hypothesis,
+    Observation,
+    ObservationHypothesisRelation,
+    ObservationRun,
+    ResearchEvent,
+    ResearchQuestion,
+    ResearchRun,
+    ResearchWorkflowState,
+)
 
 __all__ = [
     "DBBaseModel",
     "Collection",
     "Conversation",
     "Paper",
+    "ApprovalRequest",
+    "Conclusion",
+    "ConclusionEvidence",
+    "ConclusionObservation",
+    "Evidence",
+    "EvidenceRelation",
+    "EvidenceSearchAttempt",
+    "EvidenceSearchHit",
+    "Experiment",
+    "ExperimentHypothesis",
+    "Hypothesis",
+    "Observation",
+    "ObservationHypothesisRelation",
+    "ObservationRun",
+    "ResearchEvent",
+    "ResearchQuestion",
+    "ResearchRun",
+    "ResearchWorkflowState",
 ]

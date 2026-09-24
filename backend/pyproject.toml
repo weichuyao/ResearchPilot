@@ -52,3 +52,8 @@ dependencies = [
     "sqlmodel>=0.0.24",
     "uvicorn[standard]>=0.34.2",
 ]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.3,<9",
+]

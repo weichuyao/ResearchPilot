@@ -1,0 +1,115 @@
+"""Closed vocabularies used by the research state store.
+
+Values are persisted as strings instead of database-native enums.  This keeps
+SQLite and PostgreSQL behaviour aligned and lets application migrations add a
+new state without altering a database enum type.
+"""
+
+from enum import StrEnum
+
+
+class QuestionStatus(StrEnum):
+    OPEN = "OPEN"
+    ACTIVE = "ACTIVE"
+    ANSWERED = "ANSWERED"
+    ARCHIVED = "ARCHIVED"
+
+
+class HypothesisStatus(StrEnum):
+    PROPOSED = "PROPOSED"
+    TESTABLE = "TESTABLE"
+    UNDER_TEST = "UNDER_TEST"
+    SUPPORTED = "SUPPORTED"
+    PARTIALLY_SUPPORTED = "PARTIALLY_SUPPORTED"
+    WEAKENED = "WEAKENED"
+    REFUTED = "REFUTED"
+    INCONCLUSIVE = "INCONCLUSIVE"
+
+
+class EvidenceType(StrEnum):
+    LITERATURE = "LITERATURE"
+    EXPERIMENTAL = "EXPERIMENTAL"
+    DERIVED_ANALYSIS = "DERIVED_ANALYSIS"
+    MODEL_HYPOTHESIS = "MODEL_HYPOTHESIS"
+    HUMAN_NOTE = "HUMAN_NOTE"
+
+
+class SearchIntent(StrEnum):
+    PRIMARY = "PRIMARY"
+    CONTRADICTION = "CONTRADICTION"
+    LIMITATION = "LIMITATION"
+    MANUAL = "MANUAL"
+
+
+class EvidenceRelationType(StrEnum):
+    SUPPORT = "SUPPORT"
+    CONTRADICT = "CONTRADICT"
+    LIMITATION = "LIMITATION"
+    RELATED = "RELATED"
+
+
+class ReviewStatus(StrEnum):
+    PROPOSED = "PROPOSED"
+    CONFIRMED = "CONFIRMED"
+    REJECTED = "REJECTED"
+
+
+class ExperimentStatus(StrEnum):
+    DRAFT = "DRAFT"
+    PLANNED = "PLANNED"
+    APPROVED = "APPROVED"
+    RUNNING = "RUNNING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
+
+
+class RunStatus(StrEnum):
+    PENDING = "PENDING"
+    RUNNING = "RUNNING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
+
+
+class ObservationRelationType(StrEnum):
+    SUPPORT = "SUPPORT"
+    CONTRADICT = "CONTRADICT"
+    INCONCLUSIVE = "INCONCLUSIVE"
+
+
+class ConclusionStatus(StrEnum):
+    DRAFT = "DRAFT"
+    PENDING_APPROVAL = "PENDING_APPROVAL"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+
+
+class ConfidenceLevel(StrEnum):
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+
+
+class ApprovalStatus(StrEnum):
+    PENDING = "PENDING"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+    SUPERSEDED = "SUPERSEDED"
+
+
+class WorkflowStage(StrEnum):
+    DEFINE_QUESTION = "DEFINE_QUESTION"
+    LITERATURE_REVIEW = "LITERATURE_REVIEW"
+    GENERATE_HYPOTHESIS = "GENERATE_HYPOTHESIS"
+    SEARCH_SUPPORTING_EVIDENCE = "SEARCH_SUPPORTING_EVIDENCE"
+    SEARCH_CONTRADICTING_EVIDENCE = "SEARCH_CONTRADICTING_EVIDENCE"
+    ASSESS_EVIDENCE = "ASSESS_EVIDENCE"
+    DESIGN_EXPERIMENT = "DESIGN_EXPERIMENT"
+    HUMAN_APPROVAL = "HUMAN_APPROVAL"
+    WAIT_FOR_RESULT = "WAIT_FOR_RESULT"
+    IMPORT_RESULT = "IMPORT_RESULT"
+    BUILD_OBSERVATION = "BUILD_OBSERVATION"
+    UPDATE_HYPOTHESIS = "UPDATE_HYPOTHESIS"
+    GENERATE_RESEARCH_REPORT = "GENERATE_RESEARCH_REPORT"
+    COMPLETE = "COMPLETE"
