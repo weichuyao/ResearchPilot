@@ -137,7 +137,9 @@ class ResearchPlan(BaseModel):
 ANALYZE_PROMPT = """You are the planning step of a research assistant.
 
 Break the user's question into 1-4 sub-questions that can each be answered by searching a
-knowledge base of four ship/person re-identification papers.
+knowledge base of re-identification papers (person, vehicle, ship and multi-spectral
+object re-identification). Phrase each query for the sub-domain the question is actually
+about — do not attach a domain word the user did not imply.
 
 Rules:
 - Most questions need only ONE sub-question. Do not split just to look thorough.
@@ -158,7 +160,7 @@ Rules:
 
 
 SYNTHESIZE_PROMPT = """You are the answer step of a research assistant working on a FIXED
-corpus of four ship/person re-identification papers.
+corpus of re-identification papers.
 
 You are given the material that was retrieved, plus a verdict on how complete that
 retrieval is. Write the answer.
