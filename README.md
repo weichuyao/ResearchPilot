@@ -10,6 +10,31 @@ re-identification literature). It started as the AI-ChatKit engineering template
 rebuilt layer by layer into a domain agent: paper ingestion, hybrid retrieval, a corrective-RAG
 research workflow, an evaluation harness, and one-command deployment.
 
+It now also includes **Scientific Research Harness V1**. The existing RAG remains available and
+acts as the Literature Evidence Engine, while research questions, hypotheses, evidence,
+experiments, runs, observations and conclusions are persisted as separate, reviewable objects.
+See `docs/current_system_audit.md`, `docs/modification_plan.md` and
+`docs/project_explanation.md`.
+
+Run the fully offline structured-research demo from `backend/`:
+
+```powershell
+.venv-py311\Scripts\python.exe scripts/scientific_harness_demo.py
+```
+
+The Workbench exports a complete research archive with a SHA-256 seal. Verify an archive
+or run a read-only deployment smoke test from `backend/`:
+
+```powershell
+.venv-py311\Scripts\python.exe scripts/verify_research_archive.py RQ-xxx-research-archive.json
+.venv-py311\Scripts\python.exe scripts/research_harness_smoke.py --base-url http://127.0.0.1:8002
+# Restore only into a missing RQ; the explicit ID confirmation prevents selecting the wrong archive.
+.venv-py311\Scripts\python.exe scripts/restore_research_archive.py archive.json --confirm-question-id RQ-xxx
+# Isolated deployments only: creates one question and one approved hypothesis.
+.venv-py311\Scripts\python.exe scripts/research_workbench_browser_smoke.py `
+  --url http://127.0.0.1:3000/research --browser-executable "C:\Path\To\msedge.exe"
+```
+
 > Design rationale for every layer lives in `reference/` —
 > start with `reference/design-decisions.md` and `reference/roadmap-status.md`.
 
@@ -31,6 +56,9 @@ research workflow, an evaluation harness, and one-command deployment.
    served via `/conversations`, frontend keeps no state of its own.
 6. **Ops** - `/health` (code rev, reranker state, index stats), rotating file logs,
    unified exception layer, Docker Compose (api / postgres / web, plus optional qdrant).
+7. **Research Workbench** - `/research` is a lightweight UI for research questions,
+   hypotheses, three-way literature evidence, human approvals, integrity metrics and
+   structured reports. PostgreSQL remains the sole source of scientific state.
 
 ## Quick start
 
@@ -65,6 +93,7 @@ pnpm install && pnpm dev
 ```
 
 API docs: `http://127.0.0.1:8002/docs` (FastAPI auto docs).
+Research Workbench: `http://127.0.0.1:3000/research`.
 
 ## Configuration
 

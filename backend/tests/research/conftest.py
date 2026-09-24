@@ -6,4 +6,3 @@ BACKEND_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(_
 APP_ROOT = os.path.join(BACKEND_ROOT, "app")
 if APP_ROOT not in sys.path:
     sys.path.insert(0, APP_ROOT)
-

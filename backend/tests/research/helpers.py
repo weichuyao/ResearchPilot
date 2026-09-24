@@ -52,4 +52,3 @@ def literature_evidence(question_id: str, **overrides):
     }
     values.update(overrides)
     return Evidence(**values)
-
