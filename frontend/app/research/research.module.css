@@ -1,0 +1,124 @@
+.shell {
+  min-height: calc(100vh - 112px);
+  background:
+    radial-gradient(circle at 8% 0%, rgba(64, 150, 132, 0.12), transparent 28%),
+    radial-gradient(circle at 96% 8%, rgba(59, 94, 145, 0.1), transparent 26%),
+    #f7f8f6;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.hero {
+  padding: 30px 34px 22px;
+  border-bottom: 1px solid rgba(24, 52, 46, 0.08);
+}
+
+.eyebrow {
+  color: #397365;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 8px 0 4px !important;
+  color: #17352f !important;
+  letter-spacing: -0.035em;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(230px, 0.28fr) minmax(0, 1fr);
+  min-height: 650px;
+}
+
+.projectRail {
+  padding: 22px;
+  border-right: 1px solid rgba(24, 52, 46, 0.08);
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.projectItem {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 14px;
+  text-align: left;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: transparent;
+  cursor: pointer;
+  transition: 160ms ease;
+}
+
+.projectItem:hover { background: rgba(255,255,255,.8); }
+.projectActive {
+  background: #fff;
+  border-color: rgba(48, 112, 95, 0.18);
+  box-shadow: 0 8px 26px rgba(32, 73, 62, 0.08);
+}
+
+.main { padding: 24px 28px 36px; min-width: 0; }
+
+.metricGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.metric {
+  padding: 16px;
+  border: 1px solid rgba(24, 52, 46, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.metricValue { color: #245d50; font-size: 24px; font-weight: 700; }
+.metricLabel { color: #6d7d78; font-size: 12px; }
+
+.entityCard {
+  margin-bottom: 12px;
+  border-color: rgba(24, 52, 46, 0.09) !important;
+  box-shadow: none !important;
+}
+
+.evidenceExcerpt {
+  margin: 10px 0;
+  padding: 12px 14px;
+  border-left: 3px solid #6d9f91;
+  background: #f5f8f6;
+  color: #53635f;
+  line-height: 1.55;
+}
+
+.report {
+  max-height: 650px;
+  padding: 22px;
+  overflow: auto;
+  white-space: pre-wrap;
+  border-radius: 14px;
+  background: #172421;
+  color: #e8f0ed;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  line-height: 1.65;
+}
+
+.provenance {
+  max-height: 520px;
+  margin-top: 14px;
+  padding: 16px;
+  overflow: auto;
+  border-radius: 12px;
+  background: #172421;
+  color: #dceae5;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+@media (max-width: 960px) {
+  .workspace { grid-template-columns: 1fr; }
+  .projectRail { border-right: 0; border-bottom: 1px solid rgba(24, 52, 46, 0.08); }
+  .metricGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

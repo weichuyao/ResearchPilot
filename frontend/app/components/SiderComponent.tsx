@@ -1,5 +1,7 @@
 import React from 'react';
-import { Layout, Menu } from 'antd';
+import Link from 'next/link';
+import { Button, Layout, Menu } from 'antd';
+import { ExperimentOutlined } from '@ant-design/icons';
 import NewChatButton from './NewChatButton';
 import { useLayoutContext } from '../layout-context'
 
@@ -41,6 +43,16 @@ const SiderComponent: React.FC<SiderComponentProps> = ({
         </div>
       )}
       <NewChatButton collapsed={collapsed} onClick={handlerNewChat} />
+      <Link href="/research" style={{ display: "block", margin: "0 16px 12px" }}>
+        <Button
+          icon={<ExperimentOutlined />}
+          block={!collapsed}
+          shape={collapsed ? "circle" : "round"}
+          style={collapsed ? { width: 40 } : undefined}
+        >
+          {!collapsed && "科研工作台"}
+        </Button>
+      </Link>
       {!collapsed && (
         <Menu
           theme="light"

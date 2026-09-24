@@ -14,12 +14,16 @@
  *
  * ## 对本地开发没有影响
  *
- * `next start` 照常工作 —— standalone 只是**额外**多产出一份
- * `.next/standalone`，不改变原来的产物。所以 scripts/start-ai-chatkit.ps1
- * 那条路径不用动。
+ * Windows 本地构建默认关闭 standalone：pnpm 的依赖树需要目录符号链接，
+ * 普通 Windows 终端通常没有创建权限。Docker 构建运行在 Linux 中，仍会
+ * 自动启用 standalone；也可用 NEXT_ENABLE_STANDALONE=1 显式强制开启。
  */
+const useStandalone =
+  process.env.NEXT_ENABLE_STANDALONE === '1' ||
+  (process.platform !== 'win32' && process.env.NEXT_DISABLE_STANDALONE !== '1');
+
 const nextConfig = {
-  output: 'standalone',
+  ...(useStandalone ? { output: 'standalone' } : {}),
 };
 
 export default nextConfig;
