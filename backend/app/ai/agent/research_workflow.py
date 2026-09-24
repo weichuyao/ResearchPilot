@@ -181,7 +181,14 @@ Rules:
                 fact does not exist, and must NOT fall back on outside knowledge.
                 A corpus that stays silent is not evidence that something is false.
    partial    — some sub-questions were answered and others were not. Say clearly which
-                part you could answer and which part the corpus does not cover."""
+                part you could answer and which part the corpus does not cover.
+
+5. Rule 4 only covers `absent`. The harder case is `sufficient` material that describes
+   some OTHER mechanism. If the question asks whether a paper uses X and what was found
+   is that it uses Y, the answer is "the corpus does not state that it uses X" — NOT
+   "它不是/并未使用 X". Finding what a paper does is not evidence about everything it
+   does not do, and a bare negative conclusion ("结论：不是") is exactly the claim this
+   system must not make."""
 
 
 class ResearchState(TypedDict):
