@@ -152,6 +152,7 @@ class ResearchRepository:
             select(func.count()).select_from(ObservationHypothesisRelation).where(
                 ObservationHypothesisRelation.hypothesis_id == hypothesis_id,
                 ObservationHypothesisRelation.relation == observation_relation,
+                ObservationHypothesisRelation.review_status == ReviewStatus.CONFIRMED.value,
             )
         )
         if not evidence_count and not observation_count:
@@ -511,6 +512,57 @@ class ResearchRepository:
         await self.session.flush()
         await self._event(observation, "OBSERVATION_CREATED", actor=actor)
         return observation
+
+    async def list_observation_relations(
+        self, observation_id: str
+    ) -> list[ObservationHypothesisRelation]:
+        return list(
+            (
+                await self.session.execute(
+                    select(ObservationHypothesisRelation).where(
+                        ObservationHypothesisRelation.observation_id == observation_id
+                    )
+                )
+            ).scalars().all()
+        )
+
+    async def review_observation_relation(
+        self,
+        observation_id: str,
+        hypothesis_id: str,
+        decision: str,
+        *,
+        reviewer: str,
+    ) -> ObservationHypothesisRelation:
+        """同 `review_evidence_relation`：观察怎么解读假设是判断，不是计算结果。
+
+        复合主键没有独立的 id，所以定位用 (observation, hypothesis) 这一对。
+        """
+        relation = await self.session.get(
+            ObservationHypothesisRelation, {"observation_id": observation_id,
+                                            "hypothesis_id": hypothesis_id}
+        )
+        if relation is None:
+            raise ResearchNotFoundError(
+                f"observation relation not found: {observation_id} -> {hypothesis_id}"
+            )
+        decision = enum_value(decision, ReviewStatus, "relation.review_status")
+        if decision == ReviewStatus.PROPOSED.value:
+            raise ResearchValidationError("review decision must be CONFIRMED or REJECTED")
+        if relation.review_status != ReviewStatus.PROPOSED.value:
+            raise ResearchValidationError("observation relation has already been reviewed")
+        relation.review_status = decision
+        relation.reviewed_by = reviewer
+        relation.reviewed_at = _now()
+        self.session.add(relation)
+        observation = await self._must_get(Observation, observation_id)
+        await self._event(
+            observation,
+            "OBSERVATION_RELATION_REVIEWED",
+            actor=reviewer,
+            after={"hypothesis_id": hypothesis_id, "status": decision},
+        )
+        return relation
 
     async def create_conclusion(
         self,

@@ -63,6 +63,13 @@ export interface ResearchState {
   experiment_hypotheses: Array<{ experiment_id: string; hypothesis_id: string }>;
   runs: Array<{ id: string; experiment_id: string; status: string; metrics: Record<string, unknown> }>;
   observations: Array<{ id: string; experiment_id: string; description: string; derived_statistics: Record<string, unknown> }>;
+  observation_hypotheses: Array<{
+    observation_id: string;
+    hypothesis_id: string;
+    relation: string;
+    review_status: string;
+    reviewed_by: string | null;
+  }>;
   conclusions: Array<{ id: string; statement: string; confidence: string; status: string }>;
   approvals: Approval[];
 }
@@ -154,8 +161,19 @@ export function reviewEvidenceRelation(id: string, decision: "CONFIRMED" | "REJE
   });
 }
 
-export function getHarnessEvaluation(questionId: string) {
-  return request<HarnessEvaluation>(`/research/questions/${questionId}/evaluation`);
+/** 观察对假设的解读同样要人工确认；链接没有独立 id，用 (observation, hypothesis) 定位。 */
+export function reviewObservationRelation(
+  observationId: string,
+  hypothesisId: string,
+  decision: "CONFIRMED" | "REJECTED",
+) {
+  return request(`/observations/${observationId}/relations/${hypothesisId}/review`, {
+    method: "POST",
+    body: JSON.stringify({ reviewer: "workbench-user", decision }),
+  });
+}
+
+export function getHarnessEvaluation(questionId: string) {  return request<HarnessEvaluation>(`/research/questions/${questionId}/evaluation`);
 }
 
 export function getResearchReport(questionId: string) {

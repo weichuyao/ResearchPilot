@@ -206,6 +206,10 @@ async def main() -> None:
                 [run.id for run in runs],
                 hypothesis_relations={hypothesis.id: "SUPPORT"},
             )
+            # 数值是算出来的，「这条观察支持该假设」却是判断 —— 同样要过确认。
+            await repository.review_observation_relation(
+                observation.id, hypothesis.id, "CONFIRMED", reviewer="demo-scientist"
+            )
             await experiment_service.complete_experiment(
                 experiment.id, actor="demo-scientist"
             )

@@ -4,8 +4,14 @@ import json
 import pytest
 
 from db.models.research import Experiment, Hypothesis, ResearchQuestion
-from db.repository.research_repository import ResearchRepository
-from research.enums import ApprovalStatus, ExperimentStatus, ObservationRelationType
+from db.repository.research_repository import ResearchNotFoundError, ResearchRepository
+from research.enums import (
+    ApprovalStatus,
+    ExperimentStatus,
+    HypothesisStatus,
+    ObservationRelationType,
+    ReviewStatus,
+)
 from research.experiment_service import ExperimentService
 from research.observation_service import ObservationService
 from research.validators import ResearchValidationError
@@ -188,5 +194,84 @@ def test_observation_is_computed_from_runs_not_interpreted(tmp_path):
             assert "supports" not in observation.description.lower()
             await import_service.complete_experiment(experiment.id, actor="pi")
             assert experiment.status == "COMPLETED"
+
+    asyncio.run(scenario())
+
+
+def test_observation_link_needs_confirmation_before_it_moves_a_hypothesis(tmp_path):
+    """观察的**数值**是算出来的，但它对假设的**解读**是判断 —— 未确认不得解锁跃迁。
+
+    这条测试是这条约束的全部理由：`_require_hypothesis_basis` 只数已确认的观察关系。
+    没有它，"人工批准后才有 SUPPORTED" 会被一条自动生成的观察悄悄绕过。
+    """
+    async def scenario():
+        async with isolated_session(tmp_path / "obs-confirm.db") as session:
+            repository = ResearchRepository(session)
+            _question, hypothesis, experiment = await _approved_experiment(repository)
+            await repository.transition_hypothesis(
+                hypothesis.id, HypothesisStatus.UNDER_TEST.value
+            )
+            import_service = ExperimentService(repository)
+            control, _ = await _import(import_service, repository, {
+                "experiment_id": experiment.id, "run_id": "RUN-C",
+                "config": {"group": "control"}, "metrics": {"mAP": 87.61}})
+            treatment, _ = await _import(import_service, repository, {
+                "experiment_id": experiment.id, "run_id": "RUN-T",
+                "config": {"group": "treatment"}, "metrics": {"mAP": 88.21}})
+            observation = await ObservationService(repository).build_from_runs(
+                experiment.id, [control.id, treatment.id],
+                hypothesis_relations={hypothesis.id: ObservationRelationType.SUPPORT.value},
+            )
+            # rollback 会让 ORM 实例过期，之后只碰这些纯字符串，不碰 ORM 对象
+            observation_id = observation.id
+            hypothesis_id = hypothesis.id
+            await session.commit()
+
+            links = await repository.list_observation_relations(observation_id)
+            assert [link.review_status for link in links] == [ReviewStatus.PROPOSED.value]
+
+            approval = await repository.request_approval(
+                entity_type="Hypothesis", entity_id=hypothesis_id,
+                action="UPDATE_HYPOTHESIS_STATUS:SUPPORTED",
+            )
+            await repository.review_approval(approval.id, "APPROVED", reviewer="pi")
+            approval_id = approval.id
+            await session.commit()
+
+            # 人工批准了，但观察关系还没确认 —— 两者都是必要的，都不是充分的
+            with pytest.raises(ResearchValidationError, match="confirmed support"):
+                await repository.transition_hypothesis(
+                    hypothesis_id, HypothesisStatus.SUPPORTED.value,
+                    approval_request_id=approval_id, actor="pi",
+                )
+            await session.rollback()
+
+            reviewed = await repository.review_observation_relation(
+                observation_id, hypothesis_id, "CONFIRMED", reviewer="pi"
+            )
+            assert reviewed.review_status == ReviewStatus.CONFIRMED.value
+            assert reviewed.reviewed_by == "pi"
+            assert reviewed.reviewed_at is not None
+            await session.commit()
+
+            moved = await repository.transition_hypothesis(
+                hypothesis_id, HypothesisStatus.SUPPORTED.value,
+                approval_request_id=approval_id, actor="pi",
+            )
+            assert moved.status == HypothesisStatus.SUPPORTED.value
+
+            with pytest.raises(ResearchValidationError, match="already been reviewed"):
+                await repository.review_observation_relation(
+                    observation_id, hypothesis_id, "REJECTED", reviewer="someone-else"
+                )
+            with pytest.raises(ResearchValidationError, match="must be CONFIRMED or REJECTED"):
+                await repository.review_observation_relation(
+                    observation_id, hypothesis_id, "PROPOSED", reviewer="pi"
+                )
+            # 不存在的链接是「查不到」不是「违反不变量」—— 路由据此分 404 / 422
+            with pytest.raises(ResearchNotFoundError):
+                await repository.review_observation_relation(
+                    observation_id, "H-does-not-exist", "CONFIRMED", reviewer="pi"
+                )
 
     asyncio.run(scenario())

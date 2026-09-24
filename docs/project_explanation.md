@@ -26,7 +26,9 @@ Literature Evidence 表示其他工作在特定论文中的报告，来源链是
 
 ## Q7：实验结果为什么不能直接变成 scientific conclusion？
 
-Run metrics 是原始结果；Observation 是对一个或多个 Run 的确定性汇总；Conclusion 才是解释。一次 mAP 上升可能受 seed、对照设置或数据泄漏影响。分层之后，数值不会因为一句模型解释就被升级为“证明有效”。
+Run metrics 是原始结果；Observation 是对一个或多个 Run 的确定性汇总；Conclusion 才是解释。一次 mAP 上升可能受 seed、对照设置或数据泄漏影响。分层之后，数值不会因为一句模型解释就被升级为”证明有效”。
+
+追问常落在”那 Observation 里就没有主观成分吗”——有。均值和组间差是算出来的，但”这条观察支持哪个假设”是判断，所以 `ObservationHypothesisRelation` 与文献证据关系同级，带 `PROPOSED/CONFIRMED/REJECTED` 审核态；未被人工确认的观察关系不能解锁假设状态跃迁，即使审批已经通过。
 
 ## Q8：Harness 如何保证一条 conclusion 可以追踪到论文页码或者实验 run？
 
@@ -38,5 +40,9 @@ Conclusion 通过关系表连接 Evidence 和 Observation。Literature Evidence 
 
 ## Q10：此次真正新增的技术贡献是什么？
 
-新增贡献是结构化科研状态和约束层：七类核心对象、关系数据库 authority、EvidenceRelation 审核态、三路证据搜索记录、标准 Run 导入与哈希确认、确定性 Observation、审批驱动的 Hypothesis 更新、显式 Research Controller、双链 provenance、结构化 Research Report 以及 Harness 完整性指标。核心价值不是“让模型自动做科研”，而是让模型参与的科研过程可追踪、可验证、可更新。
+新增贡献是结构化科研状态和约束层：七类核心对象、关系数据库 authority、EvidenceRelation
+与 ObservationHypothesisRelation 两套审核态、三路证据搜索记录、标准 Run 导入与哈希确认、
+确定性 Observation、审批驱动的 Hypothesis 更新、显式 Research Controller、双链 provenance、
+结构化 Research Report 以及 Harness 完整性指标。核心价值不是”让模型自动做科研”，而是让模型
+参与的科研过程可追踪、可验证、可更新。
 

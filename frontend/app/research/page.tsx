@@ -14,7 +14,8 @@ import {
   advanceWorkflow, approveExperiment, completeExperiment, confirmRunImport, createConclusion, createExperiment,
   createHypothesis, createObservation, createResearchQuestion, getHarnessEvaluation,
   getProvenance, getResearchArchive, getResearchReport, getResearchState, listResearchQuestions,
-  prepareRunImport, proposeHypothesisUpdate, reviewApproval, reviewEvidenceRelation, searchEvidence,
+  prepareRunImport, proposeHypothesisUpdate, reviewApproval, reviewEvidenceRelation,
+  reviewObservationRelation, searchEvidence,
 } from "../lib/researchApi";
 import styles from "./research.module.css";
 
@@ -329,6 +330,26 @@ export default function ResearchWorkbench() {
             </Space>}>
             <Paragraph>{experiment.purpose}</Paragraph>
             <Text type="secondary">Runs：{state.runs.filter((x) => x.experiment_id === experiment.id).length} · Observations：{state.observations.filter((x) => x.experiment_id === experiment.id).length}</Text>
+          </Card>
+        ))}
+      </>}
+      {state.observation_hypotheses.length > 0 && <>
+        <Title level={4} className="mt-6">Observation → Hypothesis 解读</Title>
+        <Alert className="mb-3" type="info" showIcon
+          message="观察的数值由 Run 确定性算出，但「它支持还是反驳哪个假设」是判断；未确认的解读不会解锁假设状态。" />
+        {state.observation_hypotheses.map((link) => (
+          <Card key={`${link.observation_id}-${link.hypothesis_id}`} className={styles.entityCard} size="small"
+            title={<Space><Text code>{link.observation_id}</Text><Tag>{link.relation}</Tag>
+              <Tag color={link.review_status === "CONFIRMED" ? "success" : link.review_status === "REJECTED" ? "error" : "warning"}>
+                {link.review_status}</Tag></Space>}
+            extra={link.review_status === "PROPOSED" && <Space>
+              <Button size="small" onClick={() => run(`${link.observation_id}-${link.hypothesis_id}`,
+                () => reviewObservationRelation(link.observation_id, link.hypothesis_id, "CONFIRMED"))}>确认</Button>
+              <Button size="small" danger onClick={() => run(`${link.observation_id}-${link.hypothesis_id}`,
+                () => reviewObservationRelation(link.observation_id, link.hypothesis_id, "REJECTED"))}>驳回</Button>
+            </Space>}>
+            <Text type="secondary">假设：<Text code>{link.hypothesis_id}</Text>
+              {link.reviewed_by ? ` · 由 ${link.reviewed_by} 复核` : " · 等待人工判断"}</Text>
           </Card>
         ))}
       </>}

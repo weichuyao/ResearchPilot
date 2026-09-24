@@ -230,6 +230,12 @@ class ObservationHypothesisRelation(SQLModel, table=True):
         foreign_key="research_hypothesis.id", primary_key=True, max_length=40
     )
     relation: str = Field(max_length=24)
+    # An observation interpreting a hypothesis is a scientific judgement, not a
+    # computation, so it carries the same reviewed/proposed state as an evidence
+    # relation: an unreviewed link must never unlock a hypothesis status change.
+    review_status: str = Field(default=ReviewStatus.PROPOSED.value, max_length=24, index=True)
+    reviewed_by: str | None = Field(default=None, max_length=200)
+    reviewed_at: datetime | None = Field(default=None)
 
 
 class Conclusion(ResearchTimestamped, table=True):

@@ -34,6 +34,13 @@ class EvidenceRelationReviewIn(BaseModel):
     rationale: str = ""
 
 
+class ObservationRelationReviewIn(BaseModel):
+    """观察对假设的解读需要一个独立的确认动作 —— 见 `ObservationHypothesisRelation`。"""
+
+    decision: Literal["CONFIRMED", "REJECTED"]
+    reviewer: str
+
+
 class ExperimentCreate(BaseModel):
     research_question_id: str
     tested_hypotheses: list[str]

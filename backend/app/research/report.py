@@ -105,7 +105,8 @@ class ResearchReportService:
         observation_links = (
             await self.repository.session.execute(
                 select(ObservationHypothesisRelation).where(
-                    ObservationHypothesisRelation.hypothesis_id == hypothesis.id
+                    ObservationHypothesisRelation.hypothesis_id == hypothesis.id,
+                    ObservationHypothesisRelation.review_status == ReviewStatus.CONFIRMED.value,
                 )
             )
         ).scalars().all()

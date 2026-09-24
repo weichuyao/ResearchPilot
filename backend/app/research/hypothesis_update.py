@@ -94,12 +94,13 @@ class HypothesisUpdateService:
                         ObservationHypothesisRelation.observation_id == observation.id,
                         ObservationHypothesisRelation.hypothesis_id == hypothesis.id,
                         ObservationHypothesisRelation.relation == ObservationRelationType.SUPPORT.value,
+                        ObservationHypothesisRelation.review_status == ReviewStatus.CONFIRMED.value,
                     )
                 )
             ).scalars().first()
             if relation is None:
                 raise ResearchValidationError(
-                    f"observation {observation.id} is not linked as SUPPORT"
+                    f"observation {observation.id} is not linked as confirmed SUPPORT"
                 )
 
     async def _require_confirmed_relation(

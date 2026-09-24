@@ -138,7 +138,8 @@ cd backend
 
 ## 11. 最终交付门禁
 
-- Harness tests：33 passed。
+- Harness tests：33 passed。（这是 V1 交付当时的数；截至 §13 的补强，
+  `pytest tests/research tests/eval -q` 为 **63 passed** —— 科研域 45 + 越界形态分类器 18。）
 - Python `compileall`：通过。
 - Next.js production build、lint 与 TypeScript：通过；`/research` 静态路由 42.4 kB。
 - `git diff --check`：通过，仅有 Git 的 LF→CRLF 工作区提示。
@@ -160,3 +161,28 @@ cd backend
   报告缓存会在状态刷新后失效，档案下载的 Blob URL 在点击调度后再释放。
 - PostgreSQL 实测：同一实验成功导入 2 个 Run，Observation 后状态为 `RUNNING`，显式完成后为
   `COMPLETED`；夹具已按精确 RQ ID 清理，research 表恢复为空。
+
+## 13. 观察解读的确认态（2026-09-24 补）
+
+V1 原始实现有一处不对称：`EvidenceRelation` 有 `review_status`，
+`ObservationHypothesisRelation` 却没有 —— 观察的**数值**是确定性算出来的，但"这条观察
+支持/反驳哪个假设"同样是判断，却可以直接解锁假设状态跃迁。现已补齐：
+
+- 该表新增 `review_status`（默认 `PROPOSED`）、`reviewed_by`、`reviewed_at`。
+- `repository._require_hypothesis_basis` 与 `HypothesisUpdateService` 只计 `CONFIRMED`
+  的观察关系：人工批准是必要条件，观察关系确认也是。
+- 新增 `POST /observations/{id}/relations/{hypothesis_id}/review`（复合主键没有独立 id，
+  用这一对定位）；工作台增加确认/驳回入口，状态投影原样带出 `review_status`。
+- Research Report 的 Observations 章节只列已确认解读。
+
+真实环境验收（PostgreSQL + 真实语料 + 本地重排）：问题 → 假设注册 → 实验批准 →
+两个 Run 导入并各自批准 → 确定性观察（组间差 0.6）→ **未确认时 `/evaluate` 返回 422
+`observation ... is not linked as confirmed SUPPORT`** → 确认后返回 200 生成审批请求。
+只读烟测 9/9 必需路由、18/18 表兼容；验收数据已按 research 表清空，`paper` 72 行未受影响。
+离线侧 63 passed（含新约束的正反两个方向）。
+
+**一条必须记下的迁移隐患**：新列由 `_add_missing_columns` 建（`ALTER TABLE ADD COLUMN`
+不带 server default），因此对**已有行** `review_status` 会是 `NULL` 而非 `PROPOSED`。
+当前这些表为空所以不可见；一旦有生产数据，`NULL` 会被 `!= PROPOSED` 判成"已复核过"，
+既不能确认也不能重判。方向是 fail-closed（不会误放行），但应在真实数据产生之前
+补一次回填或让应用层把 `NULL` 视同 `PROPOSED`。

@@ -14,6 +14,7 @@ from api.schema.researchSchema import (
     HypothesisUpdateProposal,
     QuestionCreate,
     ObservationCreate,
+    ObservationRelationReviewIn,
     RunImportConfirmIn,
     RunImportIn,
     WorkflowAdvanceIn,
@@ -505,6 +506,27 @@ async def create_observation(
         )
         await session.commit()
         return _dump(observation)
+    except Exception as exc:
+        await session.rollback()
+        _http_error(exc)
+
+
+@research_router.post("/observations/{observation_id}/relations/{hypothesis_id}/review")
+async def review_observation_relation(
+    observation_id: str, hypothesis_id: str, body: ObservationRelationReviewIn, session: SessionDep
+) -> dict:
+    """确认"这条观察确实支持/反驳这个假设"。
+
+    观察的**数值**是确定性算出来的，但"它意味着什么"是判断，和证据关系同级，
+    所以未确认的链接不得解锁假设状态跃迁（repository._require_hypothesis_basis）。
+    """
+    repository = ResearchRepository(session)
+    try:
+        relation = await repository.review_observation_relation(
+            observation_id, hypothesis_id, body.decision, reviewer=body.reviewer
+        )
+        await session.commit()
+        return _dump(relation)
     except Exception as exc:
         await session.rollback()
         _http_error(exc)
