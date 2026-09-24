@@ -95,6 +95,48 @@ def test_archive_verifier_cli_rejects_tampering(tmp_path, monkeypatch, capsys):
     assert "does not match" in capsys.readouterr().err
 
 
+def test_archive_rejects_internally_resigned_stale_fingerprint(tmp_path):
+    """改完内容再把档案哈希重算一遍，让它**自我一致**——这一层只能靠指纹拦。
+
+    `test_archive_rejects_resigned_cross_question_records` 防的是夹带别的项目；
+    这里防的是同项目内的内容篡改：所有外键都合法，作用域校验全过，
+    只有重新计算的状态指纹会对不上。断言里必须连"什么都没落库"一起验，
+    否则只证明了报错、没证明回滚。
+    """
+    async def scenario():
+        async with isolated_session(tmp_path / "fp-source.db") as session:
+            repository = ResearchRepository(session)
+            question = await repository.create_question(
+                ResearchQuestion(title="Fingerprint RQ", description="Stale fingerprint must roll back")
+            )
+            evidence = await repository.create_evidence(literature_evidence(question.id))
+            conclusion = await repository.create_conclusion(
+                Conclusion(research_question_id=question.id, statement="Approved wording"),
+                supporting_evidence_ids=[evidence.id],
+            )
+            await session.commit()
+            archive = await ResearchArchiveService(repository).export(question.id)
+
+        tampered = deepcopy(archive)
+        for row in tampered["records"]["conclusions"]:
+            if row["id"] == conclusion.id:
+                row["statement"] = "Silently rewritten wording"
+        tampered["archive_sha256"] = ResearchArchiveService._digest(tampered)
+        # 档案自身是自洽的：verify() 一定放行，所以它必须死在指纹这一关
+        assert ResearchArchiveService.verify(tampered)
+        assert tampered["state_fingerprint"] == archive["state_fingerprint"]
+
+        async with isolated_session(tmp_path / "fp-target.db") as session:
+            service = ResearchArchiveService(ResearchRepository(session))
+            with pytest.raises(ResearchValidationError, match="fingerprint does not match"):
+                await service.restore(tampered)
+            await session.rollback()
+            assert await session.get(ResearchQuestion, question.id) is None
+            assert await session.get(Conclusion, conclusion.id) is None
+
+    asyncio.run(scenario())
+
+
 def test_archive_restores_into_empty_store_without_overwrite(tmp_path):
     async def scenario():
         source_path = tmp_path / "source.db"
