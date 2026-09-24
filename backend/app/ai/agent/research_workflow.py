@@ -73,7 +73,7 @@ from ai.rag.pipeline import (
     format_hits,
     retrieve,
 )
-from ai.rag.textnorm import norm_for_match
+from ai.rag.textnorm import content_key, norm_for_match
 from ai.tools.research_tools import all_titles, list_papers, resolve_paper_sources
 
 logger = logging.getLogger(__name__)
@@ -428,6 +428,8 @@ async def analyze(state: ResearchState, config: RunnableConfig) -> dict:
                 "queries": [],
                 "formatted": "",
                 "hits": [],
+                "evidence_blocks": [],
+                "seen_keys": [],
             }
         )
     if not sub_questions:   # 模型没拆出子问题时的兜底：拿原问题当唯一查询
@@ -437,6 +439,7 @@ async def analyze(state: ResearchState, config: RunnableConfig) -> dict:
                 "facets": [], "facets_found": [], "facets_missing": [],
                 "status": "pending", "top1": 0.0, "evidence": None, "attempts": 0,
                 "queries": [], "formatted": "", "hits": [],
+                "evidence_blocks": [], "seen_keys": [],
             }
         )
 
@@ -485,7 +488,27 @@ async def retrieve_node(state: ResearchState, config: RunnableConfig) -> dict:
         # 拿它当相关性判据必然虚高。
         score = evidence_score(sub["question"], outcome.hits)
         sub["evidence"] = None if score is None else round(score, 3)
-        sub["formatted"] = NO_HITS_MESSAGE if outcome.rejected else format_hits(outcome.hits)
+        # 证据**跨轮累加**，与下面的 facets_found 同一个道理：第 1 轮已经捞到的块，
+        # 不该因为第 2 轮改写后没再命中就从写答案的材料里消失。原来这里是整串
+        # 覆盖，于是出现过这种不自洽 —— assess 判「要点已齐」（它跨轮记着），
+        # synthesize 却看不到那块原文，`evidence_recall` 也因此在 0.955~1.0 之间抖
+        # （A16 的 metatraining 锚点只在第 1 轮的结果里）。
+        #
+        # 这里**不设条数上限**：实测加一个「先命中优先」的 30 条上限，会把最后一轮
+        # 的新块整轮挤掉，于是 A16 修好了、A20 反而坏了 —— 截断让改动变成非单调。
+        # 真要控成本，该动的是每轮 retrieve() 的 top_n，而不是事后丢证据。
+        seen = set(sub.get("seen_keys") or [])
+        fresh = [item for item in outcome.hits if content_key(item[0].page_content) not in seen]
+        for doc, _origin, _s in fresh:
+            seen.add(content_key(doc.page_content))
+        sub["seen_keys"] = sorted(seen)
+        blocks = sub.get("evidence_blocks") or []
+        if fresh:
+            blocks.append(format_hits(fresh))
+        elif not blocks and outcome.rejected:
+            blocks.append(NO_HITS_MESSAGE)
+        sub["evidence_blocks"] = blocks
+        sub["formatted"] = "\n\n".join(blocks)
 
         # 要点覆盖：查答案要的几块齐不齐。**跨轮累加** —— 第 1 轮捞到的要点，
         # 第 2 轮不该因为这次没命中就重新算作缺失。
