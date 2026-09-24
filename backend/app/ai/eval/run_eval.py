@@ -577,6 +577,13 @@ def to_markdown(summary: dict, records: list[dict], eval_name: str) -> str:
     for kind in ("A", "B", "C"):
         for key, value in (summary.get(kind) or {}).items():
             lines.append("| %s.%s | %s |" % (kind, key, value))
+        if kind == "B" and "over_claim_rate" in (summary.get("B") or {}):
+            # 这条数字是 LLM 评委报的，而评委自己就量不稳：B05 复跑五轮，五轮答案
+            # 都写了夹具明令禁止的绝对否定，评委只报出一轮（决策十一）。
+            # 旁边那把可复现的尺子是 app/ai/eval/overclaim_probe.py。
+            lines.append("")
+            lines.append("> ⚠️ `B.over_claim_rate` 由评委判定，**不能当回归判据**；"
+                         "要量越界用 `python app/ai/eval/overclaim_probe.py`（确定性、可单测）。")
     for key, value in (summary.get("process") or {}).items():
         lines.append("| process.%s | %s |" % (key, value))
     lines += ["", "## 逐题", "", "| 题号 | 类型 | 页级命中 | 排名 | 证据命中 | 缺失的锚点 | verdict | 期望 | 概念覆盖 | 越界 | 引用 | 工具轮数 |", "|---|---|---|---|---|---|---|---|---|---|---|---|"]
