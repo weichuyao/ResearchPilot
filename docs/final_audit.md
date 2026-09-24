@@ -108,7 +108,7 @@ cd backend
 - 档案同时保存 state fingerprint 与覆盖完整档案内容的 SHA-256；修改任何导出字段都会
   导致 `ResearchArchiveService.verify()` 和独立校验 CLI 失败。
 - `scripts/verify_research_archive.py` 可在不连接数据库的情况下核验交付档案。
-- `scripts/research_harness_smoke.py` 是只读部署检查：验证 `/health`、OpenAPI 的 8 个
+- `scripts/research_harness_smoke.py` 是只读部署检查：验证 `/health`、OpenAPI 的 9 个
   必需 Harness 路由、项目列表，并在已有项目时校验 state/evaluation/export 一致性。
 - 真实环境 smoke 结果：72 papers、6818 chunks、9/9 必需路由存在、0 次数据库写入。
 
