@@ -181,8 +181,18 @@ V1 原始实现有一处不对称：`EvidenceRelation` 有 `review_status`，
 只读烟测 9/9 必需路由、18/18 表兼容；验收数据已按 research 表清空，`paper` 72 行未受影响。
 离线侧 63 passed（含新约束的正反两个方向）。
 
-**一条必须记下的迁移隐患**：新列由 `_add_missing_columns` 建（`ALTER TABLE ADD COLUMN`
-不带 server default），因此对**已有行** `review_status` 会是 `NULL` 而非 `PROPOSED`。
-当前这些表为空所以不可见；一旦有生产数据，`NULL` 会被 `!= PROPOSED` 判成"已复核过"，
-既不能确认也不能重判。方向是 fail-closed（不会误放行），但应在真实数据产生之前
-补一次回填或让应用层把 `NULL` 视同 `PROPOSED`。
+**曾记录、现已消除的迁移隐患**：新列由 `_add_missing_columns` 建（`ALTER TABLE ADD COLUMN`
+不带 server default），因此对**已有行** `review_status` 会是 `NULL` 而非 `PROPOSED`
+—— 模型里的 `default=` 只在 ORM 插新行时生效。而 `NULL != "PROPOSED"` 会被判成
+"已复核过"，那条记录既不能确认也不能重判。这些表当时为空所以不可见，但真实数据一旦
+产生就会咬人。三层处理：
+
+- `_add_missing_columns` 现在带 `DEFAULT` 补列，并对已有行做一次 `WHERE ... IS NULL` 回填；
+- 同一处逻辑顺带补建列上的索引 —— 旧版只补列不建索引，真实 PostgreSQL 上
+  `research_observation_hypothesis.review_status` 的索引**确实缺失**（已单独补齐）。
+  SQLite 还会因为索引未删而拒绝 `DROP COLUMN`，这一点是写回归测试时踩出来的；
+- 读路径 `_pending_review()` 把 `NULL`／空串一律视同未复核，兜住修复之前已经建好的库。
+
+由 `tests/research/test_schema_migration.py`（4 条）锁住：先铺数据再删列、按现行机制补回来，
+断言已有行拿到 `PROPOSED` 且索引存在；另一条按**旧版行为**补列，断言确实能造出 `NULL`
+—— 否则"容忍 NULL"那条测试就是空判。

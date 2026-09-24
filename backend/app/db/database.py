@@ -65,6 +65,16 @@ def _add_missing_columns(conn) -> None:
 
     ⚠️ 这是**临时手段**，只覆盖「加可空列」这一种情况。改造 #6 换 PostgreSQL 时
     应该同时引入真正的 migration 工具（Alembic），那时删列、改类型、建索引才有的谈。
+
+    ## 为什么补列时必须带上 DEFAULT 并回填
+
+    `ALTER TABLE ... ADD COLUMN c VARCHAR(n)` 不带默认值时，**已有行拿到的全是 NULL**，
+    而模型里写的 `default=` 是 Python 侧的，只在 ORM 插入新行时生效。于是应用一读旧行，
+    就会看到 `NULL` 而不是模型声称的那个初值。这在本项目里有真实后果：
+    `research_observation_hypothesis` 加 `review_status` 时，旧行的值是 `NULL`，
+    而审核判断写的是 `!= PROPOSED` —— `NULL` 会被当成"已经复核过了"，
+    那条记录既不能再确认也不能重判，等于被静默锁死。方向上仍然 fail-closed
+    （未确认的解读不会解锁状态跃迁），但这就是"看不见的坏状态"。
     """
     from sqlalchemy import inspect, text
 
@@ -79,10 +89,60 @@ def _add_missing_columns(conn) -> None:
             ddl = "ALTER TABLE %s ADD COLUMN %s %s" % (
                 table_name, column.name, column.type.compile(conn.dialect)
             )
+            literal = _default_literal(column, conn)
+            if literal is not None:
+                ddl += " DEFAULT " + literal
             conn.execute(text(ddl))
+            if literal is not None:
+                # DEFAULT 只保证之后新行的缺省值，已有行要靠这一次显式回填；
+                # 对刚建的空表它就是一条 0 行的 UPDATE，代价可以忽略。
+                conn.execute(
+                    text("UPDATE %s SET %s = :value WHERE %s IS NULL"
+                         % (table_name, column.name, column.name)),
+                    {"value": _default_python_value(column)},
+                )
+            if column.index:
+                # 只补列不补索引的话，旧库上这个字段就是全表扫 —— 而且 SQLite 会因为
+                # 索引还在而拒绝 DROP COLUMN，等于把 schema 差异埋成只有测试才暴露的坑。
+                conn.execute(text(
+                    "CREATE INDEX IF NOT EXISTS ix_%s_%s ON %s (%s)"
+                    % (table_name, column.name, table_name, column.name)))
             logging.getLogger(__name__).info(
-                "schema: 给 %s 补上新列 %s", table_name, column.name
+                "schema: 给 %s 补上新列 %s%s",
+                table_name, column.name, "（含默认值并回填已有行）" if literal else "",
             )
+
+
+def _default_clause(column):
+    """取出模型里声明的列默认值（`Field(default=...)` 或 `server_default=`）。"""
+    if column.server_default is not None:
+        arg = getattr(column.server_default, "arg", None)
+        return str(arg) if arg is not None else None
+    # `default=` 落在 Column.default 上，SQLAlchemy 的 ColumnDefault.arg 才是那个值
+    default = getattr(column, "default", None)
+    value = getattr(default, "arg", None) if default is not None else None
+    return value if isinstance(value, (str, int, float, bool)) else None
+
+
+def _default_literal(column, conn) -> str | None:
+    """把默认值编译成 SQL 字面量；编译不出来就退回"不带默认值"（保持原有行为）。"""
+    value = _default_clause(column)
+    if value is None:
+        return None
+    try:
+        processor = column.type.literal_processor(dialect=conn.dialect)
+        return processor(value) if processor else None
+    except Exception:  # 任何方言/类型不支持，都不该让启动失败
+        logging.getLogger(__name__).warning(
+            "schema: 列 %s.%s 的默认值无法编译，按无默认值补列",
+            getattr(column, "table", None) and column.table.name, column.name,
+        )
+        return None
+
+
+def _default_python_value(column):
+    value = _default_clause(column)
+    return value
 
 # create_db_and_tables();
 

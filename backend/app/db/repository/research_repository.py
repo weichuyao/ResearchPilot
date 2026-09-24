@@ -73,6 +73,17 @@ def _now() -> datetime:
     return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
+def _pending_review(status: str | None) -> bool:
+    """NULL / 空串都按「未复核」处理。
+
+    补列机制修好之前，给已有表新加的 `review_status` 对旧行写入的是 NULL 而不是
+    `PROPOSED`（模型里的 `default=` 只在 ORM 插新行时生效）。如果这里用
+    `!= PROPOSED` 判断，NULL 就会被当成"已经复核过了"，那条记录既不能确认也不能
+    重判 —— 一个看不见的锁死状态。
+    """
+    return (status or ReviewStatus.PROPOSED.value) == ReviewStatus.PROPOSED.value
+
+
 class ResearchNotFoundError(LookupError):
     pass
 
@@ -363,7 +374,7 @@ class ResearchRepository:
         decision = enum_value(decision, ReviewStatus, "relation.review_status")
         if decision == ReviewStatus.PROPOSED.value:
             raise ResearchValidationError("review decision must be CONFIRMED or REJECTED")
-        if relation.review_status != ReviewStatus.PROPOSED.value:
+        if not _pending_review(relation.review_status):
             raise ResearchValidationError("evidence relation has already been reviewed")
         relation.review_status = decision
         relation.reviewed_by = reviewer
@@ -549,7 +560,7 @@ class ResearchRepository:
         decision = enum_value(decision, ReviewStatus, "relation.review_status")
         if decision == ReviewStatus.PROPOSED.value:
             raise ResearchValidationError("review decision must be CONFIRMED or REJECTED")
-        if relation.review_status != ReviewStatus.PROPOSED.value:
+        if not _pending_review(relation.review_status):
             raise ResearchValidationError("observation relation has already been reviewed")
         relation.review_status = decision
         relation.reviewed_by = reviewer
