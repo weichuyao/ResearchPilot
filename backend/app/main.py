@@ -12,6 +12,7 @@ from api.chat_routes import chat_router
 from api.conversation_routes import conversation_router
 from api.document_routes import document_router
 from api.system_routes import system_router
+from api.research_routes import research_router
 from ai.agent.agents import agents, get_agent
 from ai.agent.checkpointer import shutdown_checkpointer, startup_checkpointer
 from core.logging_config import setup_logging
@@ -102,3 +103,4 @@ app.include_router(chat_router)
 app.include_router(conversation_router)
 app.include_router(document_router)
 app.include_router(system_router)
+app.include_router(research_router)

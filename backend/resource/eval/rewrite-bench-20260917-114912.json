@@ -1,0 +1,274 @@
+{
+  "generated_at": "2026-09-17 11:49:12",
+  "mode": "rewrite",
+  "model": "local-rewriter",
+  "eval_set": "reid_paper_eval_set.json",
+  "top_k": 10,
+  "graded_items": 22,
+  "metrics": {
+    "hit": 18,
+    "recall@1": 0.2727,
+    "recall@5": 0.6818,
+    "mrr": 0.452,
+    "mean_rank": 3.0
+  },
+  "anchor": {
+    "complete": 15,
+    "total": 22
+  },
+  "structured_failed": [],
+  "rewrite_seconds_per_item": 1.469,
+  "model_status": {
+    "configured": "local-rewriter",
+    "target": "research-rewriter",
+    "calls": 30,
+    "fallbacks": 0,
+    "last_error": ""
+  },
+  "per_item": {
+    "A01": {
+      "rank": 3,
+      "missing": [],
+      "queries": [
+        "hard positive problem unsupervised ship re-identification domain adaptation uda intra batch cluster soft pseudo labels batch cluster level"
+      ]
+    },
+    "A02": {
+      "rank": 5,
+      "missing": [],
+      "queries": [
+        "MCL training alternating two phases loop iterative training strategy alternating between training strategy alternating intra batch cluster",
+        "MCL two phases training loss wi exp exp zi intra batch cluster contrastive learning mcl"
+      ]
+    },
+    "A03": {
+      "rank": 1,
+      "missing": [],
+      "queries": [
+        "VesselReID dataset number of images number of identities testing sets boat reid vessel re id vessel identities"
+      ]
+    },
+    "A04": {
+      "rank": 2,
+      "missing": [],
+      "queries": [
+        "DPEFormer DPSM patch selection module masked image patch token blending module fbm dpsm feature blending occlusion augmentation roa guided proxy token"
+      ]
+    },
+    "A05": {
+      "rank": 7,
+      "missing": [
+        "kmin"
+      ],
+      "queries": [
+        "DPSM patch token retention number of tokens blending module fbm guided proxy token selection module dpsm label guided proxy"
+      ]
+    },
+    "A06": {
+      "rank": 1,
+      "missing": [],
+      "queries": [
+        "ROA occlusion mask generated from occluder and occluded region de occluder ddo guided de occluder blending module fbm cut paste",
+        "ROA occlusion mask inference stage occlusion mask used blending module fbm cut paste occlusion augmentation roa segment anything model"
+      ]
+    },
+    "A07": {
+      "rank": 4,
+      "missing": [],
+      "queries": [
+        "A²RNet long-term ship re-identification appearance variation typical reasons association reinforcement tar association perception sap association forgetting mechanism reinforcement tar module"
+      ]
+    },
+    "A08": {
+      "rank": 2,
+      "missing": [
+        "loading and equipment configuration"
+      ],
+      "queries": [
+        "A²RNet SAP semantic attributes part-level association reinforcement tar association perception sap association forgetting mechanism reinforcement tar module"
+      ]
+    },
+    "A09": {
+      "rank": 7,
+      "missing": [
+        "identity-view pair"
+      ],
+      "queries": [
+        "A²RNet temporal attention re-identification history features cross-time matching association reinforcement tar association perception sap association forgetting mechanism reinforcement tar module"
+      ]
+    },
+    "A10": {
+      "rank": 2,
+      "missing": [],
+      "queries": [
+        "ViV-ReID dataset size number of images person identities million frames publicly available spatio temporal video based vessel"
+      ]
+    },
+    "A11": {
+      "rank": 8,
+      "missing": [
+        "Grounding DINO",
+        "Deep SORT"
+      ],
+      "queries": [
+        "ViV-ReID dataset annotation pipeline automated human verification bidirectional structural aware million frames spatio temporal video based vessel",
+        "ViV-ReID dataset automated annotation similarity check bi sstn bidirectional structural aware spatial temporal graph aware spatial temporal",
+        "ViV-ReID dataset human annotation expert review bidirectional structural aware million frames anchor expert spatio temporal",
+        "ViV-ReID dataset automated human annotation collaboration bidirectional structural aware million frames spatio temporal video based vessel"
+      ]
+    },
+    "A12": {
+      "rank": null,
+      "missing": [
+        "one-fifth",
+        "364"
+      ],
+      "queries": [
+        "ViV-ReID query set from gallery set tracklet fragmented spatio temporal address fragmented spatio bi sstn million frames"
+      ]
+    },
+    "B03": {
+      "rank": null,
+      "missing": [],
+      "queries": [
+        "AIS signal input feature fusion for ship re-identification association forgetting dataset called long term cross modal ship"
+      ]
+    },
+    "B04": {
+      "rank": null,
+      "missing": [],
+      "queries": [
+        "3D point cloud ship re-identification sound wave LiDAR trans intellig veh ieee trans intellig international conference semantic segmentation",
+        "3D point cloud ship re-identification sound wave LiDAR trans intellig veh ieee trans intellig international conference semantic segmentation"
+      ]
+    },
+    "B05": {
+      "rank": null,
+      "missing": [],
+      "queries": [
+        "DPEFormer GAN generated occlusion training images occlusion augmentation roa segment anything model realistic occlusion augmentation anything model sam"
+      ]
+    },
+    "B06": {
+      "rank": null,
+      "missing": [],
+      "queries": [
+        "reinforcement learning patch selection strategy ship re-identification association reinforcement tar reinforcement tar module temporal association reinforcement selection module dpsm",
+        "reinforcement learning patch number selection ship re-identification association reinforcement tar reinforcement tar module temporal association reinforcement long term ship",
+        "reinforcement learning patch retention threshold ship re-identification association reinforcement tar reinforcement tar module temporal association reinforcement long term ship",
+        "reinforcement learning patch sampling strategy ship re-identification association reinforcement tar reinforcement tar module temporal association reinforcement polygon annotations"
+      ]
+    },
+    "C01": {
+      "rank": null,
+      "missing": [],
+      "queries": [
+        "red-braised pork cooking steps bike repair update steps qualitative results",
+        "red-braised pork seasoning ingredients shared virtual positional hit area red box indicate correct"
+      ]
+    },
+    "C02": {
+      "rank": null,
+      "missing": [],
+      "queries": [
+        "stock market prediction future returns none none none cos sim latest methods mask prediction",
+        "stock prediction evaluation accuracy loss soft cross entropy t stri t sce deformation loss"
+      ]
+    },
+    "A13": {
+      "rank": 2,
+      "missing": [],
+      "queries": [
+        "Sparse VMamba embedding layer Femb spatial-temporal features long range spatio range spatio temporal linear computational complexity robust spatio temporal"
+      ]
+    },
+    "A14": {
+      "rank": null,
+      "missing": [],
+      "queries": [
+        "FDNM SYSU-MM01 evaluation metric mAP 镜 头 设 多 镜 头 头 设 置 衰 减 到",
+        "FDNM SYSU-MM01 evaluation mode pedestrian vehicle pedestrian-vehicle mixed 情 况 下 种 情 况 衰 减 到 消 融 研"
+      ]
+    },
+    "A15": {
+      "rank": 1,
+      "missing": [],
+      "queries": [
+        "Pseudo-Label Noise Prevention paper conference journal noise prevention suppression domain union odu softening npss online domain union",
+        "Pseudo-Label Noise Prevention ship re-identification vehicle re-identification noise prevention suppression domain union odu softening npss online domain union"
+      ]
+    },
+    "A16": {
+      "rank": 4,
+      "missing": [],
+      "queries": [
+        "SAM-driven MAE method task construction for background interference ncu edu cn nanchang university nanchang samdriven mae driven mae pre",
+        "MAE background interference handling masked autoencoder sam driven mae driven mae pre segment anything model identity unrelated background"
+      ]
+    },
+    "A17": {
+      "rank": null,
+      "missing": [
+        "Lightweight Cross-View Vehicle ReID"
+      ],
+      "queries": [
+        "CVNet title core design points gate gate gate filtrate collaboration dfc depthwise separable convolutions shallow filtrate collaboration"
+      ]
+    },
+    "A18": {
+      "rank": 1,
+      "missing": [],
+      "queries": [
+        "SeCap aerial-ground person re-identification challenges aerial-ground person re-identification northwestern polytechnical university nwpu edu cn secap self calibrating polytechnical university china"
+      ]
+    },
+    "A19": {
+      "rank": 1,
+      "missing": [],
+      "queries": [
+        "SPG-GT combination of keypoint detection for ships newly created slad spg gt leverages created slad data longer inference time",
+        "SPG-GT keypoint detection module architecture newly created slad spg gt leverages created slad data longer inference time"
+      ]
+    },
+    "A20": {
+      "rank": null,
+      "missing": [
+        "DEcoupled sEmantic Prompt Learning",
+        "MultiSpectral Object ReID"
+      ],
+      "queries": [
+        "DEEP framework full name deep re-identification anal mach intell pattern anal mach xiang l shao mach intell vol",
+        "DEEP framework re-identification task long term ship index terms outperforms state identification ieee transactions"
+      ]
+    },
+    "A21": {
+      "rank": 2,
+      "missing": [],
+      "queries": [
+        "reordering scheme for diffusion-based occlusion removal de occluder ddo ranking hrr scheme guided de occluder diffusion guided de"
+      ]
+    },
+    "B07": {
+      "rank": null,
+      "missing": [],
+      "queries": [
+        "federated learning privacy protection ship re-identification xidian edu cn event streams event cameras event camera",
+        "federated learning generalization ship re-identification long term ship association forgetting hoss reid dataset term ship re"
+      ]
+    },
+    "B08": {
+      "rank": null,
+      "missing": [],
+      "queries": [
+        "DeepSpeed distributed training framework dependency dependency modeling distributed multi view view image compression multi view image"
+      ]
+    },
+    "A22": {
+      "rank": 1,
+      "missing": [],
+      "queries": [
+        "STMI Segmentation-Guided Feature Modulation attention guidance token reallocation str hypergraph interaction chi reallocation str module modulation sfm module"
+      ]
+    }
+  }
+}
