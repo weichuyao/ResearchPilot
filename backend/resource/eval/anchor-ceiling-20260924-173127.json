@@ -1,0 +1,1072 @@
+{
+ "generated_at": "2026-09-24T17:31:27",
+ "corpus_fingerprint": {
+  "papers": 72,
+  "chunks": 6818,
+  "_说明": ""
+ },
+ "top_k": 10,
+ "pool_k": 30,
+ "items_with_anchors": 22,
+ "reachable_in_pool": 18,
+ "reachable_via_production": 13,
+ "reachable_by_question_text": 17,
+ "verdict_tally": {
+  "REACHABLE": 11,
+  "RECALL-MISS": 4,
+  "BRIDGE-GAP": 2,
+  "GATE-BLOCKED": 5
+ },
+ "brittle_le3_chunks": 12,
+ "unique_anchor_items": [
+  "A08",
+  "A20",
+  "A21",
+  "A22"
+ ],
+ "per_item": [
+  {
+   "id": "A08",
+   "question": "A²RNet 的 SAP 模块推断的三类语义属性是什么？",
+   "anchors": {
+    "ship type": {
+     "corpus_chunks": 13,
+     "by_anchor": {
+      "pool_rank": 5,
+      "prod_rank": 3,
+      "rejected": false,
+      "vector_top1": 0.4016
+     },
+     "by_question": {
+      "pool_rank": 6,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.4517
+     }
+    },
+    "imaging perspective": {
+     "corpus_chunks": 1,
+     "by_anchor": {
+      "pool_rank": 4,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.4425
+     },
+     "by_question": {
+      "pool_rank": 6,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.4517
+     }
+    },
+    "loading and equipment configuration": {
+     "corpus_chunks": 1,
+     "by_anchor": {
+      "pool_rank": 4,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.358
+     },
+     "by_question": {
+      "pool_rank": null,
+      "prod_rank": 11,
+      "rejected": false,
+      "vector_top1": 0.4517
+     }
+    }
+   },
+   "min_corpus_chunks": 1,
+   "missing_in_pool": [],
+   "blocked_by_gate": [],
+   "unreachable_by_anchor": [],
+   "unreachable_by_question": [],
+   "verdict": "REACHABLE"
+  },
+  {
+   "id": "A20",
+   "question": "DEEP 框架的全称是什么、针对什么任务、解决什么挑战？",
+   "anchors": {
+    "DEcoupled sEmantic Prompt Learning": {
+     "corpus_chunks": 7,
+     "by_anchor": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.5667
+     },
+     "by_question": {
+      "pool_rank": 2,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.4247
+     }
+    },
+    "MultiSpectral Object ReID": {
+     "corpus_chunks": 1,
+     "by_anchor": {
+      "pool_rank": 3,
+      "prod_rank": 5,
+      "rejected": false,
+      "vector_top1": 0.5436
+     },
+     "by_question": {
+      "pool_rank": 4,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.4247
+     }
+    }
+   },
+   "min_corpus_chunks": 1,
+   "missing_in_pool": [],
+   "blocked_by_gate": [],
+   "unreachable_by_anchor": [],
+   "unreachable_by_question": [],
+   "verdict": "REACHABLE"
+  },
+  {
+   "id": "A21",
+   "question": "这篇 diffusion 去遮挡论文提出的重排序方案叫什么、起什么作用？",
+   "anchors": {
+    "Hybrid Re-Ranking": {
+     "corpus_chunks": 15,
+     "by_anchor": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.5751
+     },
+     "by_question": {
+      "pool_rank": 5,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.4385
+     }
+    },
+    "de-occlusion module": {
+     "corpus_chunks": 1,
+     "by_anchor": {
+      "pool_rank": 10,
+      "prod_rank": 3,
+      "rejected": false,
+      "vector_top1": 0.4136
+     },
+     "by_question": {
+      "pool_rank": 5,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.4385
+     }
+    }
+   },
+   "min_corpus_chunks": 1,
+   "missing_in_pool": [],
+   "blocked_by_gate": [],
+   "unreachable_by_anchor": [],
+   "unreachable_by_question": [],
+   "verdict": "REACHABLE"
+  },
+  {
+   "id": "A22",
+   "question": "STMI 的 Segmentation-Guided Feature Modulation 模块用什么来引导注意力学习？",
+   "anchors": {
+    "Segmentation-Guided Feature Modulation": {
+     "corpus_chunks": 7,
+     "by_anchor": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.5404
+     },
+     "by_question": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.5615
+     }
+    },
+    "SAM segmentation model": {
+     "corpus_chunks": 1,
+     "by_anchor": {
+      "pool_rank": null,
+      "prod_rank": null,
+      "rejected": false,
+      "vector_top1": 0.5087
+     },
+     "by_question": {
+      "pool_rank": 8,
+      "prod_rank": 5,
+      "rejected": false,
+      "vector_top1": 0.5615
+     }
+    },
+    "foreground masks": {
+     "corpus_chunks": 2,
+     "by_anchor": {
+      "pool_rank": 6,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.4524
+     },
+     "by_question": {
+      "pool_rank": 8,
+      "prod_rank": 5,
+      "rejected": false,
+      "vector_top1": 0.5615
+     }
+    }
+   },
+   "min_corpus_chunks": 1,
+   "missing_in_pool": [
+    "SAM segmentation model"
+   ],
+   "blocked_by_gate": [],
+   "unreachable_by_anchor": [
+    "SAM segmentation model"
+   ],
+   "unreachable_by_question": [],
+   "verdict": "RECALL-MISS"
+  },
+  {
+   "id": "A04",
+   "question": "DPEFormer 的 DPSM 如何从遮挡图像中选择有用的 patch token？",
+   "anchors": {
+    "proxy token": {
+     "corpus_chunks": 10,
+     "by_anchor": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.4481
+     },
+     "by_question": {
+      "pool_rank": 2,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.5271
+     }
+    },
+    "hard attention": {
+     "corpus_chunks": 2,
+     "by_anchor": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.3889
+     },
+     "by_question": {
+      "pool_rank": 11,
+      "prod_rank": 13,
+      "rejected": false,
+      "vector_top1": 0.5271
+     }
+    }
+   },
+   "min_corpus_chunks": 2,
+   "missing_in_pool": [],
+   "blocked_by_gate": [],
+   "unreachable_by_anchor": [],
+   "unreachable_by_question": [],
+   "verdict": "REACHABLE"
+  },
+  {
+   "id": "A09",
+   "question": "A²RNet 的 TAR 如何组织历史特征，以进行跨时间的匹配？",
+   "anchors": {
+    "instance bank": {
+     "corpus_chunks": 9,
+     "by_anchor": {
+      "pool_rank": 2,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.3847
+     },
+     "by_question": {
+      "pool_rank": 14,
+      "prod_rank": null,
+      "rejected": false,
+      "vector_top1": 0.5286
+     }
+    },
+    "identity-view pair": {
+     "corpus_chunks": 2,
+     "by_anchor": {
+      "pool_rank": null,
+      "prod_rank": null,
+      "rejected": false,
+      "vector_top1": 0.4437
+     },
+     "by_question": {
+      "pool_rank": null,
+      "prod_rank": null,
+      "rejected": false,
+      "vector_top1": 0.5286
+     }
+    }
+   },
+   "min_corpus_chunks": 2,
+   "missing_in_pool": [
+    "identity-view pair"
+   ],
+   "blocked_by_gate": [],
+   "unreachable_by_anchor": [
+    "identity-view pair"
+   ],
+   "unreachable_by_question": [
+    "instance bank",
+    "identity-view pair"
+   ],
+   "verdict": "RECALL-MISS"
+  },
+  {
+   "id": "A10",
+   "question": "ViV-ReID 数据集的规模是多少？",
+   "anchors": {
+    "480": {
+     "corpus_chunks": 80,
+     "by_anchor": {
+      "pool_rank": 1,
+      "prod_rank": null,
+      "rejected": true,
+      "vector_top1": 0.2828
+     },
+     "by_question": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.4725
+     }
+    },
+    "7165": {
+     "corpus_chunks": 11,
+     "by_anchor": {
+      "pool_rank": 2,
+      "prod_rank": null,
+      "rejected": true,
+      "vector_top1": 0.2719
+     },
+     "by_question": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.4725
+     }
+    },
+    "1145469": {
+     "corpus_chunks": 2,
+     "by_anchor": {
+      "pool_rank": null,
+      "prod_rank": null,
+      "rejected": true,
+      "vector_top1": 0.2802
+     },
+     "by_question": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.4725
+     }
+    }
+   },
+   "min_corpus_chunks": 2,
+   "missing_in_pool": [
+    "1145469"
+   ],
+   "blocked_by_gate": [
+    "480",
+    "7165",
+    "1145469"
+   ],
+   "unreachable_by_anchor": [],
+   "unreachable_by_question": [],
+   "verdict": "RECALL-MISS"
+  },
+  {
+   "id": "A11",
+   "question": "ViV-ReID 数据集标注管线如何同时利用自动化和人工核验？",
+   "anchors": {
+    "Grounding DINO": {
+     "corpus_chunks": 7,
+     "by_anchor": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.3672
+     },
+     "by_question": {
+      "pool_rank": null,
+      "prod_rank": null,
+      "rejected": false,
+      "vector_top1": 0.3817
+     }
+    },
+    "Deep SORT": {
+     "corpus_chunks": 2,
+     "by_anchor": {
+      "pool_rank": 10,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.3752
+     },
+     "by_question": {
+      "pool_rank": null,
+      "prod_rank": null,
+      "rejected": false,
+      "vector_top1": 0.3817
+     }
+    }
+   },
+   "min_corpus_chunks": 2,
+   "missing_in_pool": [],
+   "blocked_by_gate": [],
+   "unreachable_by_anchor": [],
+   "unreachable_by_question": [
+    "Grounding DINO",
+    "Deep SORT"
+   ],
+   "verdict": "BRIDGE-GAP"
+  },
+  {
+   "id": "A12",
+   "question": "ViV-ReID 的 query set 是怎样从 gallery set 形成的，包含多少条 tracklet？",
+   "anchors": {
+    "one-fifth": {
+     "corpus_chunks": 2,
+     "by_anchor": {
+      "pool_rank": 6,
+      "prod_rank": null,
+      "rejected": true,
+      "vector_top1": 0.3383
+     },
+     "by_question": {
+      "pool_rank": null,
+      "prod_rank": null,
+      "rejected": false,
+      "vector_top1": 0.4945
+     }
+    },
+    "364": {
+     "corpus_chunks": 76,
+     "by_anchor": {
+      "pool_rank": 1,
+      "prod_rank": null,
+      "rejected": true,
+      "vector_top1": 0.265
+     },
+     "by_question": {
+      "pool_rank": null,
+      "prod_rank": null,
+      "rejected": false,
+      "vector_top1": 0.4945
+     }
+    }
+   },
+   "min_corpus_chunks": 2,
+   "missing_in_pool": [],
+   "blocked_by_gate": [
+    "one-fifth",
+    "364"
+   ],
+   "unreachable_by_anchor": [],
+   "unreachable_by_question": [
+    "one-fifth",
+    "364"
+   ],
+   "verdict": "GATE-BLOCKED"
+  },
+  {
+   "id": "A13",
+   "question": "Sparse VMamba 的嵌入层 Femb 是怎么由空间与时间特征得到的？",
+   "anchors": {
+    "Spatial Patch Embedding": {
+     "corpus_chunks": 2,
+     "by_anchor": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.5275
+     },
+     "by_question": {
+      "pool_rank": 4,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.4633
+     }
+    },
+    "learnable parameter": {
+     "corpus_chunks": 25,
+     "by_anchor": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.5184
+     },
+     "by_question": {
+      "pool_rank": 4,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.4633
+     }
+    }
+   },
+   "min_corpus_chunks": 2,
+   "missing_in_pool": [],
+   "blocked_by_gate": [],
+   "unreachable_by_anchor": [],
+   "unreachable_by_question": [],
+   "verdict": "REACHABLE"
+  },
+  {
+   "id": "A17",
+   "question": "CVNet 的标题体现了哪两个核心设计点？",
+   "anchors": {
+    "Lightweight Cross-View Vehicle ReID": {
+     "corpus_chunks": 3,
+     "by_anchor": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.6246
+     },
+     "by_question": {
+      "pool_rank": 5,
+      "prod_rank": 3,
+      "rejected": false,
+      "vector_top1": 0.4652
+     }
+    },
+    "Multi-Scale Localization": {
+     "corpus_chunks": 6,
+     "by_anchor": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.4534
+     },
+     "by_question": {
+      "pool_rank": 3,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.4652
+     }
+    }
+   },
+   "min_corpus_chunks": 3,
+   "missing_in_pool": [],
+   "blocked_by_gate": [],
+   "unreachable_by_anchor": [],
+   "unreachable_by_question": [],
+   "verdict": "REACHABLE"
+  },
+  {
+   "id": "A18",
+   "question": "SeCap 认为 Aerial-Ground Person ReID 的主要挑战是什么？",
+   "anchors": {
+    "Aerial-Ground Person Reidentification": {
+     "corpus_chunks": 3,
+     "by_anchor": {
+      "pool_rank": 3,
+      "prod_rank": 7,
+      "rejected": false,
+      "vector_top1": 0.6396
+     },
+     "by_question": {
+      "pool_rank": 5,
+      "prod_rank": 5,
+      "rejected": false,
+      "vector_top1": 0.5079
+     }
+    },
+    "appearance variations": {
+     "corpus_chunks": 34,
+     "by_anchor": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.5471
+     },
+     "by_question": {
+      "pool_rank": 5,
+      "prod_rank": 5,
+      "rejected": false,
+      "vector_top1": 0.5079
+     }
+    }
+   },
+   "min_corpus_chunks": 3,
+   "missing_in_pool": [],
+   "blocked_by_gate": [],
+   "unreachable_by_anchor": [],
+   "unreachable_by_question": [],
+   "verdict": "REACHABLE"
+  },
+  {
+   "id": "A03",
+   "question": "VesselReID 数据集最终包含多少张图像、多少个船舶身份？",
+   "anchors": {
+    "30587": {
+     "corpus_chunks": 4,
+     "by_anchor": {
+      "pool_rank": null,
+      "prod_rank": null,
+      "rejected": true,
+      "vector_top1": 0.322
+     },
+     "by_question": {
+      "pool_rank": 2,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.6672
+     }
+    },
+    "1248": {
+     "corpus_chunks": 9,
+     "by_anchor": {
+      "pool_rank": 2,
+      "prod_rank": null,
+      "rejected": true,
+      "vector_top1": 0.2052
+     },
+     "by_question": {
+      "pool_rank": 2,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.6672
+     }
+    }
+   },
+   "min_corpus_chunks": 4,
+   "missing_in_pool": [
+    "30587"
+   ],
+   "blocked_by_gate": [
+    "30587",
+    "1248"
+   ],
+   "unreachable_by_anchor": [],
+   "unreachable_by_question": [],
+   "verdict": "RECALL-MISS"
+  },
+  {
+   "id": "A05",
+   "question": "DPSM 如何决定保留多少个 patch token？",
+   "anchors": {
+    "maximal gradient magnitude": {
+     "corpus_chunks": 4,
+     "by_anchor": {
+      "pool_rank": 4,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.3794
+     },
+     "by_question": {
+      "pool_rank": 11,
+      "prod_rank": null,
+      "rejected": false,
+      "vector_top1": 0.5027
+     }
+    },
+    "kmin": {
+     "corpus_chunks": 5,
+     "by_anchor": {
+      "pool_rank": 1,
+      "prod_rank": null,
+      "rejected": true,
+      "vector_top1": 0.3236
+     },
+     "by_question": {
+      "pool_rank": 5,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.5027
+     }
+    }
+   },
+   "min_corpus_chunks": 4,
+   "missing_in_pool": [],
+   "blocked_by_gate": [
+    "kmin"
+   ],
+   "unreachable_by_anchor": [],
+   "unreachable_by_question": [
+    "maximal gradient magnitude"
+   ],
+   "verdict": "GATE-BLOCKED"
+  },
+  {
+   "id": "A16",
+   "question": "SAM-driven MAE 方法的元学习如何构造任务来应对背景干扰？",
+   "anchors": {
+    "metatraining": {
+     "corpus_chunks": 4,
+     "by_anchor": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.4544
+     },
+     "by_question": {
+      "pool_rank": 14,
+      "prod_rank": null,
+      "rejected": false,
+      "vector_top1": 0.518
+     }
+    },
+    "background interference": {
+     "corpus_chunks": 38,
+     "by_anchor": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.5067
+     },
+     "by_question": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.518
+     }
+    }
+   },
+   "min_corpus_chunks": 4,
+   "missing_in_pool": [],
+   "blocked_by_gate": [],
+   "unreachable_by_anchor": [],
+   "unreachable_by_question": [
+    "metatraining"
+   ],
+   "verdict": "BRIDGE-GAP"
+  },
+  {
+   "id": "A06",
+   "question": "ROA 使用什么来源生成遮挡掩码？它是否在推理阶段使用？",
+   "anchors": {
+    "Segment Anything": {
+     "corpus_chunks": 27,
+     "by_anchor": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.3964
+     },
+     "by_question": {
+      "pool_rank": 6,
+      "prod_rank": 2,
+      "rejected": false,
+      "vector_top1": 0.4322
+     }
+    },
+    "mask set": {
+     "corpus_chunks": 5,
+     "by_anchor": {
+      "pool_rank": 9,
+      "prod_rank": null,
+      "rejected": true,
+      "vector_top1": 0.3017
+     },
+     "by_question": {
+      "pool_rank": 6,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.4322
+     }
+    }
+   },
+   "min_corpus_chunks": 5,
+   "missing_in_pool": [],
+   "blocked_by_gate": [
+    "mask set"
+   ],
+   "unreachable_by_anchor": [],
+   "unreachable_by_question": [],
+   "verdict": "GATE-BLOCKED"
+  },
+  {
+   "id": "A19",
+   "question": "SPG-GT 用什么组合做船舶关键点检测？",
+   "anchors": {
+    "graph neural networks": {
+     "corpus_chunks": 9,
+     "by_anchor": {
+      "pool_rank": 4,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.5285
+     },
+     "by_question": {
+      "pool_rank": 1,
+      "prod_rank": 2,
+      "rejected": false,
+      "vector_top1": 0.5583
+     }
+    },
+    "ship structural prior": {
+     "corpus_chunks": 5,
+     "by_anchor": {
+      "pool_rank": 10,
+      "prod_rank": 3,
+      "rejected": false,
+      "vector_top1": 0.397
+     },
+     "by_question": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.5583
+     }
+    }
+   },
+   "min_corpus_chunks": 5,
+   "missing_in_pool": [],
+   "blocked_by_gate": [],
+   "unreachable_by_anchor": [],
+   "unreachable_by_question": [],
+   "verdict": "REACHABLE"
+  },
+  {
+   "id": "A01",
+   "question": "hard positive problem（HPP）在无监督船舶 ReID 中指什么？",
+   "anchors": {
+    "hard positive problem": {
+     "corpus_chunks": 6,
+     "by_anchor": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.4337
+     },
+     "by_question": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.4486
+     }
+    },
+    "instance-level": {
+     "corpus_chunks": 71,
+     "by_anchor": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.4122
+     },
+     "by_question": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.4486
+     }
+    }
+   },
+   "min_corpus_chunks": 6,
+   "missing_in_pool": [],
+   "blocked_by_gate": [],
+   "unreachable_by_anchor": [],
+   "unreachable_by_question": [],
+   "verdict": "REACHABLE"
+  },
+  {
+   "id": "A02",
+   "question": "MCL 的训练过程交替进行的两个阶段分别是什么？",
+   "anchors": {
+    "pseudo-label": {
+     "corpus_chunks": 328,
+     "by_anchor": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.6926
+     },
+     "by_question": {
+      "pool_rank": 2,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.4338
+     }
+    },
+    "cluster-level": {
+     "corpus_chunks": 32,
+     "by_anchor": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.4929
+     },
+     "by_question": {
+      "pool_rank": 6,
+      "prod_rank": 3,
+      "rejected": false,
+      "vector_top1": 0.4338
+     }
+    }
+   },
+   "min_corpus_chunks": 32,
+   "missing_in_pool": [],
+   "blocked_by_gate": [],
+   "unreachable_by_anchor": [],
+   "unreachable_by_question": [],
+   "verdict": "REACHABLE"
+  },
+  {
+   "id": "A15",
+   "question": "Pseudo-Label Noise Prevention 这篇论文发表在哪里、针对什么任务？",
+   "anchors": {
+    "IEEE TRANSACTIONS ON INFORMATION FORENSICS AND SECURITY": {
+     "corpus_chunks": 51,
+     "by_anchor": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.4476
+     },
+     "by_question": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.577
+     }
+    },
+    "Unsupervised Person Re-Identification": {
+     "corpus_chunks": 111,
+     "by_anchor": {
+      "pool_rank": 2,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.5259
+     },
+     "by_question": {
+      "pool_rank": 2,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.577
+     }
+    }
+   },
+   "min_corpus_chunks": 51,
+   "missing_in_pool": [],
+   "blocked_by_gate": [],
+   "unreachable_by_anchor": [],
+   "unreachable_by_question": [],
+   "verdict": "REACHABLE"
+  },
+  {
+   "id": "A07",
+   "question": "A²RNet 认为长期船舶 ReID 中外观大幅变化的典型原因有哪些？",
+   "anchors": {
+    "cargo": {
+     "corpus_chunks": 52,
+     "by_anchor": {
+      "pool_rank": 1,
+      "prod_rank": null,
+      "rejected": true,
+      "vector_top1": 0.3231
+     },
+     "by_question": {
+      "pool_rank": 1,
+      "prod_rank": 2,
+      "rejected": false,
+      "vector_top1": 0.4878
+     }
+    },
+    "viewpoint": {
+     "corpus_chunks": 298,
+     "by_anchor": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.393
+     },
+     "by_question": {
+      "pool_rank": 5,
+      "prod_rank": 3,
+      "rejected": false,
+      "vector_top1": 0.4878
+     }
+    },
+    "occlusion": {
+     "corpus_chunks": 298,
+     "by_anchor": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.419
+     },
+     "by_question": {
+      "pool_rank": 5,
+      "prod_rank": 3,
+      "rejected": false,
+      "vector_top1": 0.4878
+     }
+    }
+   },
+   "min_corpus_chunks": 52,
+   "missing_in_pool": [],
+   "blocked_by_gate": [
+    "cargo"
+   ],
+   "unreachable_by_anchor": [],
+   "unreachable_by_question": [],
+   "verdict": "GATE-BLOCKED"
+  },
+  {
+   "id": "A14",
+   "question": "FDNM 在 SYSU-MM01 上用什么评价指标、分哪些模式评估？",
+   "anchors": {
+    "SYSU-MM01": {
+     "corpus_chunks": 90,
+     "by_anchor": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.4213
+     },
+     "by_question": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.587
+     }
+    },
+    "CMC": {
+     "corpus_chunks": 60,
+     "by_anchor": {
+      "pool_rank": 1,
+      "prod_rank": null,
+      "rejected": true,
+      "vector_top1": 0.2905
+     },
+     "by_question": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.587
+     }
+    },
+    "mAP": {
+     "corpus_chunks": 1065,
+     "by_anchor": {
+      "pool_rank": 1,
+      "prod_rank": null,
+      "rejected": true,
+      "vector_top1": 0.3356
+     },
+     "by_question": {
+      "pool_rank": 1,
+      "prod_rank": 1,
+      "rejected": false,
+      "vector_top1": 0.587
+     }
+    }
+   },
+   "min_corpus_chunks": 60,
+   "missing_in_pool": [],
+   "blocked_by_gate": [
+    "CMC",
+    "mAP"
+   ],
+   "unreachable_by_anchor": [],
+   "unreachable_by_question": [],
+   "verdict": "GATE-BLOCKED"
+  }
+ ]
+}
